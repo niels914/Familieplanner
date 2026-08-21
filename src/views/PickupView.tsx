@@ -4,6 +4,7 @@ import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { addDays, formatLong, isoWeekday, todayInNl } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
 import { pickupForDate } from '../lib/events';
+import { Icon } from '../components/Icon';
 
 const WEEKDAYS: Weekday[] = [1, 2, 3, 4, 5];
 const WEEKDAY_LABEL: Record<Weekday, string> = { 1: 'ma', 2: 'di', 3: 'wo', 4: 'do', 5: 'vr' };
@@ -172,7 +173,7 @@ export function PickupView() {
                           title="Terug naar het vaste schema"
                           onClick={() => void deletePickupOverride(override.id)}
                         >
-                          ↺
+                          <Icon name="terugdraaien" size={16} />
                         </button>
                       ) : (
                         <span />

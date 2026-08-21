@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
+import { Icon } from './Icon';
 
 interface Props {
   title: string;
@@ -32,7 +33,7 @@ export function Modal({ title, onClose, children, footer }: Props) {
         <div className="modal__head">
           <h2>{title}</h2>
           <button className="btn btn--ghost btn--sm" onClick={onClose} aria-label="Sluiten">
-            ✕
+            <Icon name="kruis" size={18} />
           </button>
         </div>
         <div className="modal__body">{children}</div>

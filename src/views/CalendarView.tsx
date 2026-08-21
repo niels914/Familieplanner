@@ -14,6 +14,7 @@ import { useData, useStore } from '../lib/store';
 import { birthdaysOnDate, coversDate, eventsOnDate, pickupForDate } from '../lib/events';
 import { EventRow } from '../components/EventRow';
 import { EventForm } from '../components/EventForm';
+import { Icon } from '../components/Icon';
 
 type Filter = 'alles' | PersonId;
 const FILTERS: Filter[] = ['alles', 'matthijs', 'amelie', 'lotte', 'gezin'];
@@ -62,12 +63,16 @@ export function CalendarView({
   return (
     <div className="page">
       <div className="cal__head">
-        <div className="cal__title">
+        <div className="cal__title display">
           {monthName(month - 1)} {year}
         </div>
         <div className="row">
-          <button className="btn btn--sm btn--ghost" onClick={() => shiftMonth(-1)} aria-label="Vorige maand">
-            ‹
+          <button
+            className="btn btn--sm btn--ghost"
+            onClick={() => shiftMonth(-1)}
+            aria-label="Vorige maand"
+          >
+            <Icon name="chevron-links" size={18} />
           </button>
           <button
             className="btn btn--sm"
@@ -78,8 +83,12 @@ export function CalendarView({
           >
             Vandaag
           </button>
-          <button className="btn btn--sm btn--ghost" onClick={() => shiftMonth(1)} aria-label="Volgende maand">
-            ›
+          <button
+            className="btn btn--sm btn--ghost"
+            onClick={() => shiftMonth(1)}
+            aria-label="Volgende maand"
+          >
+            <Icon name="chevron-rechts" size={18} />
           </button>
         </div>
       </div>
@@ -122,7 +131,7 @@ export function CalendarView({
           return (
             <button key={date} className={classes} onClick={() => onSelect(date)}>
               <span className="day__num">{Number(date.slice(8))}</span>
-              {hasBring && <span className="day__bring">🎒</span>}
+              {hasBring && <Icon name="rugzak" size={12} className="day__bring" />}
               {items.length > 0 && (
                 <span className="day__dots">
                   {items.slice(0, 5).map((e) => (
@@ -145,7 +154,9 @@ export function CalendarView({
       </div>
 
       <div className="row row--between" style={{ marginTop: 20, marginBottom: 10 }}>
-        <h2 className="cap">{formatLong(selected)}</h2>
+        <h2 className="cap display" style={{ fontSize: '1.45rem' }}>
+          {formatLong(selected)}
+        </h2>
         <button className="btn btn--sm" onClick={() => setCreating(true)}>
           + Item
         </button>
@@ -169,8 +180,8 @@ export function CalendarView({
         )}
 
         {birthdays.map((c) => (
-          <div key={c.id} className="card card--pad small">
-            🎂 <strong>{c.name}</strong> is jarig
+          <div key={c.id} className="card card--pad small iconrow">
+            <Icon name="taart" size={16} /> <strong>{c.name}</strong> is jarig
             {c.giftIdeas && <span className="muted"> · cadeau-idee: {c.giftIdeas}</span>}
           </div>
         ))}

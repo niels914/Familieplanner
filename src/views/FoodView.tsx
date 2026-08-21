@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { addDays, formatShort, startOfWeek, todayInNl, weekdayShort } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
+import { Icon } from '../components/Icon';
 
 export function FoodView() {
   const [tab, setTab] = useState<'boodschappen' | 'menu'>('boodschappen');
@@ -81,7 +82,7 @@ function Shopping() {
                 aria-label={`${item.text} verwijderen`}
                 onClick={() => void deleteShopping(item.id)}
               >
-                ✕
+                <Icon name="kruis" size={16} />
               </button>
             </div>
           ))
@@ -141,14 +142,20 @@ function WeekMenu() {
   return (
     <div className="stack">
       <div className="row row--between">
-        <button className="btn btn--sm btn--ghost" onClick={() => setWeekStart(addDays(weekStart, -7))}>
-          ‹ Vorige
+        <button
+          className="btn btn--sm btn--ghost iconrow"
+          onClick={() => setWeekStart(addDays(weekStart, -7))}
+        >
+          <Icon name="chevron-links" size={16} /> Vorige
         </button>
         <span className="small muted">
           {formatShort(weekStart)} — {formatShort(addDays(weekStart, 6))}
         </span>
-        <button className="btn btn--sm btn--ghost" onClick={() => setWeekStart(addDays(weekStart, 7))}>
-          Volgende ›
+        <button
+          className="btn btn--sm btn--ghost iconrow"
+          onClick={() => setWeekStart(addDays(weekStart, 7))}
+        >
+          Volgende <Icon name="chevron-rechts" size={16} />
         </button>
       </div>
 

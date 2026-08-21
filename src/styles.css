@@ -8,7 +8,7 @@
   --line: #e4dfd5;
   --line-strong: #cfc8ba;
 
-  --primary: #1f6f5c;
+  --primary: #1a5f4e;
   --primary-ink: #ffffff;
   --primary-soft: #e2efea;
 
@@ -23,16 +23,25 @@
   --ouder: #7a6a3f;
   --ouder-soft: #f2ecdb;
 
-  --warn: #b45f1c;
-  --warn-soft: #fbeddf;
+  /* Accent: alleen voor meenemen en urgentie. Donkerder dan het oude
+     #b45f1c, dat op zacht oranje maar 3,98:1 haalde. */
+  --warn: #9a4a12;
+  --warn-soft: #f6e9de;
   --danger: #a93a34;
   --danger-soft: #f8e5e3;
 
-  --radius: 14px;
-  --radius-sm: 9px;
-  --shadow: 0 1px 2px rgba(30, 25, 15, 0.06), 0 6px 18px rgba(30, 25, 15, 0.06);
+  --radius: 12px;
+  --radius-sm: 8px;
+  /* Eén schaduw, alleen voor wat echt zweeft: knop, venster, melding. */
   --shadow-lg: 0 10px 40px rgba(30, 25, 15, 0.18);
   --nav-height: 62px;
+
+  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+  --font-ui: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  --dur: 170ms;
+  --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -60,12 +69,11 @@
     --ouder: #cbb87f;
     --ouder-soft: #322d1e;
 
-    --warn: #e09a5c;
+    --warn: #eaa971;
     --warn-soft: #35271c;
     --danger: #e58278;
     --danger-soft: #37211f;
 
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 18px rgba(0, 0, 0, 0.3);
     --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.55);
   }
 }
@@ -79,7 +87,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-ui);
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -87,9 +95,21 @@ body {
 }
 
 h1, h2, h3, h4 { margin: 0; font-weight: 650; line-height: 1.25; letter-spacing: -0.01em; }
-h1 { font-size: 1.5rem; }
+
+/* Fraunces alleen waar hij groot genoeg is om gezien te worden. */
+h1, .display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.9rem;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
 h2 { font-size: 1.15rem; }
 h3 { font-size: 1rem; }
+
+@media (min-width: 860px) {
+  h1, .display { font-size: 2.15rem; }
+}
 p { margin: 0 0 0.6em; }
 a { color: var(--primary); }
 
@@ -181,7 +201,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 .tabbar__item[aria-current='true'] { color: var(--primary); }
-.tabbar__icon { font-size: 1.2rem; line-height: 1; }
+.tabbar__icon {
+  display: grid;
+  place-items: center;
+  height: 24px;
+  transition: transform var(--dur) var(--ease);
+}
+.tabbar__item[aria-current='true'] .tabbar__icon { transform: translateY(-1px); }
 
 .navlink {
   display: flex;
@@ -213,7 +239,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
 }
 
 .card--pad { padding: 14px 16px; }
@@ -225,7 +250,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .row--wrap { flex-wrap: wrap; }
 .grow { flex: 1; min-width: 0; }
 .muted { color: var(--muted); }
-.small { font-size: 0.85rem; }
+.small { font-size: 0.88rem; }
 .tiny { font-size: 0.76rem; }
 .center { text-align: center; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -250,6 +275,23 @@ button, input, select, textarea { font: inherit; color: inherit; }
   font-size: 0.9rem;
 }
 
+/* Zichtbare focus op alles wat je met een toetsenbord kunt bereiken. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* -------------------------------------------------------------- knoppen */
 .btn {
   display: inline-flex;
@@ -265,8 +307,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: filter 0.12s ease, background 0.12s ease;
-  min-height: 40px;
+  transition: filter var(--dur) var(--ease), background var(--dur) var(--ease);
+  min-height: 44px;
 }
 .btn:hover { background: var(--surface-2); }
 .btn:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -277,7 +319,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .btn--ghost:hover { background: var(--surface-2); }
 .btn--danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
 .btn--danger:hover { background: var(--danger-soft); }
-.btn--sm { min-height: 32px; padding: 5px 11px; font-size: 0.82rem; }
+.btn--sm { min-height: 36px; padding: 6px 12px; font-size: 0.82rem; }
+.btn .icon-gap { margin-right: -2px; }
 .btn--block { width: 100%; }
 
 .fab {
@@ -486,11 +529,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
   padding-top: 1px;
 }
 .event__title { font-weight: 600; }
-.event__meta { font-size: 0.8rem; color: var(--muted); }
+.event__meta { font-size: 0.85rem; color: var(--muted); }
 
 .bring {
-  margin-top: 7px;
-  padding: 7px 9px;
+  margin-top: 8px;
+  padding: 9px 11px;
   border-radius: var(--radius-sm);
   background: var(--warn-soft);
   color: var(--warn);
@@ -500,7 +543,20 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .bring--done { background: var(--surface-2); color: var(--muted); }
 
 .bringrow { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
-.bringrow input[type='checkbox'] { width: 18px; height: 18px; accent-color: var(--primary); }
+.bringrow input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--primary);
+  transition: transform var(--dur) var(--ease);
+}
+.bringrow input[type='checkbox']:active { transform: scale(0.86); }
+.bringrow input[type='checkbox']:checked { animation: tik var(--dur) var(--ease); }
+
+@keyframes tik {
+  0% { transform: scale(0.8); }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
 .bringrow--done span { text-decoration: line-through; color: var(--muted); }
 
 /* --------------------------------------------------------------- modal */
@@ -588,6 +644,26 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* --------------------------------------------------------------- lijst */
 .list { display: flex; flex-direction: column; gap: 8px; }
 
+/* Icoon plus tekst als één regel, met de tekst optisch uitgelijnd. */
+.iconrow { display: inline-flex; align-items: center; gap: 7px; }
+
+/* Kop van een kaart die zelf een knop is: hele breedte, één regel. */
+.cardhead {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 0 6px;
+  margin-bottom: 2px;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.iconrow svg { flex-shrink: 0; }
+
 .tile {
   display: flex;
   align-items: center;
@@ -622,8 +698,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .phone {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 14px;
   border-radius: 999px;
   background: var(--primary-soft);
   color: var(--primary);
@@ -667,7 +744,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .shopitem--done { opacity: 0.55; }
 .shopitem--done .shopitem__text { text-decoration: line-through; }
-.shopitem input[type='checkbox'] { width: 21px; height: 21px; accent-color: var(--primary); flex-shrink: 0; }
+.shopitem input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--primary);
+  flex-shrink: 0;
+  transition: transform var(--dur) var(--ease);
+}
+.shopitem input[type='checkbox']:active { transform: scale(0.86); }
+.shopitem input[type='checkbox']:checked { animation: tik var(--dur) var(--ease); }
 
 .spinner {
   width: 22px;

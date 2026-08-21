@@ -6,6 +6,7 @@ import { useData, useStore } from '../lib/store';
 import { birthdaysOnDate, eventsOnDate, pickupForDate } from '../lib/events';
 import { EventRow } from '../components/EventRow';
 import { EventForm } from '../components/EventForm';
+import { Icon } from '../components/Icon';
 
 export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }) {
   const { events, contacts, pickupRules, pickupOverrides, meals, shopping } = useData();
@@ -49,12 +50,11 @@ export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }
 
       {klaarzetten.length > 0 && (
         <div className="card card--pad" style={{ marginBottom: 14 }}>
-          <div className="row row--between" style={{ marginBottom: 6 }}>
-            <strong>🎒 Klaarzetten voor morgen</strong>
-            <button className="btn btn--sm btn--ghost" onClick={() => onOpenDate(tomorrow)}>
-              Morgen →
-            </button>
-          </div>
+          <button className="cardhead" onClick={() => onOpenDate(tomorrow)}>
+            <Icon name="rugzak" size={19} />
+            <strong className="grow">Klaarzetten voor morgen</strong>
+            <Icon name="chevron-rechts" size={17} className="muted" />
+          </button>
           {klaarzetten.map(({ event, item }) => (
             <label key={item.id} className="bringrow">
               <input type="checkbox" checked={false} onChange={() => toggleBring(event, item.id)} />
@@ -85,7 +85,9 @@ export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }
           ))}
           {dinner?.dish && (
             <div className="row row--between small">
-              <span className="chip">Eten vandaag</span>
+              <span className="chip iconrow">
+                <Icon name="eten" size={14} /> Eten vandaag
+              </span>
               <span className="muted">{dinner.dish}</span>
             </div>
           )}
@@ -93,8 +95,8 @@ export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }
       )}
 
       {birthdays.map((c) => (
-        <div key={c.id} className="banner banner--info" style={{ marginBottom: 10 }}>
-          🎂 {c.name} is vandaag jarig
+        <div key={c.id} className="banner banner--info iconrow" style={{ marginBottom: 10 }}>
+          <Icon name="taart" size={18} /> {c.name} is vandaag jarig
           {c.parents[0]?.name && ` — ouders: ${c.parents.map((p) => p.name).join(', ')}`}
         </div>
       ))}

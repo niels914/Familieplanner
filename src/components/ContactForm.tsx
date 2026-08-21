@@ -3,6 +3,7 @@ import type { ChildId, Contact, Parent, ParentRole } from '../../shared/types';
 import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { Modal } from './Modal';
 import { useStore } from '../lib/store';
+import { Icon } from './Icon';
 
 const ROLES: ParentRole[] = ['moeder', 'vader', 'verzorger'];
 
@@ -245,7 +246,7 @@ export function ContactForm({
                         set('parents', (draft.parents ?? []).filter((x) => x.id !== p.id))
                       }
                     >
-                      ✕
+                      <Icon name="kruis" size={16} />
                     </button>
                   </div>
                   <input

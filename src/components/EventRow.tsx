@@ -1,15 +1,16 @@
-import type { CalendarEvent } from '../../shared/types';
+import type { CalendarEvent, Category } from '../../shared/types';
 import { PERSON_LABEL, CATEGORY_LABEL } from '../../shared/types';
+import { Icon, type IconName } from './Icon';
 
-const CATEGORY_ICON: Record<string, string> = {
-  school: '🎒',
-  psz: '🧸',
-  opvang: '🍼',
-  oppas: '🧑‍🍼',
-  afspraak: '📌',
-  verjaardag: '🎂',
-  vrij: '🌴',
-  anders: '•',
+const CATEGORY_ICON: Record<Category, IconName> = {
+  school: 'rugzak',
+  psz: 'blokken',
+  opvang: 'fles',
+  oppas: 'oppas',
+  afspraak: 'speld',
+  verjaardag: 'taart',
+  vrij: 'koffer',
+  anders: 'kalender',
 };
 
 export function EventRow({
@@ -26,7 +27,7 @@ export function EventRow({
   return (
     <div className={`event event--${event.person}`}>
       <div className="event__time">
-        {event.allDay ? CATEGORY_ICON[event.category] ?? '•' : event.time}
+        {event.allDay ? <Icon name={CATEGORY_ICON[event.category]} size={20} /> : event.time}
       </div>
       <div className="grow">
         <button
@@ -45,8 +46,9 @@ export function EventRow({
 
         {event.bring.length > 0 && (
           <div className={`bring ${open.length === 0 ? 'bring--done' : ''}`}>
-            <div style={{ marginBottom: 2 }}>
-              {open.length === 0 ? '✓ Alles klaargezet' : '🎒 Meenemen'}
+            <div className="iconrow" style={{ marginBottom: 3 }}>
+              <Icon name={open.length === 0 ? 'vinkje' : 'rugzak'} size={16} />
+              {open.length === 0 ? 'Alles klaargezet' : 'Meenemen'}
             </div>
             {event.bring.map((item) => (
               <label

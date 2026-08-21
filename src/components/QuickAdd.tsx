@@ -6,6 +6,7 @@ import { quickParse } from '../lib/quickparse';
 import { useStore } from '../lib/store';
 import { Modal } from './Modal';
 import { EventForm } from './EventForm';
+import { Icon } from './Icon';
 
 const EXAMPLES = [
   'Matthijs volgende week donderdag lege schoenendoos mee',
@@ -106,7 +107,9 @@ export function QuickAdd({ date, onClose }: { date: string; onClose: () => void 
               </div>
             </div>
             {parsed.bring.length > 0 && (
-              <div className="bring">🎒 Meenemen: {parsed.bring.join(', ')}</div>
+              <div className="bring iconrow">
+                <Icon name="rugzak" size={16} /> Meenemen: {parsed.bring.join(', ')}
+              </div>
             )}
           </div>
         ) : (

@@ -4,6 +4,7 @@ import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { useData } from '../lib/store';
 import { euro, initials } from '../lib/events';
 import { ContactForm } from '../components/ContactForm';
+import { Icon } from '../components/Icon';
 
 type Filter = 'alle' | ChildId | 'oppas' | 'overig';
 
@@ -155,7 +156,8 @@ function ContactTile({ contact, onEdit }: { contact: Contact; onEdit: () => void
             <div className="row row--wrap" style={{ marginTop: 8 }}>
               {phones.map((p) => (
                 <a key={p.phone} className="phone" href={`tel:${p.phone.replace(/\s/g, '')}`}>
-                  📞 {p.name}: {p.phone}
+                  <Icon name="telefoon" size={16} />
+                  {p.name}: {p.phone}
                 </a>
               ))}
             </div>

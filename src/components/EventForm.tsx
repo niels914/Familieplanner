@@ -3,6 +3,7 @@ import type { BringItem, CalendarEvent, Category, Contact, PersonId } from '../.
 import { CATEGORY_LABEL, PERSON_LABEL } from '../../shared/types';
 import { Modal } from './Modal';
 import { useData, useStore } from '../lib/store';
+import { Icon } from './Icon';
 
 const PERSONS: PersonId[] = ['matthijs', 'amelie', 'lotte', 'gezin', 'niels', 'irene'];
 const CATEGORIES: Category[] = [
@@ -353,7 +354,7 @@ export function EventForm({
                     )
                   }
                 >
-                  ✕
+                  <Icon name="kruis" size={16} />
                 </button>
               </div>
             ))}

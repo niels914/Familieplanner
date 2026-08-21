@@ -10,22 +10,23 @@ import { FoodView } from './views/FoodView';
 import { PickupView } from './views/PickupView';
 import { SettingsView } from './views/SettingsView';
 import { QuickAdd } from './components/QuickAdd';
+import { Icon, type IconName } from './components/Icon';
 
 type View = 'vandaag' | 'agenda' | 'oppas' | 'contacten' | 'meer' | 'eten' | 'brengen' | 'instellingen';
 
-const TABS: Array<{ id: View; label: string; icon: string }> = [
-  { id: 'vandaag', label: 'Vandaag', icon: '☀️' },
-  { id: 'agenda', label: 'Agenda', icon: '📅' },
-  { id: 'oppas', label: 'Oppas', icon: '🧑‍🍼' },
-  { id: 'contacten', label: 'Contacten', icon: '👪' },
-  { id: 'meer', label: 'Meer', icon: '⋯' },
+const TABS: Array<{ id: View; label: string; icon: IconName }> = [
+  { id: 'vandaag', label: 'Vandaag', icon: 'vandaag' },
+  { id: 'agenda', label: 'Agenda', icon: 'kalender' },
+  { id: 'oppas', label: 'Oppas', icon: 'oppas' },
+  { id: 'contacten', label: 'Contacten', icon: 'contacten' },
+  { id: 'meer', label: 'Meer', icon: 'meer' },
 ];
 
-const ALL_LINKS: Array<{ id: View; label: string; icon: string }> = [
+const ALL_LINKS: Array<{ id: View; label: string; icon: IconName }> = [
   ...TABS.slice(0, 4),
-  { id: 'eten', label: 'Eten', icon: '🍽' },
-  { id: 'brengen', label: 'Breng & haal', icon: '🚗' },
-  { id: 'instellingen', label: 'Instellingen', icon: '⚙️' },
+  { id: 'eten', label: 'Eten', icon: 'eten' },
+  { id: 'brengen', label: 'Breng & haal', icon: 'auto' },
+  { id: 'instellingen', label: 'Instellingen', icon: 'instellingen' },
 ];
 
 export default function App() {
@@ -89,7 +90,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
     <div className="app">
       <nav className="sidebar">
         <div className="sidebar__brand">
-          <span>🏡</span> Familieplanner
+          <Icon name="huis" size={20} /> Familieplanner
         </div>
         {ALL_LINKS.map((link) => (
           <button
@@ -98,7 +99,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
             aria-current={view === link.id}
             onClick={() => setView(link.id)}
           >
-            <span>{link.icon}</span>
+            <Icon name={link.icon} size={19} />
             {link.label}
           </button>
         ))}
@@ -124,7 +125,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       </main>
 
       <button className="fab" onClick={() => setQuickAdd(true)} aria-label="Snel toevoegen">
-        +
+        <Icon name="plus" size={26} />
       </button>
 
       <nav className="tabbar">
@@ -138,7 +139,9 @@ function Shell({ onLogout }: { onLogout: () => void }) {
             }
             onClick={() => setView(tab.id)}
           >
-            <span className="tabbar__icon">{tab.icon}</span>
+            <span className="tabbar__icon">
+              <Icon name={tab.icon} size={22} />
+            </span>
             {tab.label}
           </button>
         ))}
@@ -162,11 +165,13 @@ function MoreView({ onNavigate }: { onNavigate: (view: View) => void }) {
       <div className="list">
         {items.map((item) => (
           <button key={item.id} className="tile" onClick={() => onNavigate(item.id)}>
-            <div className="avatar">{item.icon}</div>
+            <div className="avatar">
+              <Icon name={item.icon} size={20} />
+            </div>
             <span className="grow">
               <strong>{item.label}</strong>
             </span>
-            <span className="muted">›</span>
+            <Icon name="chevron-rechts" size={18} className="muted" />
           </button>
         ))}
       </div>
@@ -196,7 +201,9 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
   return (
     <div className="login">
       <form className="card login__card" onSubmit={submit}>
-        <div className="login__logo">🏡</div>
+        <div className="login__logo">
+          <Icon name="huis" size={44} />
+        </div>
         <h1 className="center" style={{ marginBottom: 4 }}>
           Familieplanner
         </h1>

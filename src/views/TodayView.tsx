@@ -4,8 +4,8 @@ import { PERSON_LABEL } from '../../shared/types';
 import { addDays, formatLong, todayInNl } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
 import { birthdaysOnDate, eventsOnDate, pickupForDate } from '../lib/events';
-import { EventRow } from '../components/EventRow';
 import { EventForm } from '../components/EventForm';
+import { Timeline } from '../components/Timeline';
 import { Icon } from '../components/Icon';
 
 export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }) {
@@ -26,6 +26,7 @@ export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }
   const klaarzetten = tomorrowEvents.flatMap((e) =>
     e.bring.filter((b) => !b.done).map((b) => ({ event: e, item: b })),
   );
+  const heeftMeeneemItems = tomorrowEvents.some((e) => e.bring.length > 0);
 
   const toggleBring = (event: CalendarEvent, itemId: string) => {
     void saveEvent({
@@ -34,106 +35,122 @@ export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }
     });
   };
 
+  // Eén regel die de dag samenvat, in plaats van drie losse tellers.
+  const samenvatting = [
+    todayEvents.length === 0
+      ? 'niets in de agenda'
+      : `${todayEvents.length} ding${todayEvents.length === 1 ? '' : 'en'} vandaag`,
+    klaarzetten.length > 0 ? `${klaarzetten.length} klaarzetten` : null,
+    openShopping > 0 ? `${openShopping} boodschappen` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
     <div className="page">
-      <div className="page__head">
-        <div>
-          <h1 className="cap">{formatLong(today)}</h1>
-          <div className="page__sub">
-            {todayEvents.length === 0
-              ? 'Niets in de agenda vandaag.'
-              : `${todayEvents.length} ding${todayEvents.length === 1 ? '' : 'en'} vandaag`}
-            {openShopping > 0 && ` · ${openShopping} op de boodschappenlijst`}
-          </div>
-        </div>
-      </div>
+      <header className="dayhead">
+        <h1 className="cap">{formatLong(today)}</h1>
+        <p className="page__sub">{samenvatting}</p>
+      </header>
 
-      {klaarzetten.length > 0 && (
-        <div className="card card--pad" style={{ marginBottom: 14 }}>
-          <button className="cardhead" onClick={() => onOpenDate(tomorrow)}>
+      {klaarzetten.length > 0 ? (
+        <section className="prep">
+          <button className="prep__head" onClick={() => onOpenDate(tomorrow)}>
             <Icon name="rugzak" size={19} />
             <strong className="grow">Klaarzetten voor morgen</strong>
-            <Icon name="chevron-rechts" size={17} className="muted" />
+            <Icon name="chevron-rechts" size={17} />
           </button>
-          {klaarzetten.map(({ event, item }) => (
-            <label key={item.id} className="bringrow">
-              <input type="checkbox" checked={false} onChange={() => toggleBring(event, item.id)} />
-              <span className="grow">
-                {item.text}
-                <span className="muted small">
-                  {' '}
-                  — {event.person !== 'gezin' ? `${PERSON_LABEL[event.person]}, ` : ''}
-                  {event.title}
-                </span>
-              </span>
-            </label>
-          ))}
-        </div>
+          <ul className="prep__list">
+            {klaarzetten.map(({ event, item }) => (
+              <li key={item.id}>
+                <label className="prep__row">
+                  <input
+                    type="checkbox"
+                    checked={false}
+                    onChange={() => toggleBring(event, item.id)}
+                  />
+                  <span className="grow">
+                    <span className="prep__text">{item.text}</span>
+                    <span className="prep__for">
+                      {event.person !== 'gezin' ? `${PERSON_LABEL[event.person]} · ` : ''}
+                      {event.title}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : (
+        heeftMeeneemItems && (
+          <p className="allklaar iconrow">
+            <Icon name="vinkje" size={18} /> Alles staat klaar voor morgen.
+          </p>
+        )
       )}
 
-      {(pickups.length > 0 || dinner) && (
-        <div className="card card--pad stack stack--sm" style={{ marginBottom: 14 }}>
+      {(pickups.length > 0 || dinner?.dish) && (
+        <div className="facts">
           {pickups.map((p) => (
-            <div key={p.child} className="row row--between small">
+            <div key={p.child} className="fact">
               <span className={`chip chip--${p.child}`}>{PERSON_LABEL[p.child]}</span>
-              <span className="muted">
-                brengen: <strong>{p.dropoff || '—'}</strong> · halen:{' '}
-                <strong>{p.pickup || '—'}</strong>
-                {p.isOverride && ' (afwijking)'}
+              <span className="fact__value">
+                <em>brengen</em> {p.dropoff || '—'} <em>halen</em> {p.pickup || '—'}
+                {p.isOverride && <span className="chip chip--warn">afwijking</span>}
               </span>
             </div>
           ))}
           {dinner?.dish && (
-            <div className="row row--between small">
-              <span className="chip iconrow">
-                <Icon name="eten" size={14} /> Eten vandaag
+            <div className="fact">
+              <span className="fact__icon">
+                <Icon name="eten" size={16} />
               </span>
-              <span className="muted">{dinner.dish}</span>
+              <span className="fact__value">
+                <em>eten</em> {dinner.dish}
+              </span>
             </div>
           )}
         </div>
       )}
 
       {birthdays.map((c) => (
-        <div key={c.id} className="banner banner--info iconrow" style={{ marginBottom: 10 }}>
+        <p key={c.id} className="banner banner--info iconrow">
           <Icon name="taart" size={18} /> {c.name} is vandaag jarig
-          {c.parents[0]?.name && ` — ouders: ${c.parents.map((p) => p.name).join(', ')}`}
-        </div>
+          {c.parents.length > 0 && ` — ouders: ${c.parents.map((p) => p.name).join(', ')}`}
+        </p>
       ))}
 
-      <div className="section-title">Vandaag</div>
-      <div className="stack stack--sm">
-        {todayEvents.length === 0 ? (
-          <div className="empty">Een lege dag. Ook fijn.</div>
-        ) : (
-          todayEvents.map((e) => (
-            <EventRow
-              key={e.id}
-              event={e}
-              onClick={() => setEditing(e)}
-              onToggleBring={(id) => toggleBring(e, id)}
-            />
-          ))
-        )}
-      </div>
+      {todayEvents.length === 0 ? (
+        <div className="empty">Een lege dag. Ook fijn.</div>
+      ) : (
+        <Timeline
+          events={todayEvents}
+          onOpen={setEditing}
+          onToggleBring={toggleBring}
+        />
+      )}
 
-      <div className="section-title">Morgen</div>
-      <div className="stack stack--sm">
-        {tomorrowEvents.length === 0 ? (
-          <div className="empty">Morgen staat er nog niets.</div>
-        ) : (
-          tomorrowEvents.map((e) => (
-            <EventRow
-              key={e.id}
-              event={e}
-              onClick={() => setEditing(e)}
-              onToggleBring={(id) => toggleBring(e, id)}
-            />
-          ))
+      <details className="foldout">
+        <summary>
+          <span className="foldout__label">Morgen</span>
+          <span className="foldout__preview grow">
+            {tomorrowEvents.length === 0
+              ? 'nog niets gepland'
+              : tomorrowEvents
+                  .slice(0, 2)
+                  .map((e) => e.title)
+                  .join(', ') + (tomorrowEvents.length > 2 ? `, +${tomorrowEvents.length - 2}` : '')}
+          </span>
+          <Icon name="chevron-rechts" size={17} className="foldout__chevron" />
+        </summary>
+        {tomorrowEvents.length > 0 && (
+          <Timeline events={tomorrowEvents} onOpen={setEditing} onToggleBring={toggleBring} />
         )}
-      </div>
+      </details>
 
-      {editing && <EventForm initial={editing} date={editing.date} onClose={() => setEditing(null)} />}
+      {editing && (
+        <EventForm initial={editing} date={editing.date} onClose={() => setEditing(null)} />
+      )}
     </div>
   );
 }

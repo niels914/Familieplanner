@@ -542,6 +542,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .bring--done { background: var(--surface-2); color: var(--muted); }
 
+/* Afgeronde meeneem-lijstjes hoeven geen blok meer te zijn. */
+.bring--klaar {
+  margin: 6px 0 0;
+  color: var(--primary);
+  font-size: 0.82rem;
+  font-weight: 550;
+}
+
 .bringrow { display: flex; align-items: center; gap: 8px; padding: 3px 0; }
 .bringrow input[type='checkbox'] {
   width: 22px;
@@ -558,6 +566,194 @@ button, input, select, textarea { font: inherit; color: inherit; }
   100% { transform: scale(1); }
 }
 .bringrow--done span { text-decoration: line-through; color: var(--muted); }
+
+/* --------------------------------------------------------- vandaag-scherm */
+.dayhead { margin-bottom: 16px; }
+.dayhead h1 { margin-bottom: 2px; }
+
+/* Klaarzetten voor morgen: het blok waarvoor de app bestaat. */
+.prep {
+  border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+  background: var(--warn-soft);
+  border-radius: var(--radius);
+  padding: 2px 14px 8px;
+  margin-bottom: 16px;
+}
+
+.prep__head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--warn);
+  font-size: 0.95rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.prep__list { list-style: none; margin: 0; padding: 0; }
+
+.prep__row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 52px;
+  padding: 5px 0;
+  border-top: 1px solid color-mix(in srgb, var(--warn) 18%, transparent);
+  cursor: pointer;
+}
+
+.prep__row input[type='checkbox'] {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  accent-color: var(--warn);
+  transition: transform var(--dur) var(--ease);
+}
+.prep__row input[type='checkbox']:active { transform: scale(0.86); }
+
+.prep__text { display: block; color: var(--text); font-weight: 600; }
+.prep__for { display: block; font-size: 0.8rem; color: var(--warn); }
+
+.allklaar {
+  margin: 0 0 16px;
+  padding: 2px;
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 550;
+}
+
+/* Korte feiten over de dag: brengen, halen, eten. Geen kaart — een strook. */
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 20px;
+  padding: 2px 0 14px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.fact { display: flex; align-items: center; gap: 9px; font-size: 0.88rem; }
+.fact__icon { color: var(--muted); display: grid; place-items: center; }
+.fact__value em {
+  font-style: normal;
+  font-size: 0.71rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  margin: 0 4px 0 10px;
+}
+.fact__value em:first-child { margin-left: 0; }
+
+/* ------------------------------------------------------------- tijdlijn */
+.timeline { list-style: none; margin: 6px 0 0; padding: 0; }
+
+.tl { display: grid; grid-template-columns: 46px 18px 1fr; }
+
+.tl__time {
+  text-align: right;
+  padding-top: 3px;
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 1px;
+}
+.tl__hour { font-weight: 700; }
+.tl__hour::after { content: ':'; }
+.tl__min { font-weight: 600; opacity: 0.75; }
+
+.tl__rail { position: relative; }
+.tl__rail::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+  transform: translateX(-50%);
+}
+.tl__rail::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 7px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--muted);
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 3px var(--bg);
+}
+.tl:first-child .tl__rail::before { top: 11px; }
+.tl:last-child .tl__rail::before { bottom: calc(100% - 12px); }
+
+.tl--matthijs .tl__rail::after { background: var(--matthijs); }
+.tl--amelie .tl__rail::after { background: var(--amelie); }
+.tl--lotte .tl__rail::after { background: var(--lotte); }
+.tl--gezin .tl__rail::after { background: var(--gezin); }
+.tl--niels .tl__rail::after,
+.tl--irene .tl__rail::after { background: var(--ouder); }
+
+.tl__body { padding: 0 0 20px 4px; min-width: 0; }
+.tl:last-child .tl__body { padding-bottom: 4px; }
+
+/* De klikbare inhoud van een item, gedeeld door tijdlijn en kaart. */
+.event__open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.event__open > span { display: block; }
+
+/* --------------------------------------------------------- morgen-uitklap */
+.foldout { margin-top: 20px; border-top: 1px solid var(--line); }
+.foldout > summary {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 54px;
+  cursor: pointer;
+  list-style: none;
+}
+.foldout > summary::-webkit-details-marker { display: none; }
+
+.foldout__label {
+  flex-shrink: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.foldout__preview {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+.foldout__chevron {
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: transform var(--dur) var(--ease);
+}
+.foldout[open] .foldout__chevron { transform: rotate(90deg); }
 
 /* --------------------------------------------------------------- modal */
 .overlay {

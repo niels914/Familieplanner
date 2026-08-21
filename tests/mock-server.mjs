@@ -19,6 +19,9 @@ const db = {
     { id: uid(), source: 'local', title: 'Oppas', date: plus(2), allDay: true, person: 'gezin', category: 'oppas', bring: [], reminder: true, sitter: { name: 'Sanne', start: '18:30', end: '23:00', rate: 6.5, paid: false }, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Oppas (etentje)', date: plus(-9), allDay: true, person: 'gezin', category: 'oppas', bring: [], reminder: true, sitter: { name: 'Sanne', start: '19:00', end: '23:30', rate: 6.5, paid: true }, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Zwemles', date: today, time: '16:15', allDay: false, person: 'matthijs', category: 'afspraak', bring: [], reminder: true, createdAt: '', updatedAt: '' },
+    { id: uid(), source: 'parro', parroUid: 'p9', title: 'Luizencontrole', date: today, time: '08:30', allDay: false, person: 'matthijs', category: 'school', bring: [], reminder: true, createdAt: '', updatedAt: '' },
+    { id: uid(), source: 'local', title: 'Fruitdag', date: today, allDay: true, person: 'amelie', category: 'psz', bring: [{ id: uid(), text: 'Appel', done: true }], reminder: true, createdAt: '', updatedAt: '' },
+    { id: uid(), source: 'local', title: 'Consultatiebureau Lotte', date: today, time: '11:15', allDay: false, person: 'lotte', category: 'afspraak', bring: [{ id: uid(), text: 'Groeiboekje', done: false }], reminder: true, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Consultatiebureau', date: plus(3), time: '10:00', allDay: false, person: 'lotte', category: 'afspraak', bring: [{ id: uid(), text: 'Groeiboekje', done: false }], reminder: true, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Wenmiddag opvang', date: plus(1), allDay: true, person: 'lotte', category: 'opvang', bring: [{ id: uid(), text: 'Reservekleertjes', done: false }, { id: uid(), text: 'Speen', done: false }], reminder: true, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'parro', parroUid: 'p2', title: 'Studiedag — alle kinderen vrij', date: plus(12), allDay: true, person: 'matthijs', category: 'school', bring: [], reminder: true, createdAt: '', updatedAt: '' },
@@ -33,6 +36,8 @@ const db = {
     { id: uid(), weekday: 2, child: 'matthijs', dropoff: 'Niels', pickup: 'BSO' },
     { id: uid(), weekday: 1, child: 'amelie', dropoff: 'Irene', pickup: 'Irene' },
     { id: uid(), weekday: 2, child: 'lotte', dropoff: 'Niels', pickup: 'Irene' },
+    { id: uid(), weekday: 5, child: 'matthijs', dropoff: 'Irene', pickup: 'Niels' },
+    { id: uid(), weekday: 5, child: 'amelie', dropoff: 'Niels', pickup: 'Opa & oma' },
   ],
   pickupOverrides: [],
   shopping: [

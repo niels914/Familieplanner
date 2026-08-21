@@ -4,6 +4,7 @@ import { PERSON_LABEL, CATEGORY_LABEL } from '../../shared/types';
 const CATEGORY_ICON: Record<string, string> = {
   school: '🎒',
   psz: '🧸',
+  opvang: '🍼',
   oppas: '🧑‍🍼',
   afspraak: '📌',
   verjaardag: '🎂',

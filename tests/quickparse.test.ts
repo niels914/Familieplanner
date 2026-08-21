@@ -33,6 +33,14 @@ const f = quickParse('Meenemen: fruit, drinken en een beker', vrijdag);
 check('meerdere dingen meenemen', f.bring, ['fruit', 'drinken', 'een beker']);
 check('zonder datum wordt het vandaag', f.date, vrijdag);
 
+const h = quickParse('Lotte dinsdag reservekleertjes mee', vrijdag);
+check('Lotte herkend', h.person, 'lotte');
+check('kinderopvang afgeleid voor Lotte', h.category, 'opvang');
+check('meenemen voor Lotte', h.bring, ['reservekleertjes']);
+
+const i = quickParse('Lotte naar de crèche 3 september', vrijdag);
+check('crèche wordt kinderopvang', i.category, 'opvang');
+
 const g = quickParse('Zwemles vrijdag', vrijdag);
 check('de dag van vandaag noemen betekent vandaag', g.date, vrijdag);
 

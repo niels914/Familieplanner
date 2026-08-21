@@ -16,7 +16,7 @@ import { EventRow } from '../components/EventRow';
 import { EventForm } from '../components/EventForm';
 
 type Filter = 'alles' | PersonId;
-const FILTERS: Filter[] = ['alles', 'matthijs', 'amelie', 'gezin'];
+const FILTERS: Filter[] = ['alles', 'matthijs', 'amelie', 'lotte', 'gezin'];
 
 export function CalendarView({
   selected,
@@ -136,7 +136,9 @@ export function CalendarView({
                   {e.title}
                 </span>
               ))}
-              {items.length > 2 && <span className="tiny muted">+{items.length - 2} meer</span>}
+              {items.length > 2 && (
+                <span className="tiny muted day__more">+{items.length - 2} meer</span>
+              )}
             </button>
           );
         })}

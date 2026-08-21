@@ -49,6 +49,7 @@ const MONTHS: Record<string, number> = {
 const PERSONS: Array<[RegExp, PersonId]> = [
   [/\bmatthijs\b/i, 'matthijs'],
   [/\bam[ée]lie\b|\bamelie\b|\bameli\b/i, 'amelie'],
+  [/\blotte\b/i, 'lotte'],
   [/\birene\b/i, 'irene'],
   [/\bniels\b/i, 'niels'],
 ];
@@ -58,6 +59,7 @@ const CATEGORIES: Array<[RegExp, Category]> = [
   [/\bjarig\b|\bverjaardag\b|\bfeestje\b/i, 'verjaardag'],
   [/\bvakantie\b|\bvrije? dag\b|\bstudiedag\b/i, 'vrij'],
   [/\bpeuterspeelzaal\b|\bpsz\b|\bpeuter\b/i, 'psz'],
+  [/\bopvang\b|\bcr[èe]che\b|\bkinderdagverblijf\b|\bkdv\b/i, 'opvang'],
   [/\bschool\b|\bgym\b|\bjuf\b|\bmeester\b|\bklas\b/i, 'school'],
 ];
 
@@ -207,6 +209,7 @@ export function quickParse(input: string, today: string): QuickResult {
   if (category === 'anders' && bring.length > 0) {
     if (person === 'matthijs') category = 'school';
     else if (person === 'amelie') category = 'psz';
+    else if (person === 'lotte') category = 'opvang';
   }
 
   return {

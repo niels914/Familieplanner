@@ -1,10 +1,16 @@
 /** Gedeelde types tussen de web-app en de Netlify Functions. */
 
-export type PersonId = 'matthijs' | 'amelie' | 'gezin' | 'niels' | 'irene';
+export type PersonId = 'matthijs' | 'amelie' | 'lotte' | 'gezin' | 'niels' | 'irene';
+
+/** De kinderen, in volgorde van leeftijd. Gebruikt voor filters, het breng- en
+ *  haalschema en de contactenlijst. */
+export type ChildId = 'matthijs' | 'amelie' | 'lotte';
+export const CHILDREN: ChildId[] = ['matthijs', 'amelie', 'lotte'];
 
 export type Category =
   | 'school'
   | 'psz'
+  | 'opvang'
   | 'oppas'
   | 'afspraak'
   | 'verjaardag'
@@ -75,7 +81,7 @@ export interface Contact {
   /** Naam van het klasgenootje, de oppas of de contactpersoon. */
   name: string;
   /** Van welk kind is dit een klasgenootje. */
-  childOf?: 'matthijs' | 'amelie';
+  childOf?: ChildId;
   group?: string;
   /** 'YYYY-MM-DD' of '--MM-DD' als het jaar onbekend is. */
   birthday?: string;
@@ -94,7 +100,7 @@ export type Weekday = 1 | 2 | 3 | 4 | 5;
 export interface PickupRule {
   id: string;
   weekday: Weekday;
-  child: 'matthijs' | 'amelie';
+  child: ChildId;
   /** Wie brengt. Leeg = nog niet afgesproken. */
   dropoff?: string;
   /** Wie haalt. */
@@ -105,7 +111,7 @@ export interface PickupRule {
 export interface PickupOverride {
   id: string;
   date: string;
-  child: 'matthijs' | 'amelie';
+  child: ChildId;
   dropoff?: string;
   pickup?: string;
   note?: string;
@@ -145,7 +151,7 @@ export interface Settings {
   parroEventCount?: number;
   lastReminderDate?: string;
   /** Aan welk kind Parro-items gekoppeld worden. */
-  parroPerson?: 'matthijs' | 'amelie';
+  parroPerson?: ChildId;
   /** Vaste info die je met de oppas deelt. */
   sitterBriefing?: string;
 }
@@ -163,6 +169,7 @@ export interface AppData {
 export const PERSON_LABEL: Record<PersonId, string> = {
   matthijs: 'Matthijs',
   amelie: 'Amélie',
+  lotte: 'Lotte',
   gezin: 'Gezin',
   niels: 'Niels',
   irene: 'Irene',
@@ -171,6 +178,7 @@ export const PERSON_LABEL: Record<PersonId, string> = {
 export const CATEGORY_LABEL: Record<Category, string> = {
   school: 'School',
   psz: 'Peuterspeelzaal',
+  opvang: 'Kinderopvang',
   oppas: 'Oppas',
   afspraak: 'Afspraak',
   verjaardag: 'Verjaardag',

@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
-import type { PickupRule, Weekday } from '../../shared/types';
-import { PERSON_LABEL } from '../../shared/types';
+import type { ChildId, PickupRule, Weekday } from '../../shared/types';
+import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { addDays, formatLong, isoWeekday, todayInNl } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
 import { pickupForDate } from '../lib/events';
 
-const CHILDREN: Array<'matthijs' | 'amelie'> = ['matthijs', 'amelie'];
 const WEEKDAYS: Weekday[] = [1, 2, 3, 4, 5];
 const WEEKDAY_LABEL: Record<Weekday, string> = { 1: 'ma', 2: 'di', 3: 'wo', 4: 'do', 5: 'vr' };
 const SUGGESTIONS = ['Niels', 'Irene', 'Opa & oma', 'Oppas', 'BSO', 'Overblijf'];
@@ -17,14 +16,10 @@ export function PickupView() {
 
   const today = todayInNl();
 
-  const ruleFor = (child: 'matthijs' | 'amelie', weekday: Weekday): PickupRule | undefined =>
+  const ruleFor = (child: ChildId, weekday: Weekday): PickupRule | undefined =>
     pickupRules.find((r) => r.child === child && r.weekday === weekday);
 
-  const setRule = (
-    child: 'matthijs' | 'amelie',
-    weekday: Weekday,
-    patch: Partial<PickupRule>,
-  ) => {
+  const setRule = (child: ChildId, weekday: Weekday, patch: Partial<PickupRule>) => {
     const existing = ruleFor(child, weekday);
     const next = pickupRules.filter((r) => !(r.child === child && r.weekday === weekday));
     const merged: PickupRule = {

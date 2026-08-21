@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { Contact, Parent, ParentRole } from '../../shared/types';
+import type { ChildId, Contact, Parent, ParentRole } from '../../shared/types';
+import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { Modal } from './Modal';
 import { useStore } from '../lib/store';
 
@@ -119,10 +120,13 @@ export function ContactForm({
                 id="ct-child"
                 className="select"
                 value={draft.childOf ?? 'matthijs'}
-                onChange={(e) => set('childOf', e.target.value as 'matthijs' | 'amelie')}
+                onChange={(e) => set('childOf', e.target.value as ChildId)}
               >
-                <option value="matthijs">Matthijs</option>
-                <option value="amelie">Amélie</option>
+                {CHILDREN.map((c) => (
+                  <option key={c} value={c}>
+                    {PERSON_LABEL[c]}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="field">

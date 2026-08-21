@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import type { ChildId } from '../../shared/types';
+import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { useData, useStore } from '../lib/store';
 import { api } from '../lib/api';
 import {
@@ -166,12 +168,13 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
               id="parro-person"
               className="select"
               value={settings.parroPerson ?? 'matthijs'}
-              onChange={(e) =>
-                void saveSettings({ parroPerson: e.target.value as 'matthijs' | 'amelie' })
-              }
+              onChange={(e) => void saveSettings({ parroPerson: e.target.value as ChildId })}
             >
-              <option value="matthijs">Matthijs</option>
-              <option value="amelie">Amélie</option>
+              {CHILDREN.map((c) => (
+                <option key={c} value={c}>
+                  {PERSON_LABEL[c]}
+                </option>
+              ))}
             </select>
           </div>
         </div>

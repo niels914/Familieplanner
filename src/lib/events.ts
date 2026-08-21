@@ -1,4 +1,5 @@
-import type { CalendarEvent, Contact, PickupOverride, PickupRule } from '../../shared/types';
+import type { ChildId, CalendarEvent, Contact, PickupOverride, PickupRule } from '../../shared/types';
+import { CHILDREN } from '../../shared/types';
 import { isoWeekday } from '../../shared/dates';
 
 export function coversDate(e: CalendarEvent, date: string): boolean {
@@ -49,7 +50,7 @@ export function initials(name: string): string {
 }
 
 export interface PickupForDay {
-  child: 'matthijs' | 'amelie';
+  child: ChildId;
   dropoff?: string;
   pickup?: string;
   note?: string;
@@ -65,10 +66,9 @@ export function pickupForDate(
   const weekday = isoWeekday(date);
   if (weekday > 5) return [];
 
-  const children: Array<'matthijs' | 'amelie'> = ['matthijs', 'amelie'];
   const out: PickupForDay[] = [];
 
-  for (const child of children) {
+  for (const child of CHILDREN) {
     const override = overrides.find((o) => o.date === date && o.child === child);
     const rule = rules.find((r) => r.weekday === weekday && r.child === child);
     if (!override && !rule) continue;

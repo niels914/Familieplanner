@@ -16,6 +16,8 @@
   --matthijs-soft: #e3edf7;
   --amelie: #a8437a;
   --amelie-soft: #f9e7f1;
+  --lotte: #6a4fa6;
+  --lotte-soft: #ece7f8;
   --gezin: #1f6f5c;
   --gezin-soft: #e2efea;
   --ouder: #7a6a3f;
@@ -51,6 +53,8 @@
     --matthijs-soft: #1e2c3b;
     --amelie: #e88cbd;
     --amelie-soft: #37202e;
+    --lotte: #b39ce8;
+    --lotte-soft: #2a2440;
     --gezin: #4fb096;
     --gezin-soft: #1d3a33;
     --ouder: #cbb87f;
@@ -335,6 +339,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .chip--matthijs { background: var(--matthijs-soft); color: var(--matthijs); }
 .chip--amelie { background: var(--amelie-soft); color: var(--amelie); }
+.chip--lotte { background: var(--lotte-soft); color: var(--lotte); }
 .chip--gezin { background: var(--gezin-soft); color: var(--gezin); }
 .chip--niels, .chip--irene { background: var(--ouder-soft); color: var(--ouder); }
 .chip--warn { background: var(--warn-soft); color: var(--warn); }
@@ -407,14 +412,17 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Op een smal scherm zijn titels in de maandweergave toch niet leesbaar:
    daar tonen we gekleurde stipjes, vanaf een tablet de titels zelf. */
 .day__dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
-.day__pill { display: none; }
+.day__pill,
+.day__more { display: none; }
 @media (min-width: 560px) {
   .day__dots { display: none; }
   .day__pill { display: block; }
+  .day__more { display: block; }
 }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
 .dot--matthijs { background: var(--matthijs); }
 .dot--amelie { background: var(--amelie); }
+.dot--lotte { background: var(--lotte); }
 .dot--gezin { background: var(--gezin); }
 .dot--niels, .dot--irene { background: var(--ouder); }
 
@@ -431,6 +439,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .day__pill--matthijs { background: var(--matthijs-soft); color: var(--matthijs); }
 .day__pill--amelie { background: var(--amelie-soft); color: var(--amelie); }
+.day__pill--lotte { background: var(--lotte-soft); color: var(--lotte); }
 .day__pill--gezin { background: var(--gezin-soft); color: var(--gezin); }
 .day__pill--niels, .day__pill--irene { background: var(--ouder-soft); color: var(--ouder); }
 
@@ -464,6 +473,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .event:hover { background: var(--surface-2); }
 .event--matthijs { border-left-color: var(--matthijs); }
 .event--amelie { border-left-color: var(--amelie); }
+.event--lotte { border-left-color: var(--lotte); }
 .event--gezin { border-left-color: var(--gezin); }
 .event--niels, .event--irene { border-left-color: var(--ouder); }
 
@@ -606,6 +616,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .avatar--matthijs { background: var(--matthijs-soft); color: var(--matthijs); }
 .avatar--amelie { background: var(--amelie-soft); color: var(--amelie); }
+.avatar--lotte { background: var(--lotte-soft); color: var(--lotte); }
 .avatar--oppas { background: var(--primary-soft); color: var(--primary); }
 
 .phone {

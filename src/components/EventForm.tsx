@@ -4,8 +4,17 @@ import { CATEGORY_LABEL, PERSON_LABEL } from '../../shared/types';
 import { Modal } from './Modal';
 import { useData, useStore } from '../lib/store';
 
-const PERSONS: PersonId[] = ['matthijs', 'amelie', 'gezin', 'niels', 'irene'];
-const CATEGORIES: Category[] = ['school', 'psz', 'oppas', 'afspraak', 'verjaardag', 'vrij', 'anders'];
+const PERSONS: PersonId[] = ['matthijs', 'amelie', 'lotte', 'gezin', 'niels', 'irene'];
+const CATEGORIES: Category[] = [
+  'school',
+  'psz',
+  'opvang',
+  'oppas',
+  'afspraak',
+  'verjaardag',
+  'vrij',
+  'anders',
+];
 
 function emptyEvent(date: string): Partial<CalendarEvent> {
   return {

@@ -1,15 +1,17 @@
-import { useMemo, useState } from 'react';
-import type { Contact } from '../../shared/types';
+import { useEffect, useMemo, useState } from 'react';
+import type { ChildId, Contact } from '../../shared/types';
+import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { useData } from '../lib/store';
 import { euro, initials } from '../lib/events';
 import { ContactForm } from '../components/ContactForm';
 
-type Filter = 'alle' | 'matthijs' | 'amelie' | 'oppas' | 'overig';
+type Filter = 'alle' | ChildId | 'oppas' | 'overig';
 
 const FILTER_LABEL: Record<Filter, string> = {
   alle: 'Alle',
   matthijs: 'Klas Matthijs',
   amelie: 'Klas Amélie',
+  lotte: 'Klas Lotte',
   oppas: 'Oppas',
   overig: 'Overig',
 };
@@ -20,6 +22,23 @@ export function ContactsView() {
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState<Contact | null>(null);
   const [creating, setCreating] = useState(false);
+
+  // Een filter voor een kind zonder contacten is alleen maar ruis; Lotte krijgt
+  // pas een chip zodra er een klasgenootje van haar in staat.
+  const available = useMemo<Filter[]>(() => {
+    const out: Filter[] = ['alle'];
+    for (const child of CHILDREN) {
+      if (contacts.some((c) => c.kind === 'klasgenoot' && c.childOf === child)) out.push(child);
+    }
+    if (contacts.some((c) => c.kind === 'oppas')) out.push('oppas');
+    if (contacts.some((c) => c.kind === 'overig')) out.push('overig');
+    return out;
+  }, [contacts]);
+
+  // Verdwijnt het actieve filter (laatste contact weg), val dan terug op alles.
+  useEffect(() => {
+    if (!available.includes(filter)) setFilter('alle');
+  }, [available, filter]);
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -71,7 +90,7 @@ export function ContactsView() {
       />
 
       <div className="filters">
-        {(Object.keys(FILTER_LABEL) as Filter[]).map((f) => (
+        {available.map((f) => (
           <button key={f} className="filter" aria-pressed={filter === f} onClick={() => setFilter(f)}>
             {FILTER_LABEL[f]}
           </button>
@@ -121,7 +140,7 @@ function ContactTile({ contact, onEdit }: { contact: Contact; onEdit: () => void
           <div className="small muted">
             {contact.kind === 'klasgenoot' && (
               <>
-                Klasgenootje van {contact.childOf === 'amelie' ? 'Amélie' : 'Matthijs'}
+                Klasgenootje van {contact.childOf ? PERSON_LABEL[contact.childOf] : '—'}
                 {contact.group && ` · ${contact.group}`}
               </>
             )}

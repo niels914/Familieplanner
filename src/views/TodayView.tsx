@@ -6,6 +6,7 @@ import { useData, useStore } from '../lib/store';
 import { birthdaysOnDate, eventsOnDate, pickupForDate } from '../lib/events';
 import { EventForm } from '../components/EventForm';
 import { Timeline } from '../components/Timeline';
+import { DayFacts } from '../components/DayFacts';
 import { Icon } from '../components/Icon';
 
 export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }) {
@@ -89,29 +90,7 @@ export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }
         )
       )}
 
-      {(pickups.length > 0 || dinner?.dish) && (
-        <div className="facts">
-          {pickups.map((p) => (
-            <div key={p.child} className="fact">
-              <span className={`chip chip--${p.child}`}>{PERSON_LABEL[p.child]}</span>
-              <span className="fact__value">
-                <em>brengen</em> {p.dropoff || '—'} <em>halen</em> {p.pickup || '—'}
-                {p.isOverride && <span className="chip chip--warn">afwijking</span>}
-              </span>
-            </div>
-          ))}
-          {dinner?.dish && (
-            <div className="fact">
-              <span className="fact__icon">
-                <Icon name="eten" size={16} />
-              </span>
-              <span className="fact__value">
-                <em>eten</em> {dinner.dish}
-              </span>
-            </div>
-          )}
-        </div>
-      )}
+      <DayFacts pickups={pickups} dish={dinner?.dish} />
 
       {birthdays.map((c) => (
         <p key={c.id} className="banner banner--info iconrow">

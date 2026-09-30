@@ -36,6 +36,8 @@ const db = {
     { id: uid(), weekday: 2, child: 'matthijs', dropoff: 'Niels', pickup: 'BSO' },
     { id: uid(), weekday: 1, child: 'amelie', dropoff: 'Irene', pickup: 'Irene' },
     { id: uid(), weekday: 2, child: 'lotte', dropoff: 'Niels', pickup: 'Irene' },
+    { id: uid(), weekday: 3, child: 'matthijs', dropoff: 'Irene', pickup: 'Niels' },
+    { id: uid(), weekday: 3, child: 'amelie', dropoff: 'Niels', pickup: 'Opa & oma' },
     { id: uid(), weekday: 5, child: 'matthijs', dropoff: 'Irene', pickup: 'Niels' },
     { id: uid(), weekday: 5, child: 'amelie', dropoff: 'Niels', pickup: 'Opa & oma' },
   ],

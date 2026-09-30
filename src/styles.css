@@ -409,11 +409,138 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .cal__head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 4px;
   margin-bottom: 10px;
 }
-.cal__title { font-size: 1.2rem; font-weight: 700; text-transform: capitalize; }
+.cal__title {
+  font-size: 1.35rem;
+  text-transform: capitalize;
+  text-align: center;
+  min-width: 0;
+}
+
+.cal__controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.cal__controls .filters { margin-bottom: 0; }
+
+/* Persoonsfilter als gekleurde initialen. Compact, en het leert meteen welke
+   kleur bij wie hoort — handig bij de stippen in de weekstrip. */
+.whofilter { display: flex; align-items: center; gap: 5px; }
+
+.who {
+  min-height: 34px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.who--alles { padding: 4px 12px; }
+.who:not(.who--alles) { width: 34px; padding: 0; display: grid; place-items: center; }
+
+.who--matthijs { color: var(--matthijs); }
+.who--amelie { color: var(--amelie); }
+.who--lotte { color: var(--lotte); }
+.who--gezin { color: var(--gezin); }
+
+.who[aria-pressed='true'] { border-width: 2px; }
+.who--alles[aria-pressed='true'] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-ink);
+}
+.who--matthijs[aria-pressed='true'] { background: var(--matthijs-soft); border-color: var(--matthijs); }
+.who--amelie[aria-pressed='true'] { background: var(--amelie-soft); border-color: var(--amelie); }
+.who--lotte[aria-pressed='true'] { background: var(--lotte-soft); border-color: var(--lotte); }
+.who--gezin[aria-pressed='true'] { background: var(--gezin-soft); border-color: var(--gezin); }
+
+/* Segmentknop: week of maand. */
+.segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.segmented button {
+  min-height: 34px;
+  padding: 5px 11px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+  font-size: 0.79rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.segmented button[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* ---------------------------------------------------------- weekstrip */
+.weekstrip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+
+.wsday {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  min-height: 68px;
+  padding: 8px 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.wsday--weekend { background: var(--surface-2); }
+.wsday__wd {
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.wsday__num {
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.wsday--today .wsday__num { color: var(--primary); font-weight: 750; }
+.wsday--selected {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+.wsday__dots { display: flex; gap: 3px; min-height: 6px; margin-top: 1px; }
+.wsday__bring { position: absolute; bottom: 3px; right: 4px; color: var(--warn); }
+
+/* Welke weergave zichtbaar is op een smal scherm. */
+.cal--week .cal__month { display: none; }
+.cal--maand .cal__week { display: none; }
+
+/* ------------------------------------------------------------- de dag */
+.daycol { margin-top: 20px; }
+.daycol__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.daycol__head h2 { font-size: 1.35rem; }
 
 .cal__weekdays,
 .cal__grid {
@@ -498,6 +625,30 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .page { padding: 26px 28px 48px; }
   .day__num { font-size: 0.85rem; }
   .day__pill { font-size: 0.72rem; padding: 2px 5px; }
+
+  .cal {
+    max-width: 1180px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 32px;
+    align-items: start;
+  }
+  .cal__top { grid-column: 1; }
+  .daycol {
+    grid-column: 2;
+    margin-top: 0;
+    position: sticky;
+    top: 26px;
+    max-height: calc(100vh - 52px);
+    overflow-y: auto;
+  }
+  /* Naast elkaar is de weekstrip overbodig, en de keuze week/maand ook. */
+  .cal--week .cal__month,
+  .cal--maand .cal__month { display: block; }
+  .cal--week .cal__week,
+  .cal--maand .cal__week { display: none; }
+  .cal__modes { display: none; }
+  .cal__title { text-align: left; }
 }
 
 /* ------------------------------------------------------------- eventrij */

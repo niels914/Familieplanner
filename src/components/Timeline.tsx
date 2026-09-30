@@ -6,8 +6,7 @@
 
 import type { CalendarEvent } from '../../shared/types';
 import { Icon } from './Icon';
-import { EventBody } from './EventBody';
-import { CATEGORY_ICON } from './EventRow';
+import { EventBody, CATEGORY_ICON } from './EventBody';
 
 export function Timeline({
   events,

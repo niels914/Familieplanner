@@ -4,9 +4,21 @@
  * er maar één plek is waar bepaald wordt hoe een item leest.
  */
 
-import type { CalendarEvent } from '../../shared/types';
+import type { CalendarEvent, Category } from '../../shared/types';
 import { CATEGORY_LABEL, PERSON_LABEL } from '../../shared/types';
-import { Icon } from './Icon';
+import { Icon, type IconName } from './Icon';
+
+/** Welk icoon hoort bij welke soort item. */
+export const CATEGORY_ICON: Record<Category, IconName> = {
+  school: 'rugzak',
+  psz: 'blokken',
+  opvang: 'fles',
+  oppas: 'oppas',
+  afspraak: 'speld',
+  verjaardag: 'taart',
+  vrij: 'koffer',
+  anders: 'kalender',
+};
 
 export function EventBody({
   event,

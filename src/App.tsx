@@ -11,6 +11,7 @@ import { PickupView } from './views/PickupView';
 import { SettingsView } from './views/SettingsView';
 import { QuickAdd } from './components/QuickAdd';
 import { DaySkeleton } from './components/Skeleton';
+import { InstallHint } from './components/InstallHint';
 import { Icon, type IconName } from './components/Icon';
 
 type View = 'vandaag' | 'agenda' | 'oppas' | 'contacten' | 'meer' | 'eten' | 'brengen' | 'instellingen';
@@ -107,6 +108,9 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       </nav>
 
       <main className="main">
+        <div className="installhint-wrap">
+          <InstallHint />
+        </div>
         {loading ? (
           <DaySkeleton />
         ) : (
@@ -206,6 +210,8 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
 
   return (
     <div className="login">
+      <div className="login__stack">
+      <InstallHint voorInloggen />
       <form className="card login__card" onSubmit={submit}>
         <div className="login__logo">
           <Icon name="huis" size={44} />
@@ -236,6 +242,7 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
           )}
         </div>
       </form>
+      </div>
     </div>
   );
 }

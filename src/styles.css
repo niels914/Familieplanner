@@ -262,6 +262,7 @@ input[type='checkbox'] {
 .tiny { font-size: 0.76rem; }
 .center { text-align: center; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nowrap { white-space: nowrap; }
 
 /* Nederlandse datums beginnen met een kleine letter; alleen de eerste letter
    van de zin krijgt een hoofdletter. */
@@ -313,6 +314,25 @@ section:first-of-type > .grouphead { margin-top: 6px; }
   color: var(--muted);
   font-size: 0.9rem;
 }
+
+/* ------------------------------------------------------ installatiehint */
+.installhint {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 13px 8px 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 0.9rem;
+}
+.installhint__icoon { flex-shrink: 0; border-radius: 10px; }
+.installhint__stappen { margin: 6px 0 0; padding-left: 1.2em; }
+.installhint__stappen li { margin: 3px 0; }
+.installhint__stappen svg { vertical-align: -3px; color: var(--primary); }
+.installhint__noot { margin: 7px 0 0; font-size: 0.8rem; color: var(--muted); }
+.installhint__sub { display: block; font-size: 0.8rem; color: var(--muted); }
 
 /* ------------------------------------------------------------ leeg scherm */
 .emptystate {
@@ -1094,7 +1114,12 @@ section:first-of-type > .grouphead { margin-top: 6px; }
   justify-content: center;
   padding: 24px;
 }
-.login__card { width: 100%; max-width: 360px; padding: 26px 22px; }
+.login__stack { width: 100%; max-width: 380px; }
+.login__card { width: 100%; padding: 26px 22px; }
+
+/* De hint staat boven de pagina-inhoud, met dezelfde marges als de pagina. */
+.installhint-wrap { max-width: 880px; margin: 0 auto; padding: 16px 16px 0; }
+.installhint-wrap:empty { display: none; }
 .login__logo { font-size: 2.2rem; text-align: center; margin-bottom: 8px; }
 
 /* ------------------------------------------------------------- toasts */

@@ -33,7 +33,9 @@ export type IconName =
   | 'auto'
   | 'instellingen'
   | 'mandje'
-  | 'huis';
+  | 'huis'
+  | 'delen'
+  | 'plusvak';
 
 const PATHS: Record<IconName, JSX.Element> = {
   vandaag: (
@@ -181,6 +183,18 @@ const PATHS: Record<IconName, JSX.Element> = {
       <path d="M3 8h18l-1.8 10.6a2 2 0 0 1-2 1.7H6.8a2 2 0 0 1-2-1.7Z" />
       <path d="M8.5 8l2-4.5M15.5 8l-2-4.5" />
       <path d="M9.5 12v4.5M14.5 12v4.5" />
+    </>
+  ),
+  delen: (
+    <>
+      <path d="M8.5 9H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1.5" />
+      <path d="M12 3v11.5M8.5 6.5 12 3l3.5 3.5" />
+    </>
+  ),
+  plusvak: (
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="3.5" />
+      <path d="M12 8.5v7M8.5 12h7" />
     </>
   ),
   huis: (

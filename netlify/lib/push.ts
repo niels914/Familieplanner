@@ -25,12 +25,20 @@ export interface PushPayload {
   tag?: string;
 }
 
-/** Stuurt naar alle geregistreerde toestellen en ruimt verlopen abonnementen op. */
-export async function sendToAll(payload: PushPayload): Promise<{ sent: number; removed: number }> {
+/**
+ * Stuurt naar alle geregistreerde toestellen, of alleen naar één (bij het
+ * testbericht na aanmelden, zodat de telefoon van de ander niet meepiept).
+ * Ruimt verlopen abonnementen op.
+ */
+export async function sendToAll(
+  payload: PushPayload,
+  alleenEndpoint?: string,
+): Promise<{ sent: number; removed: number }> {
   if (!pushConfigured()) return { sent: 0, removed: 0 };
   configure();
 
-  const subs = await read<PushSubscriptionRecord[]>('pushSubs');
+  const alle = await read<PushSubscriptionRecord[]>('pushSubs');
+  const subs = alleenEndpoint ? alle.filter((s) => s.endpoint === alleenEndpoint) : alle;
   if (subs.length === 0) return { sent: 0, removed: 0 };
 
   const dead: string[] = [];

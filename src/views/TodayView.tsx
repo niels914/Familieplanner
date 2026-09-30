@@ -8,6 +8,7 @@ import { EventForm } from '../components/EventForm';
 import { Timeline } from '../components/Timeline';
 import { DayFacts } from '../components/DayFacts';
 import { Icon } from '../components/Icon';
+import { PushPrompt } from '../components/PushPrompt';
 import { EmptyState } from '../components/EmptyState';
 
 export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }) {
@@ -50,6 +51,8 @@ export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }
 
   return (
     <div className="page">
+      <PushPrompt />
+
       <header className="dayhead">
         <h1 className="cap">{formatLong(today)}</h1>
         <p className="page__sub">{samenvatting}</p>

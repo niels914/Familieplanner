@@ -33,6 +33,18 @@ interface StoreValue {
   reload: () => Promise<void>;
   saveEvent: (event: Partial<CalendarEvent>) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
+  createSeries: (
+    event: Partial<CalendarEvent>,
+    interval: 1 | 2,
+    until: string,
+  ) => Promise<number>;
+  updateSeriesFrom: (seriesId: string, from: string, patch: Partial<CalendarEvent>) => Promise<void>;
+  deleteSeries: (seriesId: string, from?: string) => Promise<void>;
+  addBringBulk: (ids: string[], text: string) => Promise<void>;
+  /** Welk reeksoverzicht open staat. Staat hier zodat elk formulier het kan
+   *  openen, zonder dat formulier en overzicht elkaar hoeven te importeren. */
+  seriesOpen: string | null;
+  setSeriesOpen: (id: string | null) => void;
   saveContact: (contact: Partial<Contact>) => Promise<void>;
   deleteContact: (id: string) => Promise<void>;
   savePickupRules: (rules: PickupRule[]) => Promise<void>;
@@ -61,6 +73,7 @@ export function StoreProvider({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [seriesOpen, setSeriesOpen] = useState<string | null>(null);
 
   useEffect(() => setUnauthorizedHandler(onSessionLost), [onSessionLost]);
 
@@ -119,6 +132,8 @@ export function StoreProvider({
       notice,
       setNotice,
       reload,
+      seriesOpen,
+      setSeriesOpen,
 
       saveEvent: (event) =>
         run(
@@ -129,6 +144,44 @@ export function StoreProvider({
       deleteEvent: (id) =>
         run(
           () => api.del<{ events: CalendarEvent[] }>(`events/${id}`),
+          (r) => patch({ events: r.events }),
+        ),
+
+      createSeries: async (event, interval, until) => {
+        let aantal = 0;
+        await run(
+          () =>
+            api.post<{ events: CalendarEvent[]; count: number }>('events/series', {
+              event,
+              interval,
+              until,
+            }),
+          (r) => {
+            aantal = r.count;
+            patch({ events: r.events });
+          },
+        );
+        return aantal;
+      },
+
+      updateSeriesFrom: (seriesId, from, changes) =>
+        run(
+          () => api.post<{ events: CalendarEvent[] }>(`events/series/${seriesId}`, { from, patch: changes }),
+          (r) => patch({ events: r.events }),
+        ),
+
+      deleteSeries: (seriesId, from) =>
+        run(
+          () =>
+            api.del<{ events: CalendarEvent[] }>(
+              `events/series/${seriesId}${from ? `?from=${encodeURIComponent(from)}` : ''}`,
+            ),
+          (r) => patch({ events: r.events }),
+        ),
+
+      addBringBulk: (ids, text) =>
+        run(
+          () => api.post<{ events: CalendarEvent[] }>('events/bring-bulk', { ids, text }),
           (r) => patch({ events: r.events }),
         ),
 
@@ -211,7 +264,7 @@ export function StoreProvider({
         return r.message;
       },
     }),
-    [data, loading, error, notice, reload, run, patch],
+    [data, loading, error, notice, seriesOpen, reload, run, patch],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

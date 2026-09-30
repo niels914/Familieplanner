@@ -1,4 +1,5 @@
 import type {
+  BringItem,
   CalendarEvent,
   Contact,
   Meal,
@@ -7,7 +8,12 @@ import type {
   PushSubscriptionRecord,
   Settings,
   ShoppingItem,
+  SeriesInfo,
+  SeriesSharedField,
 } from '../../shared/types';
+import { SERIES_SHARED_FIELDS } from '../../shared/types';
+import { seriesDates } from '../../shared/series';
+import { addDays } from '../../shared/dates';
 import {
   error,
   json,
@@ -66,6 +72,8 @@ export default async function handler(req: Request): Promise<Response> {
         });
 
       case 'events':
+        if (id === 'series') return await handleSeries(req, action, url);
+        if (id === 'bring-bulk') return await handleBringBulk(req);
         return await handleEvents(req, id);
 
       case 'contacts':
@@ -118,9 +126,10 @@ async function handleEvents(req: Request, id?: string): Promise<Response> {
         events[index] = {
           ...current,
           ...body,
-          // De Parro-koppeling blijft eigendom van de sync.
+          // De Parro-koppeling blijft eigendom van de sync, de reeks van de reeks.
           source: current.source,
           parroUid: current.parroUid,
+          series: current.series,
           id: current.id,
           bring: body.bring ?? current.bring,
           createdAt: current.createdAt,
@@ -164,6 +173,112 @@ async function handleEvents(req: Request, id?: string): Promise<Response> {
   }
 
   return error('Methode niet ondersteund.', 405);
+}
+
+// ---------------------------------------------------------------- reeksen
+
+/**
+ * Een reeks bestaat uit gewone items met hetzelfde series.id. Aanmaken,
+ * bijwerken "vanaf deze keer" en verwijderen gebeuren hier in één schrijfactie,
+ * in plaats van tientallen losse verzoeken vanaf de telefoon.
+ */
+async function handleSeries(req: Request, seriesId: string | undefined, url: URL): Promise<Response> {
+  // Nieuwe reeks
+  if (req.method === 'POST' && !seriesId) {
+    const body = await readBody<{ event: Partial<CalendarEvent>; interval: 1 | 2; until: string }>(req);
+    const { event, until } = body;
+    const interval = body.interval === 2 ? 2 : 1;
+    if (!event?.title?.trim()) return error('Geef de reeks een titel.');
+    if (!event.date) return error('Geef een startdatum op.');
+    if (!until || until < event.date) return error('De einddatum ligt vóór de start.');
+    if (until > addDays(event.date, 3 * 366)) return error('Een reeks kan hoogstens drie jaar lopen.');
+
+    const dates = seriesDates(event.date, interval, until);
+    const series: SeriesInfo = { id: newId(), interval, until };
+    const now = nowIso();
+
+    const saved = await update<CalendarEvent[]>('events', (events) => {
+      // Idempotent: update() past deze bewerking opnieuw toe als iemand anders
+      // tussendoor schreef. Staat de reeks er dan al in, niet dubbel aanmaken.
+      if (events.some((e) => e.series?.id === series.id)) return events;
+      for (const date of dates) {
+        events.push({
+          id: newId(),
+          source: 'local',
+          title: event.title!.trim(),
+          date,
+          allDay: !event.time,
+          time: event.time,
+          endTime: event.endTime,
+          person: event.person ?? 'gezin',
+          category: event.category ?? 'anders',
+          // Het meeneem-lijstje van het formulier geldt voor elke keer, met
+          // eigen id's zodat afvinken per keer werkt.
+          bring: (event.bring ?? []).map((b) => ({ id: newId(), text: b.text, done: false })),
+          notes: event.notes,
+          reminder: event.reminder ?? true,
+          location: event.location,
+          series,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+      return events;
+    });
+    return json({ events: saved, count: dates.length, seriesId: series.id });
+  }
+
+  if (!seriesId) return error('Onbekende reeks.', 404);
+
+  // Gedeelde velden bijwerken voor deze en alle volgende keren.
+  if (req.method === 'POST') {
+    const body = await readBody<{ from: string; patch: Partial<CalendarEvent> }>(req);
+    if (!body.from) return error('Vanaf welke datum?');
+    const patch: Partial<Record<SeriesSharedField, unknown>> = {};
+    for (const veld of SERIES_SHARED_FIELDS) {
+      if (veld in (body.patch ?? {})) patch[veld] = body.patch[veld];
+    }
+    const saved = await update<CalendarEvent[]>('events', (events) =>
+      events.map((e) =>
+        e.series?.id === seriesId && e.date >= body.from
+          ? ({ ...e, ...patch, allDay: !('time' in patch ? patch.time : e.time), updatedAt: nowIso() } as CalendarEvent)
+          : e,
+      ),
+    );
+    return json({ events: saved });
+  }
+
+  // Verwijderen: alles, of vanaf een datum.
+  if (req.method === 'DELETE') {
+    const from = url.searchParams.get('from');
+    const saved = await update<CalendarEvent[]>('events', (events) =>
+      events.filter((e) => !(e.series?.id === seriesId && (!from || e.date >= from))),
+    );
+    return json({ events: saved });
+  }
+
+  return error('Methode niet ondersteund.', 405);
+}
+
+/** Eén ding toevoegen aan het meeneem-lijstje van meerdere items tegelijk. */
+async function handleBringBulk(req: Request): Promise<Response> {
+  if (req.method !== 'POST') return error('Methode niet ondersteund.', 405);
+  const body = await readBody<{ ids: string[]; text: string }>(req);
+  const text = body.text?.trim();
+  if (!text) return error('Wat moet er mee?');
+  if (!body.ids?.length) return error('Kies eerst een of meer keren.');
+
+  const ids = new Set(body.ids);
+  const saved = await update<CalendarEvent[]>('events', (events) =>
+    events.map((e) => {
+      if (!ids.has(e.id)) return e;
+      // Niet dubbel toevoegen als het er al staat.
+      if (e.bring.some((b) => b.text.toLowerCase() === text.toLowerCase())) return e;
+      const item: BringItem = { id: newId(), text, done: false };
+      return { ...e, bring: [...e.bring, item], updatedAt: nowIso() };
+    }),
+  );
+  return json({ events: saved });
 }
 
 // -------------------------------------------------------------- contacts
@@ -406,12 +521,16 @@ async function handlePush(req: Request, id?: string): Promise<Response> {
   }
 
   if (id === 'test') {
-    const result = await sendToAll({
-      title: 'Familieplanner',
-      body: 'Testbericht — meldingen werken.',
-      url: '/',
-      tag: 'test',
-    });
+    const body = await readBody<{ endpoint?: string }>(req).catch(() => ({}) as { endpoint?: string });
+    const result = await sendToAll(
+      {
+        title: 'Meldingen staan aan',
+        body: 'Je krijgt elke avond een overzicht van morgen, met wat er mee moet.',
+        url: '/',
+        tag: 'test',
+      },
+      body.endpoint,
+    );
     return json(result);
   }
 

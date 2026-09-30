@@ -6,7 +6,9 @@ import type {
   PersonId,
   SitterDetails,
 } from '../../shared/types';
-import { CATEGORY_LABEL } from '../../shared/types';
+import { CATEGORY_LABEL, SERIES_SHARED_FIELDS } from '../../shared/types';
+import { addDays, formatLong } from '../../shared/dates';
+import { seriesCount } from '../../shared/series';
 import { Modal } from './Modal';
 import { ChipPicker, type ChipOption } from './ChipPicker';
 import { CATEGORY_ICON } from './EventBody';
@@ -31,6 +33,16 @@ const STANDAARD_TIJDEN = ['08:30', '12:00', '15:00', '18:00'];
 
 const LEGE_OPPAS: SitterDetails = { name: '', start: '18:00', end: '22:00', rate: 0, paid: false };
 
+/** "dinsdag" uit een datum. */
+const weekdag = (datum: string) => formatLong(datum).split(' ')[0];
+
+/** "tot en met" als snelkeuze, in weken vanaf de start. */
+const TOT_KEUZES: Array<{ label: string; weken: number }> = [
+  { label: '3 maanden', weken: 13 },
+  { label: 'half jaar', weken: 26 },
+  { label: '1 jaar', weken: 52 },
+];
+
 function emptyEvent(date: string): Partial<CalendarEvent> {
   return {
     title: '',
@@ -52,14 +64,37 @@ export function EventForm({
   date: string;
   onClose: () => void;
 }) {
-  const { saveEvent, deleteEvent, setNotice } = useStore();
+  const {
+    saveEvent,
+    deleteEvent,
+    setNotice,
+    createSeries,
+    updateSeriesFrom,
+    deleteSeries,
+    setSeriesOpen,
+  } = useStore();
   const { contacts, events } = useData();
   const [draft, setDraft] = useState<Partial<CalendarEvent>>(initial ?? emptyEvent(date));
   const [bringText, setBringText] = useState('');
   const [eigenNaam, setEigenNaam] = useState(!initial?.sitter?.contactId);
   const [busy, setBusy] = useState(false);
 
+  // Reeksen: bij een nieuw item kiezen of het herhaalt, bij een bestaande keer
+  // of een wijziging alleen voor deze keer geldt of ook voor de volgende.
+  const [herhaal, setHerhaal] = useState<0 | 1 | 2>(0);
+  const [tot, setTot] = useState(() => addDays(initial?.date ?? date, 7 * 13));
+  const [bereik, setBereik] = useState<'deze' | 'volgende'>('deze');
+  const [verwijderKeuze, setVerwijderKeuze] = useState(false);
+
   const isEditing = Boolean(initial?.id);
+  const reeks = initial?.series;
+  const startDatum = draft.date ?? date;
+  const aantalKeer = herhaal ? seriesCount(startDatum, herhaal, tot) : 1;
+
+  /** Is er iets veranderd dat voor de hele reeks geldt (titel, tijd, wie...)? */
+  const gedeeldGewijzigd =
+    Boolean(reeks) &&
+    SERIES_SHARED_FIELDS.some((veld) => veld !== 'allDay' && (draft[veld] ?? '') !== (initial?.[veld] ?? ''));
   const isParro = draft.source === 'parro';
   const isSitter = draft.category === 'oppas';
   const heeftTijd = Boolean(draft.time);
@@ -102,13 +137,25 @@ export function EventForm({
       return;
     }
     setBusy(true);
+    const opgeschoond: Partial<CalendarEvent> = {
+      ...draft,
+      title: draft.title.trim(),
+      allDay: !draft.time,
+      sitter: isSitter ? draft.sitter : undefined,
+    };
     try {
-      await saveEvent({
-        ...draft,
-        title: draft.title.trim(),
-        allDay: !draft.time,
-        sitter: isSitter ? draft.sitter : undefined,
-      });
+      if (!isEditing && herhaal) {
+        const aantal = await createSeries(opgeschoond, herhaal, tot);
+        setNotice(`${opgeschoond.title}: ${aantal} keer ingepland.`);
+      } else {
+        await saveEvent(opgeschoond);
+        if (reeks && initial && bereik === 'volgende' && gedeeldGewijzigd) {
+          const gedeeld = Object.fromEntries(
+            SERIES_SHARED_FIELDS.map((veld) => [veld, opgeschoond[veld]]),
+          ) as Partial<CalendarEvent>;
+          await updateSeriesFrom(reeks.id, initial.date, gedeeld);
+        }
+      }
       onClose();
     } catch {
       // Foutmelding komt uit de store.
@@ -117,12 +164,19 @@ export function EventForm({
     }
   };
 
-  const remove = async () => {
+  const remove = async (welke: 'deze' | 'volgende' = 'deze') => {
     if (!initial?.id) return;
-    if (!confirm(`"${initial.title}" verwijderen?`)) return;
+    // Een losse keer uit een reeks: eerst vragen welke. Bij een los item de
+    // gewone bevestiging.
+    if (reeks && !verwijderKeuze) {
+      setVerwijderKeuze(true);
+      return;
+    }
+    if (!reeks && !confirm(`"${initial.title}" verwijderen?`)) return;
     setBusy(true);
     try {
-      await deleteEvent(initial.id);
+      if (reeks && welke === 'volgende') await deleteSeries(reeks.id, initial.date);
+      else await deleteEvent(initial.id);
       onClose();
     } finally {
       setBusy(false);
@@ -136,16 +190,37 @@ export function EventForm({
       title={isEditing ? 'Item bewerken' : 'Nieuw item'}
       onClose={onClose}
       footer={
-        <>
-          {isEditing && (
-            <button className="btn btn--danger" onClick={remove} disabled={busy}>
-              Verwijderen
+        verwijderKeuze ? (
+          <div className="stack stack--sm grow">
+            <span className="small muted">Welke keren verwijderen?</span>
+            <div className="row row--wrap">
+              <button className="btn btn--danger" onClick={() => remove('deze')} disabled={busy}>
+                Alleen deze keer
+              </button>
+              <button className="btn btn--danger" onClick={() => remove('volgende')} disabled={busy}>
+                Deze en volgende
+              </button>
+              <button className="btn btn--ghost" onClick={() => setVerwijderKeuze(false)}>
+                Annuleren
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {isEditing && (
+              <button className="btn btn--danger" onClick={() => remove()} disabled={busy}>
+                Verwijderen
+              </button>
+            )}
+            <button className="btn btn--primary grow" onClick={submit} disabled={busy}>
+              {busy
+                ? 'Bezig…'
+                : !isEditing && herhaal
+                  ? `${aantalKeer} keer inplannen`
+                  : 'Opslaan'}
             </button>
-          )}
-          <button className="btn btn--primary grow" onClick={submit} disabled={busy}>
-            {busy ? 'Bezig…' : 'Opslaan'}
-          </button>
-        </>
+          </>
+        )
       }
     >
       <div className="stack">
@@ -153,6 +228,26 @@ export function EventForm({
           <div className="banner banner--info">
             Dit item komt uit Parro. Titel, datum en tijd worden bij elke synchronisatie
             overschreven — je meeneem-lijstje en notitie blijven wel staan.
+          </div>
+        )}
+
+        {reeks && initial && (
+          <div className="reeksbanner">
+            <Icon name="herhaal" size={18} />
+            <span className="grow">
+              Onderdeel van een reeks: {reeks.interval === 2 ? 'om de week' : 'elke week'} op{' '}
+              {weekdag(initial.date)}, t/m {formatLong(reeks.until).split(' ').slice(1).join(' ')}
+            </span>
+            <button
+              type="button"
+              className="btn btn--sm"
+              onClick={() => {
+                onClose();
+                setSeriesOpen(reeks.id);
+              }}
+            >
+              Hele reeks
+            </button>
           </div>
         )}
 
@@ -226,6 +321,60 @@ export function EventForm({
             </div>
           )}
         </div>
+
+        {!isEditing && !isParro && (
+          <div className="field">
+            <span className="field__label">Herhalen</span>
+            <div className="segmented" role="group" aria-label="Herhalen">
+              <button type="button" aria-pressed={herhaal === 0} onClick={() => setHerhaal(0)}>
+                Niet
+              </button>
+              <button type="button" aria-pressed={herhaal === 1} onClick={() => setHerhaal(1)}>
+                Elke week
+              </button>
+              <button type="button" aria-pressed={herhaal === 2} onClick={() => setHerhaal(2)}>
+                Om de week
+              </button>
+            </div>
+
+            {herhaal > 0 && (
+              <div className="stack stack--sm" style={{ marginTop: 4 }}>
+                <div className="row row--wrap">
+                  <label htmlFor="ev-tot" className="small muted">
+                    Tot en met
+                  </label>
+                  <input
+                    id="ev-tot"
+                    className="input"
+                    style={{ width: 170 }}
+                    type="date"
+                    min={startDatum}
+                    value={tot}
+                    onChange={(e) => setTot(e.target.value)}
+                  />
+                </div>
+                <div className="picks">
+                  {TOT_KEUZES.map((k) => (
+                    <button
+                      key={k.label}
+                      type="button"
+                      className="pick"
+                      aria-pressed={tot === addDays(startDatum, 7 * k.weken)}
+                      onClick={() => setTot(addDays(startDatum, 7 * k.weken))}
+                    >
+                      {k.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="small muted" style={{ margin: 0 }}>
+                  {herhaal === 2 ? 'Om de week' : 'Elke week'} op {weekdag(startDatum)} ·{' '}
+                  <strong>{aantalKeer} keer</strong>. Per keer kun je daarna nog iets toevoegen, zoals
+                  wat er die dag extra mee moet.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         <ChipPicker
           label="Voor wie"
@@ -410,6 +559,24 @@ export function EventForm({
             onChange={(e) => set('notes', e.target.value)}
           />
         </div>
+
+        {gedeeldGewijzigd && (
+          <div className="field">
+            <span className="field__label">Deze wijziging geldt voor</span>
+            <div className="segmented" role="group" aria-label="Wijziging geldt voor">
+              <button type="button" aria-pressed={bereik === 'deze'} onClick={() => setBereik('deze')}>
+                Alleen deze keer
+              </button>
+              <button
+                type="button"
+                aria-pressed={bereik === 'volgende'}
+                onClick={() => setBereik('volgende')}
+              >
+                Deze en volgende
+              </button>
+            </div>
+          </div>
+        )}
 
         <label className="checkline">
           <input

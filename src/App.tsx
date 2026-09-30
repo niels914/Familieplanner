@@ -12,6 +12,7 @@ import { SettingsView } from './views/SettingsView';
 import { QuickAdd } from './components/QuickAdd';
 import { DaySkeleton } from './components/Skeleton';
 import { InstallHint } from './components/InstallHint';
+import { SeriesView } from './components/SeriesView';
 import { Icon, type IconName } from './components/Icon';
 
 type View = 'vandaag' | 'agenda' | 'oppas' | 'contacten' | 'meer' | 'eten' | 'brengen' | 'instellingen';
@@ -62,7 +63,7 @@ export default function App() {
 }
 
 function Shell({ onLogout }: { onLogout: () => void }) {
-  const { loading, error, notice, setNotice } = useStore();
+  const { loading, error, notice, setNotice, seriesOpen, setSeriesOpen } = useStore();
   const [view, setView] = useState<View>('vandaag');
   const [selected, setSelected] = useState(todayInNl());
   const [quickAdd, setQuickAdd] = useState(false);
@@ -151,6 +152,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       </nav>
 
       {quickAdd && <QuickAdd date={selected} onClose={() => setQuickAdd(false)} />}
+      {seriesOpen && <SeriesView seriesId={seriesOpen} onClose={() => setSeriesOpen(null)} />}
       {/* Meldingen worden voorgelezen; een fout onderbreekt, een bevestiging niet. */}
       {(notice || error) && (
         <div

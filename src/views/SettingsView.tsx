@@ -128,8 +128,13 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
               className="btn btn--sm"
               disabled={busy}
               onClick={async () => {
-                const r = await api.post<{ sent: number }>('push/test');
-                setNotice(`Testbericht naar ${r.sent} toestel(len) gestuurd.`);
+                const sub = await currentSubscription();
+                const r = await api.post<{ sent: number }>('push/test', { endpoint: sub?.endpoint });
+                setNotice(
+                  r.sent > 0
+                    ? 'Testbericht naar deze telefoon gestuurd.'
+                    : 'Dit toestel is niet aangemeld; zet meldingen opnieuw aan.',
+                );
               }}
             >
               Stuur een testbericht

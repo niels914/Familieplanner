@@ -35,7 +35,9 @@ export type IconName =
   | 'mandje'
   | 'huis'
   | 'delen'
-  | 'plusvak';
+  | 'plusvak'
+  | 'herhaal'
+  | 'bel';
 
 const PATHS: Record<IconName, JSX.Element> = {
   vandaag: (
@@ -189,6 +191,18 @@ const PATHS: Record<IconName, JSX.Element> = {
     <>
       <path d="M8.5 9H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1.5" />
       <path d="M12 3v11.5M8.5 6.5 12 3l3.5 3.5" />
+    </>
+  ),
+  herhaal: (
+    <>
+      <path d="M4.5 11V9.5a3 3 0 0 1 3-3h11M15.5 3.5l3 3-3 3" />
+      <path d="M19.5 13v1.5a3 3 0 0 1-3 3h-11M8.5 20.5l-3-3 3-3" />
+    </>
+  ),
+  bel: (
+    <>
+      <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15Z" />
+      <path d="M10 20.5a2 2 0 0 0 4 0" />
     </>
   ),
   plusvak: (

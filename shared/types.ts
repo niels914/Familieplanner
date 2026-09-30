@@ -34,6 +34,19 @@ export interface SitterDetails {
   paid: boolean;
 }
 
+/**
+ * Een reeks, zoals zwemles op dinsdag. Elke keer is een eigen item met een
+ * eigen meeneem-lijstje en notitie — "deze les met kleren zwemmen" hoort bij
+ * één les, niet bij de hele reeks. Dit veld verbindt ze.
+ */
+export interface SeriesInfo {
+  id: string;
+  /** 1 = elke week, 2 = om de week. */
+  interval: 1 | 2;
+  /** Laatste mogelijke datum, 'YYYY-MM-DD'. */
+  until: string;
+}
+
 export interface CalendarEvent {
   id: string;
   /** 'parro' komt uit de schoolagenda en wordt bij elke sync overschreven. */
@@ -59,9 +72,25 @@ export interface CalendarEvent {
   reminder: boolean;
   sitter?: SitterDetails;
   location?: string;
+  series?: SeriesInfo;
   createdAt: string;
   updatedAt: string;
 }
+
+/** Velden die voor een hele reeks gelden. Meenemen en notitie horen daar
+ *  bewust niet bij: die zijn per keer. */
+export const SERIES_SHARED_FIELDS = [
+  'title',
+  'time',
+  'endTime',
+  'allDay',
+  'person',
+  'category',
+  'reminder',
+  'location',
+] as const;
+
+export type SeriesSharedField = (typeof SERIES_SHARED_FIELDS)[number];
 
 export type ParentRole = 'moeder' | 'vader' | 'verzorger';
 

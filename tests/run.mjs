@@ -4,7 +4,12 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const files = ['tests/ics.test.ts', 'tests/quickparse.test.ts'];
+const files = [
+  'tests/ics.test.ts',
+  'tests/quickparse.test.ts',
+  'tests/series.test.ts',
+  'tests/reminder.test.ts',
+];
 const dir = mkdtempSync(join(tmpdir(), 'fp-tests-'));
 
 try {

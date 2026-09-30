@@ -40,6 +40,12 @@ export function EventBody({
           {CATEGORY_LABEL[event.category]}
           {event.sitter && ` · ${event.sitter.name} ${event.sitter.start}–${event.sitter.end}`}
           {event.source === 'parro' && ' · Parro'}
+          {event.series && (
+            <>
+              {' · '}
+              <Icon name="herhaal" size={13} style={{ verticalAlign: -2 }} label="reeks" />
+            </>
+          )}
         </span>
         {event.notes && <span className="event__meta">{event.notes}</span>}
       </button>

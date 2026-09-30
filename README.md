@@ -17,13 +17,14 @@ gedraagt zich als een gewone app.
 |---|---|
 | **Vandaag** | Wat er vandaag speelt, plus een aanvinklijst met wat je vanavond voor morgen moet klaarzetten. |
 | **Agenda** | Maandoverzicht, filterbaar per persoon. Elk item kan een meeneem-lijstje hebben. |
+| **Reeksen** | Zwemles elke dinsdag, of om de week, tot een einddatum. Elke keer is een eigen item: vink in het reeksoverzicht de lessen aan waarin met kleren gezwommen wordt en zet er in één keer "kleren om in te zwemmen" bij. Wijzigen of verwijderen kan voor één keer of voor deze en alle volgende. |
 | **Snel toevoegen** | Typ *"Matthijs volgende week donderdag lege schoenendoos mee"* en de app maakt er het juiste item op de juiste dag van. |
 | **Oppas** | Alle oppasmomenten filterbaar op periode en oppas, met uren, uurtarief, maandtotaal en wat er nog openstaat. |
 | **Contacten** | Klasgenootjes met de naam en het telefoonnummer van vader en moeder, tikbaar om direct te bellen. Ook oppassen en overige contacten. |
 | **Breng & haal** | Vast weekschema per kind, met afwijkingen per dag voor de komende twee weken. |
 | **Eten** | Gedeelde boodschappenlijst en weekmenu; ingrediënten gaan met één knop naar de boodschappenlijst. |
 | **Parro** | De schoolagenda wordt elke drie uur opgehaald. Jouw notities en meeneem-lijstjes bij een Parro-item blijven bij een synchronisatie staan. |
-| **Herinnering** | Elke avond om 19:00 (instelbaar) één pushmelding met alles van morgen. |
+| **Herinnering** | Elke avond om 19:00 (instelbaar) één pushmelding met alles van morgen, inclusief wat er mee moet en je eigen notities. Aanzetten met één tik vanaf Vandaag; daarna komt er meteen een testbericht op alleen dat toestel. |
 
 ---
 
@@ -95,17 +96,21 @@ npm run dev:vite
 Andere handige commando's:
 
 ```bash
-npm test           # tests voor de iCalendar-parser en de snelinvoer
+npm test           # parsers, reeksen, de avondherinnering en het kleurcontrast
 npm run build      # typecheck + productiebuild
 npm run icons      # genereert de PWA-iconen opnieuw
 npm run vapid      # maakt nieuwe push-sleutels
 ```
 
-Wil je de app bekijken zonder Netlify (met voorbeelddata in het geheugen):
+Wil je de app bekijken zonder Netlify:
 
 ```bash
-npm run build && node tests/mock-server.mjs   # http://localhost:4173
+npm run build && node tests/mock-server.mjs   # http://localhost:4173, wachtwoord: test
 ```
+
+Die server draait de échte API-code uit `netlify/functions/api.ts`, met alleen de
+opslag vervangen door geheugen (`tests/memory-store.ts`) en voorbeelddata uit
+`tests/fixtures.mjs`. Wat daar werkt, werkt dus ook op Netlify — op de opslag na.
 
 ---
 

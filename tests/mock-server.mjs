@@ -17,6 +17,7 @@ const db = {
     { id: uid(), source: 'local', title: 'Lege schoenendoos mee', date: plus(1), allDay: true, person: 'matthijs', category: 'school', bring: [{ id: uid(), text: 'Lege schoenendoos', done: false }], reminder: true, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Knuffeldag', date: plus(1), allDay: true, person: 'amelie', category: 'psz', bring: [{ id: uid(), text: 'Knuffel', done: false }], reminder: true, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Oppas', date: plus(2), allDay: true, person: 'gezin', category: 'oppas', bring: [], reminder: true, sitter: { name: 'Sanne', start: '18:30', end: '23:00', rate: 6.5, paid: false }, createdAt: '', updatedAt: '' },
+    { id: uid(), source: 'local', title: 'Oppas (bioscoop)', date: plus(-3), allDay: true, person: 'gezin', category: 'oppas', bring: [], reminder: true, sitter: { name: 'Joris', start: '19:30', end: '23:00', rate: 7, paid: false }, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Oppas (etentje)', date: plus(-9), allDay: true, person: 'gezin', category: 'oppas', bring: [], reminder: true, sitter: { name: 'Sanne', start: '19:00', end: '23:30', rate: 6.5, paid: true }, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Zwemles', date: today, time: '16:15', allDay: false, person: 'matthijs', category: 'afspraak', bring: [], reminder: true, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'parro', parroUid: 'p9', title: 'Luizencontrole', date: today, time: '08:30', allDay: false, person: 'matthijs', category: 'school', bring: [], reminder: true, createdAt: '', updatedAt: '' },
@@ -29,6 +30,8 @@ const db = {
   contacts: [
     { id: uid(), kind: 'klasgenoot', name: 'Fenna de Wit', childOf: 'matthijs', group: 'groep 1/2A', birthday: '2021-03-14', giftIdeas: 'Iets met paarden', parents: [{ id: uid(), name: 'Marieke de Wit', role: 'moeder', phone: '06 12345678' }, { id: uid(), name: 'Joost de Wit', role: 'vader', phone: '06 87654321' }], createdAt: '', updatedAt: '' },
     { id: uid(), kind: 'klasgenoot', name: 'Sem Bakker', childOf: 'matthijs', group: 'groep 1/2A', parents: [{ id: uid(), name: 'Anne Bakker', role: 'moeder', phone: '06 24681012' }], notes: 'Woont om de hoek, noten-allergie.', createdAt: '', updatedAt: '' },
+    { id: uid(), kind: 'oppas', name: 'Joris Peters', phone: '06 55667788', sitterRate: 7, notes: 'Alleen doordeweeks.', parents: [], createdAt: '', updatedAt: '' },
+    { id: uid(), kind: 'overig', name: 'Huisarts Elst', phone: '0481 371234', parents: [], createdAt: '', updatedAt: '' },
     { id: uid(), kind: 'oppas', name: 'Sanne Vermeer', phone: '06 11223344', sitterRate: 6.5, notes: 'Kan meestal op vrijdag en zaterdag.', parents: [], createdAt: '', updatedAt: '' },
   ],
   pickupRules: [

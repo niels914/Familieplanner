@@ -2,8 +2,21 @@ import { useState } from 'react';
 import type { ChildId, Contact, Parent, ParentRole } from '../../shared/types';
 import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { Modal } from './Modal';
+import { ChipPicker, type ChipOption } from './ChipPicker';
 import { useStore } from '../lib/store';
 import { Icon } from './Icon';
+
+const SOORT_OPTIES: ChipOption<Contact['kind']>[] = [
+  { value: 'klasgenoot', label: 'Klasgenootje', icon: 'rugzak' },
+  { value: 'oppas', label: 'Oppas', icon: 'oppas' },
+  { value: 'overig', label: 'Overig', icon: 'contacten' },
+];
+
+const KIND_OPTIES: ChipOption<ChildId>[] = CHILDREN.map((c) => ({
+  value: c,
+  label: PERSON_LABEL[c],
+  modifier: c,
+}));
 
 const ROLES: ParentRole[] = ['moeder', 'vader', 'verzorger'];
 
@@ -89,19 +102,12 @@ export function ContactForm({
       }
     >
       <div className="stack">
-        <div className="field">
-          <label htmlFor="ct-kind">Soort contact</label>
-          <select
-            id="ct-kind"
-            className="select"
-            value={draft.kind ?? 'klasgenoot'}
-            onChange={(e) => set('kind', e.target.value as Contact['kind'])}
-          >
-            <option value="klasgenoot">Klasgenootje</option>
-            <option value="oppas">Oppas</option>
-            <option value="overig">Overig</option>
-          </select>
-        </div>
+        <ChipPicker
+          label="Soort contact"
+          value={draft.kind ?? 'klasgenoot'}
+          options={SOORT_OPTIES}
+          onChange={(v) => set('kind', v)}
+        />
 
         <div className="field">
           <label htmlFor="ct-name">{isClassmate ? 'Naam van het klasgenootje' : 'Naam'}</label>
@@ -114,22 +120,13 @@ export function ContactForm({
         </div>
 
         {isClassmate && (
-          <div className="field-row">
-            <div className="field">
-              <label htmlFor="ct-child">Klasgenootje van</label>
-              <select
-                id="ct-child"
-                className="select"
-                value={draft.childOf ?? 'matthijs'}
-                onChange={(e) => set('childOf', e.target.value as ChildId)}
-              >
-                {CHILDREN.map((c) => (
-                  <option key={c} value={c}>
-                    {PERSON_LABEL[c]}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <>
+            <ChipPicker
+              label="Klasgenootje van"
+              value={draft.childOf ?? 'matthijs'}
+              options={KIND_OPTIES}
+              onChange={(v) => set('childOf', v)}
+            />
             <div className="field">
               <label htmlFor="ct-group">Groep / klas</label>
               <input
@@ -140,7 +137,7 @@ export function ContactForm({
                 onChange={(e) => set('group', e.target.value)}
               />
             </div>
-          </div>
+          </>
         )}
 
         {draft.kind === 'oppas' && (

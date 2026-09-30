@@ -1,21 +1,35 @@
 import { useMemo, useState } from 'react';
-import type { BringItem, CalendarEvent, Category, Contact, PersonId } from '../../shared/types';
-import { CATEGORY_LABEL, PERSON_LABEL } from '../../shared/types';
+import type {
+  BringItem,
+  CalendarEvent,
+  Category,
+  PersonId,
+  SitterDetails,
+} from '../../shared/types';
+import { CATEGORY_LABEL } from '../../shared/types';
 import { Modal } from './Modal';
+import { ChipPicker, type ChipOption } from './ChipPicker';
+import { CATEGORY_ICON } from './EventBody';
 import { useData, useStore } from '../lib/store';
+import { euro, sitterHours } from '../lib/events';
 import { Icon } from './Icon';
 
-const PERSONS: PersonId[] = ['matthijs', 'amelie', 'lotte', 'gezin', 'niels', 'irene'];
-const CATEGORIES: Category[] = [
-  'school',
-  'psz',
-  'opvang',
-  'oppas',
-  'afspraak',
-  'verjaardag',
-  'vrij',
-  'anders',
+const PERSON_OPTIONS: ChipOption<PersonId>[] = [
+  { value: 'matthijs', label: 'Matthijs', modifier: 'matthijs' },
+  { value: 'amelie', label: 'Amélie', modifier: 'amelie' },
+  { value: 'lotte', label: 'Lotte', modifier: 'lotte' },
+  { value: 'gezin', label: 'Gezin' },
+  { value: 'niels', label: 'Niels', modifier: 'ouder' },
+  { value: 'irene', label: 'Irene', modifier: 'ouder' },
 ];
+
+const CATEGORY_OPTIONS: ChipOption<Category>[] = (
+  ['school', 'psz', 'opvang', 'oppas', 'afspraak', 'verjaardag', 'vrij', 'anders'] as Category[]
+).map((c) => ({ value: c, label: CATEGORY_LABEL[c], icon: CATEGORY_ICON[c] }));
+
+const STANDAARD_TIJDEN = ['08:30', '12:00', '15:00', '18:00'];
+
+const LEGE_OPPAS: SitterDetails = { name: '', start: '18:00', end: '22:00', rate: 0, paid: false };
 
 function emptyEvent(date: string): Partial<CalendarEvent> {
   return {
@@ -39,18 +53,37 @@ export function EventForm({
   onClose: () => void;
 }) {
   const { saveEvent, deleteEvent, setNotice } = useStore();
-  const { contacts } = useData();
+  const { contacts, events } = useData();
   const [draft, setDraft] = useState<Partial<CalendarEvent>>(initial ?? emptyEvent(date));
   const [bringText, setBringText] = useState('');
+  const [eigenNaam, setEigenNaam] = useState(!initial?.sitter?.contactId);
   const [busy, setBusy] = useState(false);
 
   const isEditing = Boolean(initial?.id);
-  const sitters = useMemo(() => contacts.filter((c: Contact) => c.kind === 'oppas'), [contacts]);
   const isParro = draft.source === 'parro';
   const isSitter = draft.category === 'oppas';
+  const heeftTijd = Boolean(draft.time);
+
+  const sitters = useMemo(() => contacts.filter((c) => c.kind === 'oppas'), [contacts]);
+
+  /** Tijden die jullie zelf het vaakst gebruiken, als snelkeuze. */
+  const veelgebruikteTijden = useMemo(() => {
+    const telling = new Map<string, number>();
+    for (const e of events) {
+      if (e.time) telling.set(e.time, (telling.get(e.time) ?? 0) + 1);
+    }
+    const top = [...telling.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 4)
+      .map(([tijd]) => tijd);
+    return (top.length >= 3 ? top : STANDAARD_TIJDEN).sort();
+  }, [events]);
 
   const set = <K extends keyof CalendarEvent>(key: K, value: CalendarEvent[K]) =>
     setDraft((d) => ({ ...d, [key]: value }));
+
+  const setSitter = (patch: Partial<SitterDetails>) =>
+    setDraft((d) => ({ ...d, sitter: { ...LEGE_OPPAS, ...d.sitter, ...patch } }));
 
   const addBring = () => {
     const text = bringText.trim();
@@ -96,6 +129,8 @@ export function EventForm({
     }
   };
 
+  const uren = draft.sitter ? sitterHours(draft.sitter.start, draft.sitter.end) : 0;
+
   return (
     <Modal
       title={isEditing ? 'Item bewerken' : 'Nieuw item'}
@@ -133,113 +168,129 @@ export function EventForm({
           />
         </div>
 
-        <div className="field-row">
-          <div className="field">
-            <label htmlFor="ev-date">Datum</label>
-            <input
-              id="ev-date"
-              className="input"
-              type="date"
-              value={draft.date ?? date}
+        <div className="field">
+          <label htmlFor="ev-date">Wanneer</label>
+          <input
+            id="ev-date"
+            className="input"
+            type="date"
+            value={draft.date ?? date}
+            disabled={isParro}
+            onChange={(e) => set('date', e.target.value)}
+          />
+
+          <div className="segmented" role="group" aria-label="Hele dag of een tijdstip">
+            <button
+              type="button"
+              aria-pressed={!heeftTijd}
               disabled={isParro}
-              onChange={(e) => set('date', e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="ev-time">Tijd (leeg = hele dag)</label>
-            <input
-              id="ev-time"
-              className="input"
-              type="time"
-              value={draft.time ?? ''}
+              onClick={() => set('time', undefined)}
+            >
+              Hele dag
+            </button>
+            <button
+              type="button"
+              aria-pressed={heeftTijd}
               disabled={isParro}
-              onChange={(e) => set('time', e.target.value || undefined)}
-            />
+              onClick={() => set('time', draft.time ?? veelgebruikteTijden[0])}
+            >
+              Tijdstip
+            </button>
           </div>
+
+          {heeftTijd && (
+            <div className="row row--wrap" style={{ marginTop: 2 }}>
+              <input
+                className="input"
+                style={{ width: 152 }}
+                type="time"
+                aria-label="Tijdstip"
+                value={draft.time ?? ''}
+                disabled={isParro}
+                onChange={(e) => set('time', e.target.value || undefined)}
+              />
+              <div className="picks">
+                {veelgebruikteTijden.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className="pick"
+                    aria-pressed={draft.time === t}
+                    disabled={isParro}
+                    onClick={() => set('time', t)}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="field-row">
-          <div className="field">
-            <label htmlFor="ev-person">Voor wie</label>
-            <select
-              id="ev-person"
-              className="select"
-              value={draft.person ?? 'gezin'}
-              onChange={(e) => set('person', e.target.value as PersonId)}
-            >
-              {PERSONS.map((p) => (
-                <option key={p} value={p}>
-                  {PERSON_LABEL[p]}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="ev-cat">Soort</label>
-            <select
-              id="ev-cat"
-              className="select"
-              value={draft.category ?? 'anders'}
-              onChange={(e) => set('category', e.target.value as Category)}
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {CATEGORY_LABEL[c]}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <ChipPicker
+          label="Voor wie"
+          value={draft.person ?? 'gezin'}
+          options={PERSON_OPTIONS}
+          onChange={(v) => set('person', v)}
+        />
+
+        <ChipPicker
+          label="Soort"
+          value={draft.category ?? 'anders'}
+          options={CATEGORY_OPTIONS}
+          onChange={(v) =>
+            setDraft((d) => ({
+              ...d,
+              category: v,
+              // Meteen de standaardtijden zetten, anders staat er 18:00–22:00 in
+              // beeld terwijl het item zonder oppasgegevens opgeslagen zou worden.
+              sitter: v === 'oppas' ? (d.sitter ?? { ...LEGE_OPPAS }) : d.sitter,
+            }))
+          }
+        />
 
         {isSitter && (
           <div className="card card--pad stack stack--sm">
             <strong className="small">Oppasgegevens</strong>
-            <div className="field">
-              <label htmlFor="ev-sitter">Wie past op</label>
-              <select
-                id="ev-sitter"
-                className="select"
-                value={draft.sitter?.contactId ?? ''}
-                onChange={(e) => {
-                  const contact = sitters.find((s) => s.id === e.target.value);
-                  set('sitter', {
-                    contactId: contact?.id,
-                    name: contact?.name ?? draft.sitter?.name ?? '',
-                    start: draft.sitter?.start ?? draft.time ?? '18:00',
-                    end: draft.sitter?.end ?? '22:00',
-                    rate: contact?.sitterRate ?? draft.sitter?.rate ?? 0,
-                    paid: draft.sitter?.paid ?? false,
-                  });
-                }}
-              >
-                <option value="">— naam zelf invullen —</option>
-                {sitters.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
 
-            {!draft.sitter?.contactId && (
-              <div className="field">
-                <label htmlFor="ev-sitter-name">Naam</label>
-                <input
-                  id="ev-sitter-name"
-                  className="input"
-                  value={draft.sitter?.name ?? ''}
-                  onChange={(e) =>
-                    set('sitter', {
-                      start: '18:00',
-                      end: '22:00',
-                      rate: 0,
-                      paid: false,
-                      ...draft.sitter,
-                      name: e.target.value,
-                    })
-                  }
-                />
+            {sitters.length > 0 && (
+              <div className="picks">
+                {sitters.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    className="pick"
+                    aria-pressed={draft.sitter?.contactId === s.id}
+                    onClick={() => {
+                      setEigenNaam(false);
+                      setSitter({ contactId: s.id, name: s.name, rate: s.sitterRate ?? 0 });
+                    }}
+                  >
+                    {s.name}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="pick"
+                  aria-pressed={eigenNaam}
+                  onClick={() => {
+                    setEigenNaam(true);
+                    setSitter({ contactId: undefined });
+                  }}
+                >
+                  Anders…
+                </button>
               </div>
+            )}
+
+            {(eigenNaam || sitters.length === 0) && (
+              <input
+                className="input"
+                placeholder="Naam van de oppas"
+                aria-label="Naam van de oppas"
+                value={draft.sitter?.name ?? ''}
+                onChange={(e) => setSitter({ name: e.target.value })}
+              />
             )}
 
             <div className="field-row">
@@ -249,17 +300,8 @@ export function EventForm({
                   id="ev-start"
                   className="input"
                   type="time"
-                  value={draft.sitter?.start ?? '18:00'}
-                  onChange={(e) =>
-                    set('sitter', {
-                      name: '',
-                      end: '22:00',
-                      rate: 0,
-                      paid: false,
-                      ...draft.sitter,
-                      start: e.target.value,
-                    })
-                  }
+                  value={draft.sitter?.start ?? LEGE_OPPAS.start}
+                  onChange={(e) => setSitter({ start: e.target.value })}
                 />
               </div>
               <div className="field">
@@ -268,24 +310,15 @@ export function EventForm({
                   id="ev-end"
                   className="input"
                   type="time"
-                  value={draft.sitter?.end ?? '22:00'}
-                  onChange={(e) =>
-                    set('sitter', {
-                      name: '',
-                      start: '18:00',
-                      rate: 0,
-                      paid: false,
-                      ...draft.sitter,
-                      end: e.target.value,
-                    })
-                  }
+                  value={draft.sitter?.end ?? LEGE_OPPAS.end}
+                  onChange={(e) => setSitter({ end: e.target.value })}
                 />
               </div>
             </div>
 
-            <div className="field-row">
-              <div className="field">
-                <label htmlFor="ev-rate">Uurtarief (€)</label>
+            <div className="row row--wrap">
+              <div className="field" style={{ width: 104 }}>
+                <label htmlFor="ev-rate">€ per uur</label>
                 <input
                   id="ev-rate"
                   className="input"
@@ -293,41 +326,28 @@ export function EventForm({
                   min="0"
                   step="0.5"
                   value={draft.sitter?.rate ?? 0}
-                  onChange={(e) =>
-                    set('sitter', {
-                      name: '',
-                      start: '18:00',
-                      end: '22:00',
-                      paid: false,
-                      ...draft.sitter,
-                      rate: Number(e.target.value),
-                    })
-                  }
+                  onChange={(e) => setSitter({ rate: Number(e.target.value) })}
                 />
               </div>
-              <label className="checkline" style={{ alignSelf: 'end', paddingBottom: 10 }}>
-                <input
-                  type="checkbox"
-                  checked={draft.sitter?.paid ?? false}
-                  onChange={(e) =>
-                    set('sitter', {
-                      name: '',
-                      start: '18:00',
-                      end: '22:00',
-                      rate: 0,
-                      ...draft.sitter,
-                      paid: e.target.checked,
-                    })
-                  }
-                />
-                <span className="small">Al betaald</span>
-              </label>
+              <span className="small muted grow" style={{ paddingTop: 18 }}>
+                {uren.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} uur ·{' '}
+                <strong>{euro(uren * (draft.sitter?.rate ?? 0))}</strong>
+              </span>
+              <button
+                type="button"
+                className="pick"
+                style={{ marginTop: 16 }}
+                aria-pressed={draft.sitter?.paid ?? false}
+                onClick={() => setSitter({ paid: !draft.sitter?.paid })}
+              >
+                <Icon name="vinkje" size={15} /> Betaald
+              </button>
             </div>
           </div>
         )}
 
         <div className="field">
-          <label>Meenemen</label>
+          <span className="field__label">Meenemen</span>
           <div className="stack stack--sm">
             {(draft.bring ?? []).map((item) => (
               <div key={item.id} className="row">
@@ -362,6 +382,7 @@ export function EventForm({
               <input
                 className="input grow"
                 placeholder="Bijv. gymtas, lege schoenendoos"
+                aria-label="Wat moet er mee"
                 value={bringText}
                 onChange={(e) => setBringText(e.target.value)}
                 onKeyDown={(e) => {

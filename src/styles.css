@@ -259,6 +259,37 @@ button, input, select, textarea { font: inherit; color: inherit; }
    van de zin krijgt een hoofdletter. */
 .cap::first-letter { text-transform: uppercase; }
 
+/* Plakkende groepskop, zodat je bij het scrollen weet in welke klas je zit. */
+.grouphead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 8px;
+  padding: 8px 0 7px;
+  background: var(--bg);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+section:first-of-type > .grouphead { margin-top: 6px; }
+
+.grouphead__count {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 0.7rem;
+  letter-spacing: 0;
+}
+
 .section-title {
   font-size: 0.74rem;
   font-weight: 700;
@@ -343,7 +374,53 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ------------------------------------------------------------ formulier */
 .field { display: flex; flex-direction: column; gap: 5px; }
-.field > label { font-size: 0.8rem; font-weight: 650; color: var(--muted); }
+.field > label,
+.field__label { font-size: 0.8rem; font-weight: 650; color: var(--muted); }
+
+/* Keuzechips: één tik, en je ziet de mogelijkheden zonder ze open te klappen. */
+.picks { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 38px;
+  padding: 6px 11px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
+}
+.pick[aria-pressed='true'] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-ink);
+}
+.pick--matthijs[aria-pressed='true'] {
+  background: var(--matthijs-soft);
+  border-color: var(--matthijs);
+  color: var(--matthijs);
+}
+.pick--amelie[aria-pressed='true'] {
+  background: var(--amelie-soft);
+  border-color: var(--amelie);
+  color: var(--amelie);
+}
+.pick--lotte[aria-pressed='true'] {
+  background: var(--lotte-soft);
+  border-color: var(--lotte);
+  color: var(--lotte);
+}
+.pick--ouder[aria-pressed='true'] {
+  background: var(--ouder-soft);
+  border-color: var(--ouder);
+  color: var(--ouder);
+}
 
 .input,
 .select,
@@ -388,23 +465,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .chip--warn { background: var(--warn-soft); color: var(--warn); }
 .chip--parro { background: var(--surface-2); color: var(--muted); }
 
-.filters { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 12px; }
-.filter {
-  padding: 6px 13px;
-  border-radius: 999px;
-  border: 1px solid var(--line-strong);
-  background: var(--surface);
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-.filter[aria-pressed='true'] {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-ink);
-}
-
 /* ------------------------------------------------------------- kalender */
 .cal__head {
   display: flex;
@@ -426,7 +486,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   flex-wrap: wrap;
   margin-bottom: 12px;
 }
-.cal__controls .filters { margin-bottom: 0; }
 
 /* Persoonsfilter als gekleurde initialen. Compact, en het leert meteen welke
    kleur bij wie hoort — handig bij de stippen in de weekstrip. */
@@ -486,6 +545,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: var(--surface);
   color: var(--text);
 }
+.segmented button:disabled { opacity: 0.5; cursor: not-allowed; }
+.field > .segmented { align-self: flex-start; }
 
 /* ---------------------------------------------------------- weekstrip */
 .weekstrip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
@@ -1066,17 +1127,41 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .weekgrid__day { font-weight: 700; font-size: 0.82rem; color: var(--muted); text-transform: uppercase; }
 
-.total {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 13px 16px;
+/* Oppastotalen: drie getallen naast elkaar, en wat openstaat eronder. */
+.totals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin-bottom: 14px;
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--primary-soft);
-  color: var(--primary);
-  font-weight: 700;
+  background: var(--line);
+  overflow: hidden;
 }
-.total__amount { font-size: 1.35rem; }
+.totals__cell { background: var(--surface); padding: 11px 14px; }
+.totals__label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1px;
+}
+.totals__value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.totals__open {
+  grid-column: 1 / -1;
+  padding: 9px 14px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: 0.86rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+}
 
 .striped > *:nth-child(odd) { background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
 

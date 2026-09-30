@@ -64,6 +64,21 @@ export function SittersView() {
     return { hours, cost, unpaid };
   }, [list]);
 
+  const perOppas = useMemo(() => {
+    const op = new Map<string, { naam: string; aantal: number; uren: number; bedrag: number; open: number }>();
+    for (const e of list) {
+      const naam = e.sitter!.name || 'Zonder naam';
+      const rij = op.get(naam) ?? { naam, aantal: 0, uren: 0, bedrag: 0, open: 0 };
+      const kosten = sitterCost(e);
+      rij.aantal++;
+      rij.uren += sitterHours(e.sitter!.start, e.sitter!.end);
+      rij.bedrag += kosten;
+      if (!e.sitter!.paid) rij.open += kosten;
+      op.set(naam, rij);
+    }
+    return [...op.values()].sort((a, b) => b.bedrag - a.bedrag);
+  }, [list]);
+
   const togglePaid = (e: CalendarEvent) => {
     void saveEvent({ ...e, sitter: { ...e.sitter!, paid: !e.sitter!.paid } });
   };
@@ -80,40 +95,64 @@ export function SittersView() {
         </button>
       </div>
 
-      <div className="filters">
+      <div className="picks" style={{ marginBottom: 10 }} role="group" aria-label="Periode">
         {(Object.keys(PERIOD_LABEL) as Period[]).map((p) => (
-          <button key={p} className="filter" aria-pressed={period === p} onClick={() => setPeriod(p)}>
+          <button key={p} className="pick" aria-pressed={period === p} onClick={() => setPeriod(p)}>
             {PERIOD_LABEL[p]}
           </button>
         ))}
       </div>
 
       {names.length > 0 && (
-        <select
-          className="select"
-          value={who}
-          onChange={(e) => setWho(e.target.value)}
-          style={{ marginBottom: 14 }}
-        >
-          <option value="alle">Alle oppassen</option>
+        <div className="picks" style={{ marginBottom: 14 }} role="group" aria-label="Oppas">
+          <button className="pick" aria-pressed={who === 'alle'} onClick={() => setWho('alle')}>
+            Alle oppassen
+          </button>
           {names.map((n) => (
-            <option key={n} value={n}>
+            <button key={n} className="pick" aria-pressed={who === n} onClick={() => setWho(n)}>
               {n}
-            </option>
+            </button>
           ))}
-        </select>
+        </div>
       )}
 
       {list.length > 0 && (
-        <div className="total" style={{ marginBottom: 14 }}>
-          <div>
-            <div className="tiny">
-              {list.length} moment{list.length === 1 ? '' : 'en'} ·{' '}
-              {totals.hours.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} uur
-            </div>
-            {totals.unpaid > 0 && <div className="tiny">nog te betalen: {euro(totals.unpaid)}</div>}
+        <div className="totals">
+          <div className="totals__cell">
+            <div className="totals__label">Momenten</div>
+            <div className="totals__value">{list.length}</div>
           </div>
-          <div className="total__amount">{euro(totals.cost)}</div>
+          <div className="totals__cell">
+            <div className="totals__label">Uren</div>
+            <div className="totals__value">
+              {totals.hours.toLocaleString('nl-NL', { maximumFractionDigits: 1 })}
+            </div>
+          </div>
+          <div className="totals__cell">
+            <div className="totals__label">Totaal</div>
+            <div className="totals__value">{euro(totals.cost)}</div>
+          </div>
+          {totals.unpaid > 0 && (
+            <div className="totals__open">
+              Nog te betalen <strong>{euro(totals.unpaid)}</strong>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bij "alle oppassen" wil je vooral weten wie je nog moet betalen. */}
+      {who === 'alle' && perOppas.length > 1 && (
+        <div className="stack stack--sm" style={{ marginBottom: 14 }}>
+          {perOppas.map((p) => (
+            <div key={p.naam} className="row row--between small">
+              <strong>{p.naam}</strong>
+              <span className="muted">
+                {p.aantal} × · {p.uren.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} uur ·{' '}
+                {euro(p.bedrag)}
+                {p.open > 0 && <span className="chip chip--warn">{euro(p.open)} open</span>}
+              </span>
+            </div>
+          ))}
         </div>
       )}
 

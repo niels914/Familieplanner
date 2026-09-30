@@ -41,31 +41,52 @@ export function ContactsView() {
     if (!available.includes(filter)) setFilter('alle');
   }, [available, filter]);
 
-  const list = useMemo(() => {
+  /** Gegroepeerd per klas, zodat je bij "wie is de moeder van..." meteen in
+   *  de goede klas kijkt in plaats van door één lange lijst te scrollen. */
+  const groepen = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return contacts
-      .filter((c) => {
-        if (filter === 'oppas') return c.kind === 'oppas';
-        if (filter === 'overig') return c.kind === 'overig';
-        if (filter === 'matthijs') return c.kind === 'klasgenoot' && c.childOf === 'matthijs';
-        if (filter === 'amelie') return c.kind === 'klasgenoot' && c.childOf === 'amelie';
-        return true;
-      })
-      .filter((c) => {
-        if (!q) return true;
-        const haystack = [
-          c.name,
-          c.group,
-          c.notes,
-          c.phone,
-          ...c.parents.flatMap((p) => [p.name, p.phone, p.email]),
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase();
-        return haystack.includes(q);
-      })
+
+    const matchtFilter = (c: Contact) => {
+      if (filter === 'alle') return true;
+      if (filter === 'oppas') return c.kind === 'oppas';
+      if (filter === 'overig') return c.kind === 'overig';
+      return c.kind === 'klasgenoot' && c.childOf === filter;
+    };
+
+    const matchtZoek = (c: Contact) => {
+      if (!q) return true;
+      return [c.name, c.group, c.notes, c.phone, ...c.parents.flatMap((p) => [p.name, p.phone, p.email])]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(q);
+    };
+
+    const zichtbaar = contacts
+      .filter(matchtFilter)
+      .filter(matchtZoek)
       .sort((a, b) => a.name.localeCompare(b.name, 'nl'));
+
+    const uit: Array<{ key: string; label: string; items: Contact[] }> = [];
+    const voegToe = (key: string, label: string, items: Contact[]) => {
+      if (items.length > 0) uit.push({ key, label, items });
+    };
+
+    for (const child of CHILDREN) {
+      voegToe(
+        child,
+        `Klas ${PERSON_LABEL[child]}`,
+        zichtbaar.filter((c) => c.kind === 'klasgenoot' && c.childOf === child),
+      );
+    }
+    voegToe(
+      'zonderklas',
+      'Klasgenootjes zonder klas',
+      zichtbaar.filter((c) => c.kind === 'klasgenoot' && !c.childOf),
+    );
+    voegToe('oppas', 'Oppas', zichtbaar.filter((c) => c.kind === 'oppas'));
+    voegToe('overig', 'Overig', zichtbaar.filter((c) => c.kind === 'overig'));
+    return uit;
   }, [contacts, filter, query]);
 
   return (
@@ -90,25 +111,35 @@ export function ContactsView() {
         style={{ marginBottom: 12 }}
       />
 
-      <div className="filters">
+      <div className="picks" style={{ marginBottom: 6 }} role="group" aria-label="Filter">
         {available.map((f) => (
-          <button key={f} className="filter" aria-pressed={filter === f} onClick={() => setFilter(f)}>
+          <button key={f} className="pick" aria-pressed={filter === f} onClick={() => setFilter(f)}>
             {FILTER_LABEL[f]}
           </button>
         ))}
       </div>
 
-      <div className="list">
-        {list.length === 0 ? (
-          <div className="empty">
-            {contacts.length === 0
-              ? 'Nog geen contacten. Voeg het eerste klasgenootje toe.'
-              : 'Niets gevonden.'}
-          </div>
-        ) : (
-          list.map((c) => <ContactTile key={c.id} contact={c} onEdit={() => setEditing(c)} />)
-        )}
-      </div>
+      {groepen.length === 0 ? (
+        <div className="empty">
+          {contacts.length === 0
+            ? 'Nog geen contacten. Voeg het eerste klasgenootje toe.'
+            : 'Niets gevonden.'}
+        </div>
+      ) : (
+        groepen.map((groep) => (
+          <section key={groep.key}>
+            <h2 className="grouphead">
+              {groep.label}
+              <span className="grouphead__count">{groep.items.length}</span>
+            </h2>
+            <div className="list">
+              {groep.items.map((c) => (
+                <ContactTile key={c.id} contact={c} onEdit={() => setEditing(c)} />
+              ))}
+            </div>
+          </section>
+        ))
+      )}
 
       {editing && <ContactForm initial={editing} onClose={() => setEditing(null)} />}
       {creating && <ContactForm onClose={() => setCreating(false)} />}
@@ -134,8 +165,12 @@ function ContactTile({ contact, onEdit }: { contact: Contact; onEdit: () => void
         <div className="grow">
           <div className="row row--between">
             <strong>{contact.name}</strong>
-            <button className="btn btn--ghost btn--sm" onClick={onEdit}>
-              Bewerken
+            <button
+              className="btn btn--ghost btn--sm"
+              onClick={onEdit}
+              aria-label={`${contact.name} bewerken`}
+            >
+              <Icon name="potlood" size={16} />
             </button>
           </div>
           <div className="small muted">

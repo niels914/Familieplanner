@@ -57,16 +57,12 @@ export function PickupView() {
         ))}
       </datalist>
 
-      <div className="filters">
-        <button className="filter" aria-pressed={tab === 'schema'} onClick={() => setTab('schema')}>
-          Vast weekschema
+      <div className="segmented" role="group" aria-label="Weergave" style={{ marginBottom: 14 }}>
+        <button aria-pressed={tab === 'schema'} onClick={() => setTab('schema')}>
+          Vast schema
         </button>
-        <button
-          className="filter"
-          aria-pressed={tab === 'afwijkingen'}
-          onClick={() => setTab('afwijkingen')}
-        >
-          Komende twee weken
+        <button aria-pressed={tab === 'afwijkingen'} onClick={() => setTab('afwijkingen')}>
+          Twee weken
         </button>
       </div>
 

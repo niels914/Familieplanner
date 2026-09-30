@@ -15,11 +15,11 @@ export function FoodView() {
         </div>
       </div>
 
-      <div className="filters">
-        <button className="filter" aria-pressed={tab === 'boodschappen'} onClick={() => setTab('boodschappen')}>
+      <div className="segmented" role="group" aria-label="Weergave" style={{ marginBottom: 14 }}>
+        <button aria-pressed={tab === 'boodschappen'} onClick={() => setTab('boodschappen')}>
           Boodschappen
         </button>
-        <button className="filter" aria-pressed={tab === 'menu'} onClick={() => setTab('menu')}>
+        <button aria-pressed={tab === 'menu'} onClick={() => setTab('menu')}>
           Weekmenu
         </button>
       </div>

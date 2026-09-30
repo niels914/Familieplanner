@@ -18,6 +18,7 @@ import { EventForm } from '../components/EventForm';
 import { Timeline } from '../components/Timeline';
 import { DayFacts } from '../components/DayFacts';
 import { Icon } from '../components/Icon';
+import { EmptyState } from '../components/EmptyState';
 
 type Filter = 'alles' | PersonId;
 const FILTERS: Filter[] = ['alles', 'matthijs', 'amelie', 'lotte', 'gezin'];
@@ -293,7 +294,7 @@ export function CalendarView({
         ))}
 
         {dayEvents.length === 0 ? (
-          <div className="empty">Niets gepland op deze dag.</div>
+          <EmptyState icon="kalender" title="Niets gepland op deze dag." />
         ) : (
           <Timeline events={dayEvents} onOpen={setEditing} onToggleBring={toggleBring} />
         )}

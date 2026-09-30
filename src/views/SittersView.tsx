@@ -4,6 +4,8 @@ import { formatLong, todayInNl } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
 import { byDate, euro, sitterCost, sitterHours } from '../lib/events';
 import { EventForm } from '../components/EventForm';
+import { EmptyState } from '../components/EmptyState';
+import { Icon } from '../components/Icon';
 
 type Period = 'komend' | 'maand' | 'vorige' | 'alles';
 
@@ -158,7 +160,24 @@ export function SittersView() {
 
       <div className="list">
         {list.length === 0 ? (
-          <div className="empty">Geen oppasmomenten in deze periode.</div>
+          <EmptyState
+            icon="oppas"
+            title={
+              all.length === 0 ? 'Nog geen oppasmomenten.' : 'Geen oppasmomenten in deze periode.'
+            }
+            hint={
+              all.length === 0
+                ? 'Leg het eerste vast, dan houdt de app de uren en wat je moet betalen bij.'
+                : undefined
+            }
+            action={
+              all.length === 0 ? (
+                <button className="btn btn--primary btn--sm" onClick={() => setCreating(true)}>
+                  <Icon name="plus" size={16} /> Oppasmoment toevoegen
+                </button>
+              ) : undefined
+            }
+          />
         ) : (
           list.map((e) => {
             const hours = sitterHours(e.sitter!.start, e.sitter!.end);
@@ -182,11 +201,18 @@ export function SittersView() {
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ fontWeight: 700 }}>{euro(sitterCost(e))}</div>
                     <button
-                      className={`chip ${e.sitter!.paid ? 'chip--gezin' : 'chip--warn'}`}
-                      style={{ border: 0, cursor: 'pointer', marginTop: 4 }}
+                      className={`chip chip--knop ${e.sitter!.paid ? 'chip--gezin' : 'chip--warn'}`}
+                      aria-pressed={e.sitter!.paid}
+                      aria-label={e.sitter!.paid ? 'Betaald, tik om als open te markeren' : 'Open, tik om als betaald te markeren'}
                       onClick={() => togglePaid(e)}
                     >
-                      {e.sitter!.paid ? '✓ betaald' : 'open'}
+                      {e.sitter!.paid ? (
+                        <>
+                          <Icon name="vinkje" size={13} /> betaald
+                        </>
+                      ) : (
+                        'open'
+                      )}
                     </button>
                   </div>
                 </div>

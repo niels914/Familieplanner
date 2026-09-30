@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "icons": "node scripts/make-icons.mjs",
     "vapid": "node scripts/generate-vapid.mjs",
-    "test": "node tests/run.mjs"
+    "test": "node tests/run.mjs && node scripts/contrast.mjs",
+    "contrast": "node scripts/contrast.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.3.0",

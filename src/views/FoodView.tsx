@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { addDays, formatShort, startOfWeek, todayInNl, weekdayShort } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
 import { Icon } from '../components/Icon';
+import { EmptyState } from '../components/EmptyState';
 
 export function FoodView() {
   const [tab, setTab] = useState<'boodschappen' | 'menu'>('boodschappen');
@@ -68,15 +69,25 @@ function Shopping() {
 
       <div className="list">
         {open.length === 0 && done.length === 0 ? (
-          <div className="empty">De lijst is leeg.</div>
+          <EmptyState
+            icon="mandje"
+            title="De boodschappenlijst is leeg."
+            hint="Typ hierboven wat er op moet, of zet de ingrediënten uit het weekmenu erop."
+          />
         ) : (
           open.map((item) => (
             <div key={item.id} className="shopitem">
-              <input type="checkbox" checked={false} onChange={() => void toggleShopping(item.id)} />
-              <span className="shopitem__text grow">
-                {item.text}
-                {item.source && <span className="muted tiny"> · {item.source}</span>}
-              </span>
+              <label className="shopitem__label grow">
+                <input
+                  type="checkbox"
+                  checked={false}
+                  onChange={() => void toggleShopping(item.id)}
+                />
+                <span className="shopitem__text">
+                  {item.text}
+                  {item.source && <span className="muted tiny"> · {item.source}</span>}
+                </span>
+              </label>
               <button
                 className="btn btn--ghost btn--sm"
                 aria-label={`${item.text} verwijderen`}
@@ -102,8 +113,10 @@ function Shopping() {
           <div className="list">
             {done.map((item) => (
               <div key={item.id} className="shopitem shopitem--done">
-                <input type="checkbox" checked onChange={() => void toggleShopping(item.id)} />
-                <span className="shopitem__text grow">{item.text}</span>
+                <label className="shopitem__label grow">
+                  <input type="checkbox" checked onChange={() => void toggleShopping(item.id)} />
+                  <span className="shopitem__text">{item.text}</span>
+                </label>
               </div>
             ))}
           </div>

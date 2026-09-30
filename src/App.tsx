@@ -10,6 +10,7 @@ import { FoodView } from './views/FoodView';
 import { PickupView } from './views/PickupView';
 import { SettingsView } from './views/SettingsView';
 import { QuickAdd } from './components/QuickAdd';
+import { DaySkeleton } from './components/Skeleton';
 import { Icon, type IconName } from './components/Icon';
 
 type View = 'vandaag' | 'agenda' | 'oppas' | 'contacten' | 'meer' | 'eten' | 'brengen' | 'instellingen';
@@ -107,9 +108,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
 
       <main className="main">
         {loading ? (
-          <div className="page center">
-            <div className="spinner" style={{ margin: '60px auto' }} />
-          </div>
+          <DaySkeleton />
         ) : (
           <>
             {view === 'vandaag' && <TodayView onOpenDate={openDate} />}
@@ -148,8 +147,15 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       </nav>
 
       {quickAdd && <QuickAdd date={selected} onClose={() => setQuickAdd(false)} />}
+      {/* Meldingen worden voorgelezen; een fout onderbreekt, een bevestiging niet. */}
       {(notice || error) && (
-        <div className={`toast ${error && !notice ? 'toast--error' : ''}`}>{notice ?? error}</div>
+        <div
+          className={`toast ${error && !notice ? 'toast--error' : ''}`}
+          role={error && !notice ? 'alert' : 'status'}
+          aria-live={error && !notice ? 'assertive' : 'polite'}
+        >
+          {notice ?? error}
+        </div>
       )}
     </div>
   );

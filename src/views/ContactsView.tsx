@@ -5,6 +5,7 @@ import { useData } from '../lib/store';
 import { euro, initials } from '../lib/events';
 import { ContactForm } from '../components/ContactForm';
 import { Icon } from '../components/Icon';
+import { EmptyState } from '../components/EmptyState';
 
 type Filter = 'alle' | ChildId | 'oppas' | 'overig';
 
@@ -111,20 +112,46 @@ export function ContactsView() {
         style={{ marginBottom: 12 }}
       />
 
-      <div className="picks" style={{ marginBottom: 6 }} role="group" aria-label="Filter">
-        {available.map((f) => (
-          <button key={f} className="pick" aria-pressed={filter === f} onClick={() => setFilter(f)}>
-            {FILTER_LABEL[f]}
-          </button>
-        ))}
-      </div>
+      {/* Alleen "Alle" is geen keuze: dan geen filterrij. */}
+      {available.length > 1 && (
+        <div className="picks" style={{ marginBottom: 6 }} role="group" aria-label="Filter">
+          {available.map((f) => (
+            <button key={f} className="pick" aria-pressed={filter === f} onClick={() => setFilter(f)}>
+              {FILTER_LABEL[f]}
+            </button>
+          ))}
+        </div>
+      )}
 
       {groepen.length === 0 ? (
-        <div className="empty">
-          {contacts.length === 0
-            ? 'Nog geen contacten. Voeg het eerste klasgenootje toe.'
-            : 'Niets gevonden.'}
-        </div>
+        contacts.length === 0 ? (
+          <EmptyState
+            icon="contacten"
+            title="Nog geen contacten."
+            hint="Zet het eerste klasgenootje erin, met de telefoonnummers van de ouders."
+            action={
+              <button className="btn btn--primary btn--sm" onClick={() => setCreating(true)}>
+                <Icon name="plus" size={16} /> Contact toevoegen
+              </button>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon="zoeken"
+            title={query ? `Niets gevonden voor ‘${query.trim()}’.` : 'Niets gevonden.'}
+            action={
+              <button
+                className="btn btn--sm"
+                onClick={() => {
+                  setQuery('');
+                  setFilter('alle');
+                }}
+              >
+                Alles tonen
+              </button>
+            }
+          />
+        )
       ) : (
         groepen.map((groep) => (
           <section key={groep.key}>

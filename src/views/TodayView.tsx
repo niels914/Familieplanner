@@ -8,6 +8,7 @@ import { EventForm } from '../components/EventForm';
 import { Timeline } from '../components/Timeline';
 import { DayFacts } from '../components/DayFacts';
 import { Icon } from '../components/Icon';
+import { EmptyState } from '../components/EmptyState';
 
 export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }) {
   const { events, contacts, pickupRules, pickupOverrides, meals, shopping } = useData();
@@ -100,7 +101,7 @@ export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }
       ))}
 
       {todayEvents.length === 0 ? (
-        <div className="empty">Een lege dag. Ook fijn.</div>
+        <EmptyState icon="vandaag" title="Een lege dag." hint="Ook fijn." />
       ) : (
         <Timeline
           events={todayEvents}

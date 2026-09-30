@@ -351,6 +351,7 @@ export function EventForm({
           <div className="stack stack--sm">
             {(draft.bring ?? []).map((item) => (
               <div key={item.id} className="row">
+                <label className="checkline grow">
                 <input
                   type="checkbox"
                   checked={item.done}
@@ -364,6 +365,7 @@ export function EventForm({
                   }
                 />
                 <span className="grow">{item.text}</span>
+                </label>
                 <button
                   className="btn btn--ghost btn--sm"
                   aria-label={`${item.text} verwijderen`}

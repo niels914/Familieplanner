@@ -10,8 +10,8 @@ import { dirname, join } from 'node:path';
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
-const GREEN = [31, 111, 92];
-const GREEN_DARK = [24, 88, 73];
+const GREEN = [26, 95, 78]; // #1A5F4E, de primaire kleur van de app
+const GREEN_DARK = [18, 70, 57];
 const CREAM = [247, 245, 240];
 const WHITE = [255, 255, 255];
 
@@ -33,6 +33,14 @@ function canvas(size) {
 }
 
 function roundRect(c, x0, y0, x1, y1, radius, color) {
+  // Zonder straal is het een gewone rechthoek. De afronding hieronder zou bij
+  // straal 0 elke pixel als "buiten" zien en niets tekenen.
+  if (radius < 1) {
+    for (let y = Math.floor(y0); y < Math.ceil(y1); y++) {
+      for (let x = Math.floor(x0); x < Math.ceil(x1); x++) c.set(x, y, color);
+    }
+    return;
+  }
   for (let y = Math.floor(y0); y < Math.ceil(y1); y++) {
     for (let x = Math.floor(x0); x < Math.ceil(x1); x++) {
       const dx = Math.max(x0 + radius - x, x - (x1 - radius), 0);
@@ -56,11 +64,13 @@ function circle(c, cx, cy, r, color) {
 }
 
 /** Een kalenderblad met twee ringen erboven en stipjes als dagen. */
-function draw(size, inset) {
+function draw(size, inset, maskable = false) {
   const c = canvas(size);
   const s = (v) => v * size;
 
-  roundRect(c, 0, 0, size, size, s(0.22), GREEN);
+  // Een maskable icoon moet tot in de hoeken gevuld zijn: Android legt er zelf
+  // een masker overheen. Eigen ronde hoeken geven dan transparante punten.
+  roundRect(c, 0, 0, size, size, maskable ? 0 : s(0.22), GREEN);
 
   const pad = inset;
   const x0 = s(0.5 - pad / 2);
@@ -87,7 +97,8 @@ function draw(size, inset) {
     for (let col = 0; col < cols; col++) {
       const cx = x0 + ((x1 - x0) / (cols + 1)) * (col + 1);
       const cy = gridTop + ((gridBottom - gridTop) / (rows + 1)) * (r + 1);
-      circle(c, cx, cy, dot, r === 0 && col === 2 ? [180, 90, 40] : GREEN);
+      // Eén stip in het accent: de dag waarop er iets mee moet.
+      circle(c, cx, cy, dot, r === 0 && col === 2 ? [154, 74, 18] : GREEN);
     }
   }
 
@@ -134,13 +145,14 @@ function toPng(c) {
 }
 
 const targets = [
-  ['icon-192.png', 192, 0.6],
-  ['icon-512.png', 512, 0.6],
-  ['icon-180.png', 180, 0.6],
-  ['icon-512-maskable.png', 512, 0.44],
+  ['icon-192.png', 192, 0.6, false],
+  ['icon-512.png', 512, 0.6, false],
+  // iOS rondt het beginschermicoon zelf af, dus ook hier geen eigen hoeken.
+  ['icon-180.png', 180, 0.6, true],
+  ['icon-512-maskable.png', 512, 0.44, true],
 ];
 
-for (const [name, size, inset] of targets) {
-  writeFileSync(join(OUT, name), toPng(draw(size, inset)));
+for (const [name, size, inset, fullBleed] of targets) {
+  writeFileSync(join(OUT, name), toPng(draw(size, inset, fullBleed)));
   console.log('geschreven:', name);
 }

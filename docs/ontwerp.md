@@ -159,17 +159,33 @@ lijntekeningetje, één zin en een knop die het voor de hand liggende doet
 
 Wordt niet achteraf gecontroleerd maar per fase:
 
-- Alle tekst haalt 4,5:1, ook het meenemen-blok en beide thema's.
-- Elk icoon heeft tekst ernaast of een `aria-label`.
-- Aanraakvlakken minstens 44px.
+- Alle tekst haalt 4,5:1, ook het meenemen-blok en beide thema's. De gekleurde
+  stippen per persoon halen 3:1. Controle: `npm run contrast`, draait ook mee
+  met `npm test`.
+- Elk icoon heeft tekst ernaast of een `aria-label`. Elk selectievakje staat
+  in een `<label>`, zodat de hele regel aantikbaar is.
+- Aanraakvlakken, in twee lagen:
+  - **44px** voor wat je vaak en met één hand doet: tabbalk, zweefknop,
+    klaarzetten-rijen, knoppen, telefoonnummers.
+  - **Minstens 24px** (het WCAG 2.2 AA-minimum) voor de compacte keuzes: chips,
+    persoonsfilter, segmentknoppen. Die zitten nu op 32–38px.
+
+  *Bijgesteld in fase 5.* Oorspronkelijk stond hier "overal 44px". Voor de
+  filters in de agenda zou dat een extra regel bedieningselementen kosten op
+  het scherm dat je het vaakst opent — precies de ruimte die fase 3 won. De
+  afweging is bewust gemaakt, niet vergeten.
+- Meldingen worden voorgelezen: een bevestiging beleefd (`status`), een fout
+  meteen (`alert`).
 - Zichtbare focusrand op alles wat je met een toetsenbord kunt bereiken.
-- `prefers-reduced-motion` schakelt beweging uit.
+- `prefers-reduced-motion` schakelt beweging uit, ook de laadanimatie.
+- Op geen enkel scherm schuift de pagina horizontaal op een telefoon van 390px.
 
 ---
 
 ## 5. Fasering
 
 Elke fase is een eigen commit, dus je kunt na elke stap kijken en stoppen.
+Alle vijf zijn uitgevoerd.
 
 | Fase | Wat | Waarom deze volgorde |
 |---|---|---|

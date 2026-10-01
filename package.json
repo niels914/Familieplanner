@@ -17,11 +17,13 @@
     "@fontsource-variable/fraunces": "^5.3.0",
     "@fontsource-variable/inter": "^5.3.0",
     "@netlify/blobs": "^8.1.0",
+    "@supabase/supabase-js": "^2.117.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@netlify/functions": "^2.8.2",
     "@types/node": "^26.2.0",
     "@types/react": "^18.3.12",

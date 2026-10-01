@@ -51,7 +51,14 @@ const bundel = await build({
     {
       name: 'opslag-in-geheugen',
       setup(b) {
-        b.onResolve({ filter: /\/lib\/store$/ }, () => ({ path: join(ROOT, 'tests/memory-store.ts') }));
+        // Elke import die uitkomt op netlify/lib/store, ook de korte './store'
+        // in push.ts en parro.ts, krijgt de geheugenversie.
+        b.onResolve({ filter: /(^|\/)store$/ }, (args) => {
+          const doel = resolve(args.resolveDir, args.path);
+          return doel === join(ROOT, 'netlify/lib/store')
+            ? { path: join(ROOT, 'tests/memory-store.ts') }
+            : undefined;
+        });
       },
     },
   ],

@@ -39,12 +39,39 @@ Nieuwe site → *Import an existing project* → deze repository. Netlify leest
 - publish: `dist`
 - functions: `netlify/functions`
 
-### 2. Omgevingsvariabelen instellen
+### 2. Opslag in Supabase (EU)
+
+De gegevens staan in een Supabase-database. Een EU-regio kies je bij het aanmaken
+van het project en kun je daarna niet meer wijzigen, dus let daar nu op.
+
+1. Maak een account op [supabase.com](https://supabase.com) en kies *New project*.
+2. Kies bij **Region** een regio in de EU. *Central EU (Frankfurt)* is het dichtstbij.
+   Londen en Zürich liggen buiten de EU.
+3. Bewaar het databasewachtwoord in je wachtwoordmanager. De app zelf heeft het niet nodig.
+4. Open in het project de **SQL Editor**, plak de inhoud van
+   [`supabase/schema.sql`](supabase/schema.sql) en klik *Run*. Dat maakt de tabel en de
+   beveiliging aan. Opnieuw uitvoeren kan geen kwaad.
+5. Haal twee waarden op bij *Project Settings → API* en zet ze bij stap 3 in Netlify:
+   - **Project URL** wordt `SUPABASE_URL`
+   - de **geheime sleutel** wordt `SUPABASE_SERVICE_ROLE_KEY`. Dat is de `service_role`
+     (of in het nieuwe scherm de *secret key*), **niet** de publieke `anon`/*publishable* sleutel.
+
+> **De geheime sleutel geeft volledige toegang tot de database.** Hij staat alleen in de
+> omgevingsvariabelen van Netlify, nooit in de code. De tabel heeft Row Level Security
+> zonder policies, dus de publieke sleutel kan er niets uit lezen.
+
+**Had je de app al gebruikt met de vorige opslag (Netlify Blobs)?** Dan hoef je niets te
+doen. De eerste keer dat de app opent, worden de bestaande gegevens automatisch
+overgezet. Daarna kan `netlify/lib/legacy-blobs.ts` weg.
+
+### 3. Omgevingsvariabelen instellen
 
 Netlify → *Site configuration* → *Environment variables*. Zie ook `.env.example`.
 
 | Variabele | Waarvoor |
 |---|---|
+| `SUPABASE_URL` | De project-URL uit stap 2. |
+| `SUPABASE_SERVICE_ROLE_KEY` | De geheime sleutel uit stap 2. |
 | `FAMILY_PASSWORD` | Het gedeelde wachtwoord waarmee jullie inloggen. |
 | `SESSION_SECRET` | Lange willekeurige tekst waarmee de sessiecookie ondertekend wordt. |
 | `PARRO_ICS_URL` | De iCal-link uit Parro. |
@@ -69,7 +96,7 @@ npm run vapid
 > een commit. Kun je hem niet meer terugvinden of is hij uitgelekt? Vraag in Parro een
 > nieuwe link aan; de oude vervalt dan.
 
-### 3. Op je telefoon zetten
+### 4. Op je telefoon zetten
 
 - **iPhone**: open de site in Safari → deelknop → *Zet op beginscherm*. Meldingen
   werken op iOS **alleen** vanaf het beginscherm, niet in de browser zelf.
@@ -96,7 +123,7 @@ npm run dev:vite
 Andere handige commando's:
 
 ```bash
-npm test           # parsers, reeksen, de avondherinnering en het kleurcontrast
+npm test           # parsers, reeksen, herinnering, opslag, het databaseschema en kleurcontrast
 npm run build      # typecheck + productiebuild
 npm run icons      # genereert de PWA-iconen opnieuw
 npm run vapid      # maakt nieuwe push-sleutels
@@ -126,19 +153,21 @@ shared/               types en datumhulp, gedeeld met de backend
 netlify/functions/    api.ts (alle endpoints), sync-parro.ts, send-reminders.ts
 netlify/lib/          opslag, sessie, iCalendar-parser, pushmeldingen
 public/               service worker, manifest, iconen
-tests/                tests voor de parsers, plus een nepserver om de app te bekijken
+supabase/             schema.sql: de tabel en de beveiliging
+tests/                tests, plus een testserver om de app te bekijken
 ```
 
-**Opslag.** De data staat in [Netlify Blobs](https://docs.netlify.com/blobs/overview/):
-geen extra dienst, geen extra account. Elke collectie is één JSON-document. Netlify
-Blobs kent geen voorwaardelijk schrijven, dus wijzigingen worden als *operatie*
-toegepast: na het schrijven leest de server terug, en als iemand anders er tussendoor
-kwam, wordt de bewerking opnieuw op hun versie toegepast. Zo verdwijnt er niets als
-jij en Irene tegelijk iets aanpassen.
+**Opslag.** De data staat in Supabase (Postgres). Elke soort gegevens is één rij in de
+tabel `kv` met een jsonb-document; voor de gegevens van één gezin is dat ruim genoeg
+en het houdt de app eenvoudig. Een versienummer voorkomt dat jij en Irene elkaars
+wijziging overschrijven: slaan jullie tegelijk iets op, dan krijgt de tweede een
+conflict en wordt zijn wijziging opnieuw toegepast op de verse gegevens. Dat
+controleren en schrijven gebeurt in één databaseopdracht (`kv_write` in
+`supabase/schema.sql`), dus er kan niets tussendoor komen.
 
-Wil je later naar een echte database (bijvoorbeeld Supabase in de EU, wat voor de
-telefoonnummers van andere gezinnen netter is): dan hoeft alleen `netlify/lib/store.ts`
-vervangen te worden. De rest van de code kent alleen `read`, `update` en `overwrite`.
+De code is in drie lagen verdeeld: `netlify/lib/kv.ts` (logica, kent Supabase niet),
+`netlify/lib/supabase-backend.ts` (de aanroepen) en `netlify/lib/store.ts` (koppelt
+ze). De rest van de app kent alleen `read`, `update`, `overwrite` en `readAll`.
 
 **Inloggen.** Eén gedeeld wachtwoord, vergeleken via een HMAC zodat de vergelijking
 niets over de lengte verraadt. De sessie is een cookie die met `SESSION_SECRET`
@@ -161,8 +190,19 @@ wintertijd niets aangepast te worden. Een dag wordt hoogstens één keer verstuu
 In deze app staan gegevens van andere mensen: namen en telefoonnummers van ouders van
 klasgenootjes, en van oppassen. Een paar dingen om in gedachten te houden:
 
-- De data staat bij Netlify. Netlify Blobs geeft geen keuze in de regio waar het
-  fysiek staat; wil je dat wel, stap dan over op een database in de EU (zie hierboven).
+- **Waar de data staat.** In Supabase, in de EU-regio die je bij het aanmaken van het
+  project hebt gekozen. Dat geldt voor de opslag.
+- **Waar de data langskomt.** De Netlify-functies die de data lezen en schrijven
+  draaien standaard in de VS (Ohio). De gegevens staan dus in de EU, maar gaan bij
+  gebruik wel even door een server in de VS. De regio van de functies aanpassen kan
+  alleen op een betaald Netlify-plan (*Cloud compute → Functions → Region*). Voor een
+  gezinsagenda is dit meestal acceptabel, maar je moet het weten.
+- **Back-ups.** Het gratis Supabase-plan maakt geen back-ups. Een betaald plan (Pro)
+  maakt dagelijks een back-up en bewaart die 7 dagen.
+- **Pauzeren.** Supabase pauzeert gratis projecten die een week nauwelijks worden
+  gebruikt. Door de geplande synchronisatie en herinnering is er elk uur activiteit,
+  maar dat is niet gegarandeerd. Je kunt een gepauzeerd project binnen een jaar
+  herstellen in het Supabase-dashboard.
 - De app is alleen bereikbaar met het gezinswachtwoord. Kies een goed wachtwoord en
   deel het niet buiten het gezin.
 - Verwijder contacten van klasgenootjes als de klas verandert en je ze niet meer nodig

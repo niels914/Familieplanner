@@ -1,4 +1,12 @@
-import { getStore, type Store } from '@netlify/blobs';
+/**
+ * Opslag van alle gegevens, in Supabase (Postgres) in een EU-regio.
+ *
+ * De rest van de app kent alleen `read`, `update`, `overwrite` en `readAll`.
+ * De logica staat in kv.ts, de Supabase-aanroepen in supabase-backend.ts, en
+ * het tabelontwerp in supabase/schema.sql.
+ */
+
+import { createClient } from '@supabase/supabase-js';
 import type {
   AppData,
   CalendarEvent,
@@ -10,12 +18,10 @@ import type {
   Settings,
   ShoppingItem,
 } from '../../shared/types';
+import { createKv } from './kv';
+import { leesUitBlobs } from './legacy-blobs';
+import { supabaseBackend, type SupabaseLike } from './supabase-backend';
 
-const STORE_NAME = 'familieplanner';
-
-/** Elke collectie is één JSON-document. De dataset van één gezin is klein genoeg
- *  om in zijn geheel te lezen en te schrijven; schrijven gaat met een etag-check
- *  zodat gelijktijdige wijzigingen van twee telefoons elkaar niet overschrijven. */
 export type Collection =
   | 'events'
   | 'contacts'
@@ -39,53 +45,45 @@ const EMPTY: Record<Collection, unknown> = {
   pushSubs: [] as PushSubscriptionRecord[],
 };
 
-let cached: Store | null = null;
+function maakClient(): SupabaseLike {
+  const url = process.env.SUPABASE_URL;
+  const sleutel = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-function store(): Store {
-  if (!cached) cached = getStore({ name: STORE_NAME, consistency: 'strong' });
-  return cached;
-}
-
-export async function read<T>(collection: Collection): Promise<T> {
-  const res = await store().getWithMetadata(collection, { type: 'json' });
-  if (!res || res.data === null || res.data === undefined) {
-    return structuredClone(EMPTY[collection]) as T;
+  if (!url || !sleutel) {
+    throw new Error(
+      'SUPABASE_URL en SUPABASE_SERVICE_ROLE_KEY ontbreken in de omgevingsvariabelen van Netlify. Zie de README, stap "Opslag in Supabase".',
+    );
   }
-  return res.data as T;
+
+  // Server-side: geen sessies of tokens bewaren, elke aanroep staat op zichzelf.
+  return createClient(url, sleutel, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  }) as unknown as SupabaseLike;
 }
 
-/**
- * Lees-wijzig-schrijf voor een collectie.
- *
- * Netlify Blobs kent (nog) geen voorwaardelijk schrijven, dus we lossen
- * gelijktijdige wijzigingen op door de bewerking als *operatie* te behandelen:
- * na het schrijven lezen we terug, en als er iets anders staat dan wij
- * schreven, was iemand ons voor en passen we onze operatie opnieuw toe op hun
- * versie. Beide wijzigingen blijven zo behouden.
- */
-export async function update<T>(
-  collection: Collection,
-  mutate: (current: T) => T,
-): Promise<T> {
-  let attempt = 0;
-  let written = mutate(await read<T>(collection));
-  await store().setJSON(collection, written);
+let kv: ReturnType<typeof createKv<Collection>> | null = null;
 
-  while (attempt < 4) {
-    const readBack = await read<T>(collection);
-    if (JSON.stringify(readBack) === JSON.stringify(written)) return written;
-    // Iemand schreef tussendoor: onze operatie opnieuw toepassen op hun versie.
-    written = mutate(readBack);
-    await store().setJSON(collection, written);
-    attempt++;
-    await new Promise((r) => setTimeout(r, 50 * attempt));
+/** Pas bij het eerste gebruik aanmaken, zodat een ontbrekende variabele een
+ *  duidelijke melding geeft in plaats van de hele functie te laten crashen. */
+function opslag() {
+  if (!kv) {
+    kv = createKv<Collection>({
+      backend: supabaseBackend(maakClient()),
+      empty: EMPTY,
+      // Eenmalig overzetten van de vorige opslag; zie legacy-blobs.ts.
+      legacy: leesUitBlobs,
+    });
   }
-  return written;
+  return kv;
 }
 
-export async function overwrite<T>(collection: Collection, value: T): Promise<void> {
-  await store().setJSON(collection, value);
-}
+export const read = <T>(collection: Collection): Promise<T> => opslag().read<T>(collection);
+
+export const update = <T>(collection: Collection, mutate: (current: T) => T): Promise<T> =>
+  opslag().update<T>(collection, mutate);
+
+export const overwrite = <T>(collection: Collection, value: T): Promise<void> =>
+  opslag().overwrite<T>(collection, value);
 
 /** Alles in één keer, voor het openen van de app. */
 export async function readAll(): Promise<AppData> {

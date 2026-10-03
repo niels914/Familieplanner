@@ -239,33 +239,52 @@ Het aantikbare prototype staat in `docs/mockups/fase-b.html` (open het in een br
 beelden in dezelfde map. Het bouwt op de echte stijl en de echte invoerparser.
 
 **Gekozen structuur:** vijf knoppen in de balk. Vier schermen (Vandaag, Agenda, Regelen,
-Mensen) en in het midden een grotere Nieuw-knop die vanuit elk scherm een invoerblad opent
-voor een nieuw agenda-item. Dat vervangt de zwevende plusknop. Oppas zit in Mensen
-(Contacten | Oppas).
+Mensen) en in het midden een grotere Nieuw-knop. Oppas zit in Mensen (Contacten | Oppas).
 
-**Regelen vervangt Boodschappen als scherm.** Het bevat drie segmenten: Acties,
-Boodschappen en Weekmenu. Een actie is iets dat nog moet gebeuren of afgestemd moet worden:
-een titel, wie het doet (Niels, Irene of afstemmen), een kind, een deadline en eventueel een
-koppeling aan een agenda-item. Ontwerpkeuzes:
+**De Nieuw-knop splitst in twee.** Eén blad met bovenaan de keuze *Agenda-item* of *Taak*.
+Vanuit Regelen staat Taak voorgekozen, overal anders Agenda-item. Wat je al typte blijft
+staan als je wisselt.
 
-1. **Gegroepeerd op urgentie** (te laat, deze week, later, geen datum), met een filter op wie.
-   Niels ziet bij zijn filter ook wat samen afgestemd moet worden.
-2. **Afstemmen houdt het besluit vast.** Bij afvinken kun je opschrijven wat het werd.
-3. **Acties komen naar je toe:** het dringende staat als één regel op Vandaag en de tab
-   krijgt een teller. Voorstel, nog niet gebouwd: de avondmelding noemt ook wat morgen verloopt.
-4. **Gekoppeld aan de agenda**, zodat "ouderavond: aanmelden?" naar het agenda-item wijst.
-5. **Geen eigen account per persoon.** De app heeft één gezinswachtwoord; het filter op Niels
-   of Irene kies je zelf.
+**Regelen vervangt Boodschappen als scherm** en heeft drie segmenten: Taken, Boodschappen,
+Weekmenu. Een taak is iets dat nog moet gebeuren of afgestemd moet worden: een titel, wie het
+doet (Niels, Irene of afstemmen), een kind, een deadline en eventueel een koppeling aan een
+agenda-item.
 
-Overige bevindingen:
+1. Gegroepeerd op urgentie (te laat, deze week, later, geen datum), met een filter op wie.
+2. Afstemmen houdt het besluit vast.
+3. Wat dringend is staat als één regel op Vandaag en de tab krijgt een teller.
+4. Taken kunnen aan een agenda-item hangen.
+5. Geen eigen account per persoon: het filter op Niels of Irene kies je zelf.
 
-- Boodschappen en Weekmenu zijn niet weggehaald maar segmenten van Regelen (2 tikken, net als nu).
-- Oppas wordt één tik dieper, achter Mensen.
-- De tijdstanden van Vandaag zijn een voorstel: tot 12:00 ochtend ("Vandaag mee" bovenaan),
-  tot 18:00 middag (alleen wat nog moet), daarna avond (morgen voorop).
-- De middenknop is een actie en geen bestemming. Hij is niet sneller in tikken (2, net als
-  nu), wel beter bereikbaar, en hij dekt geen inhoud meer af.
+**Automatisch signaleren wanneer niemand thuis is.** Niels en Irene zetten in de agenda wanneer
+ze *niet thuis* of *later thuis* zijn. De app legt dat naast elkaar:
 
-Aantal tikken, nu → straks: actie vastleggen kan nu niet → 3, dringende acties zien kan nu
-niet → 0, boodschap toevoegen 2 → 2, instellingen 2 → 1, iets in de agenda zetten 2 → 2,
+- *Weg* is een agenda-item van Niels of Irene van soort Niet thuis (met eindtijd), of Later
+  thuis: dan geldt de normale thuiskomst (instelling, nu 17:30) tot het opgegeven tijdstip.
+- Een **signaal** ontstaat als ze minstens een half uur tegelijk weg zijn en geen oppas-item in
+  de agenda dat tijdvak dekt. Dekt de oppas een deel, dan staat erbij welk stuk open is.
+- Al bij het invoeren staat er een waarschuwing, en na opslaan staat het signaal bij Regelen,
+  als banner op de dag in de Agenda en op Vandaag.
+- Uitwegen: Niels blijft thuis, Irene blijft thuis, Niels of Irene regelt een oppas (maakt een
+  taak met deadline), of geen probleem. Komt er later een oppas in de agenda die het dekt, dan
+  sluiten de taak en het signaal vanzelf.
+- Het is een waarschuwing en geen verbod, en het is zo goed als wat ze invullen. Het koppelen van
+  de Gmail-agenda's (docs/todo.md) kan dit later aanvullen, alleen als voorstel.
+
+**Wat dit vraagt van het model en de invoer (nog niet gebouwd):**
+
+- Agenda-items krijgen een **eindtijd**, en een nieuwe soort *Niet thuis*.
+- De parser leert "later thuis", "niet thuis" en een tijdvak als "18:00-22:00" of "tot 22:00".
+  Zonder eindtijd schat de app 3 uur (weg) of 4 uur (oppas) en zegt dat erbij.
+- Taken zijn een nieuwe verzameling (titel, wie, kind, deadline, notitie, besluit, koppeling).
+- Signalen worden berekend en niet opgeslagen; alleen de keuze erbij (blijft thuis, geen
+  probleem, taak) wordt bewaard.
+
+Overige bevindingen: Boodschappen en Weekmenu zijn segmenten van Regelen (2 tikken, net als nu);
+Oppas wordt één tik dieper; de tijdstanden van Vandaag (tot 12:00 ochtend, tot 18:00 middag,
+daarna avond) zijn een voorstel; de middenknop dekt geen inhoud meer af maar is niet sneller in
+tikken (2, net als nu).
+
+Aantal tikken, nu → straks: weten of jullie allebei weg zijn: zelf bedenken → 0, taak vastleggen
+kan nu niet → 2, boodschap toevoegen 2 → 2, instellingen 2 → 1, iets in de agenda zetten 2 → 2,
 Oppas 1 → 2, contact zoeken en breng & haal gelijk.

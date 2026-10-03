@@ -1453,6 +1453,26 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui)}
 .actrow__meta{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
 .actrow--done .actrow__title{text-decoration:line-through;color:var(--muted);font-weight:550}
 .actrow--done{opacity:.8}
+/* nieuw-blad: keuze tussen agenda-item en taak */
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.choice__opt{display:flex;align-items:center;gap:10px;min-height:64px;padding:10px 12px;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface);color:var(--muted);text-align:left;cursor:pointer;transition:background var(--dur) var(--ease),border-color var(--dur) var(--ease)}
+.choice__opt>svg{flex-shrink:0}
+.choice__opt b{display:block;font-size:.92rem;color:var(--text)}
+.choice__opt small{display:block;font-size:.72rem;line-height:1.3;color:var(--muted)}
+.choice__opt[aria-pressed='true']{background:var(--primary-soft);border-color:var(--primary);color:var(--primary);box-shadow:inset 0 0 0 1px var(--primary)}
+/* signalering */
+.actrow__icon{display:grid;place-items:center;flex-shrink:0;width:50px;min-height:56px;color:var(--warn)}
+.actrow--signal{border-color:color-mix(in srgb,var(--primary) 35%,transparent);background:color-mix(in srgb,var(--primary-soft) 55%,var(--surface))}
+.actrow--ok{opacity:.85}
+.chip--sig{background:var(--primary-soft);color:var(--primary)}
+.signalnote{display:flex;gap:9px;align-items:flex-start;margin:0 0 10px;padding:9px 12px;border-radius:var(--radius);background:var(--warn-soft);color:var(--warn);font-size:.84rem;line-height:1.4}
+.signalnote>svg{flex-shrink:0;margin-top:1px}
+.signalnote b{color:var(--warn)}
+.signalbanner{display:flex;align-items:center;gap:10px;width:100%;margin:8px 0 4px;padding:9px 14px;border:1px solid color-mix(in srgb,var(--warn) 30%,transparent);border-radius:var(--radius);background:var(--warn-soft);color:var(--warn);text-align:left;cursor:pointer;min-height:52px}
+.signalbanner b{display:block;font-size:.92rem}
+.signalbanner .tiny{display:block}
+.signalbanner>svg:last-child{flex-shrink:0}
+.mk .toast{white-space:normal;text-align:center;width:max-content;max-width:330px;border-radius:16px}
 </style>
 <div class="mk">
   <div class="mk__bar">
@@ -1492,45 +1512,49 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui)}
       <div class="navbox">
         <h3>Nu · 5 tabs en een plusknop</h3>
         <div class="tabsrow"><span class="tabpill">Vandaag</span><span class="tabpill">Agenda</span><span class="tabpill">Oppas</span><span class="tabpill">Contacten</span><span class="tabpill">Meer</span></div>
-        <ul><li>Meer → Eten (boodschappen + weekmenu)</li><li>Meer → Breng &amp; haal</li><li>Meer → Instellingen</li><li>Zwevende plusknop over de inhoud, op elk scherm</li></ul>
+        <ul><li>Meer → Eten (boodschappen + weekmenu)</li><li>Meer → Breng &amp; haal</li><li>Meer → Instellingen</li><li>Zwevende plusknop over de inhoud, alleen voor agenda-items</li></ul>
       </div>
       <div class="navbox">
         <h3>Straks · 4 schermen en een middenknop</h3>
         <div class="tabsrow"><span class="tabpill">Vandaag</span><span class="tabpill">Agenda</span><span class="tabpill" style="background:var(--primary);color:var(--primary-ink);border-color:var(--primary)">＋ Nieuw</span><span class="tabpill">Regelen</span><span class="tabpill">Mensen</span></div>
-        <ul><li><b>Regelen</b> = Acties | Boodschappen | Weekmenu</li><li>Mensen = Contacten | Oppas</li><li>Gezin-knop rechtsboven: Meldingen, Breng &amp; haal, Parro, Installeren, Uitloggen</li><li>Middenknop: nieuw agenda-item, vanuit elk scherm</li></ul>
+        <ul><li><b>Regelen</b> = Taken | Boodschappen | Weekmenu</li><li>Mensen = Contacten | Oppas</li><li>Middenknop: kies <b>Agenda-item</b> of <b>Taak</b></li><li>Gezin-knop: Meldingen, Breng &amp; haal, Parro, Normale thuiskomst, Installeren, Uitloggen</li></ul>
       </div>
     </div>
 
-    <h2>Regelen: openstaande acties</h2>
-    <p>Een actie is iets dat nog moet gebeuren of afgestemd moet worden. Ze heeft een titel, wie het doet (Niels, Irene of afstemmen), een kind, een deadline en eventueel een koppeling aan een agenda-item.</p>
-    <div class="decision"><div class="n">1</div><div><b>Gegroepeerd op urgentie, niet op wie.</b><span>Te laat, deze week, later, geen datum. Het filter Niels, Irene of Afstemmen staat erboven. Niels ziet bij zijn filter ook wat samen afgestemd moet worden.</span></div></div>
-    <div class="decision"><div class="n">2</div><div><b>Afstemmen houdt het besluit vast.</b><span>“Ouderavond: aanmelden?” blijft open tot jullie hebt besloten. Bij afvinken kun je opschrijven wat het werd. Dat staat daarna onder Afgerond.</span></div></div>
-    <div class="decision"><div class="n">3</div><div><b>Acties komen naar je toe.</b><span>Een lijst die je zelf moet openen raakt vergeten. Daarom staat het dringende op Vandaag (één regel), en krijgt de tab een teller. Voorstel: de avondmelding noemt ook wat morgen verloopt.</span></div></div>
-    <div class="decision"><div class="n">4</div><div><b>Gekoppeld aan de agenda.</b><span>De ouderavond-actie wijst naar het agenda-item; één tik brengt je erheen. De cadeau-actie hangt aan Daans verjaardag.</span></div></div>
+    <h2>De plusknop splitst in twee</h2>
+    <p>Eén tik op de middenknop opent één blad met twee grote keuzes bovenaan: <b>Agenda-item</b> (op een dag, met tijd) en <b>Taak</b> (te regelen of af te stemmen). Daaronder staat het invoerveld voor de gekozen soort.</p>
+    <div class="decision"><div class="n">1</div><div><b>De juiste soort staat al aan.</b><span>Open je het blad vanuit Regelen, dan staat Taak voorgekozen. Overal anders staat Agenda-item voorgekozen. De meeste keren hoef je dus niets extra aan te tikken.</span></div></div>
+    <div class="decision"><div class="n">2</div><div><b>Wisselen verliest niets.</b><span>Wat je al getypt had voor de ene soort blijft staan als je even naar de andere kijkt.</span></div></div>
+
+    <h2>Regelen herkent zelf wanneer niemand thuis is</h2>
+    <p>Jullie zetten gewoon in de agenda wanneer je <b>niet thuis</b> bent of <b>later thuis</b>. De app legt dat naast elkaar en meldt het zelf als jullie tegelijk weg zijn.</p>
+    <div class="decision"><div class="n">3</div><div><b>Wat telt als “weg”.</b><span>Een agenda-item van Niels of Irene van soort Niet thuis (met een eindtijd), of Later thuis: dan geldt jouw normale thuiskomst (nu 17:30, in te stellen onder Gezin) tot het tijdstip dat je opgeeft. Typ bijvoorbeeld “irene later thuis 20:00 vrijdag”.</span></div></div>
+    <div class="decision"><div class="n">4</div><div><b>Wanneer het een signaal wordt.</b><span>Als jullie minstens een half uur tegelijk weg zijn en er geen oppas in de agenda staat die dat tijdvak dekt. Dekt de oppas maar een deel, dan staat er welk stuk nog open is.</span></div></div>
+    <div class="decision"><div class="n">5</div><div><b>Al bij het invoeren gewaarschuwd.</b><span>Typ je “niels niet thuis 18:00-22:00”, dan zie je meteen dat Irene dan ook weg is, nog voor je opslaat. Na opslaan staat het bij Regelen, op de dag in de Agenda en op Vandaag.</span></div></div>
+    <div class="decision"><div class="n">6</div><div><b>Vijf uitwegen, één tik.</b><span>Niels blijft thuis, Irene blijft thuis, of Niels of Irene regelt een oppas (dat maakt een taak met deadline). Of: geen probleem, bijvoorbeeld als de kinderen elders zijn. Zet je later een oppas in de agenda, dan sluit de taak en het signaal vanzelf.</span></div></div>
 
     <h2>Aantal tikken</h2>
     <table class="tbl">
       <thead><tr><th>Wat je wilt</th><th>Nu</th><th>Straks</th><th></th></tr></thead>
       <tbody>
-        <tr><td>Actie vastleggen</td><td>kan niet</td><td>3 (Regelen, + Actie, Zet erop)</td><td class="better">nieuw</td></tr>
-        <tr><td>Zien wat dringend is</td><td>kan niet</td><td>0 (staat op Vandaag)</td><td class="better">nieuw</td></tr>
+        <tr><td>Weten of jullie allebei weg zijn</td><td>zelf bedenken</td><td>0 (staat op Vandaag en bij Regelen)</td><td class="better">nieuw</td></tr>
+        <tr><td>Taak vastleggen</td><td>kan niet</td><td>2 (middenknop, Zet erop)</td><td class="better">nieuw</td></tr>
+        <tr><td>Iets in de agenda zetten</td><td>2 (plus, Opslaan)</td><td>2 (middenknop, Zet in agenda)</td><td class="same">gelijk</td></tr>
         <tr><td>Boodschap toevoegen</td><td>2 (Meer → Eten)</td><td>2 (Regelen, Boodschappen)</td><td class="same">gelijk</td></tr>
         <tr><td>Meldingen of instellingen</td><td>2 (Meer → Instellingen)</td><td>1 (Gezin-knop)</td><td class="better">sneller</td></tr>
-        <tr><td>Iets in de agenda zetten</td><td>2 (plus, Opslaan)</td><td>2 (middenknop, Zet in agenda)</td><td class="same">gelijk</td></tr>
         <tr><td>Contact zoeken</td><td>1</td><td>1</td><td class="same">gelijk</td></tr>
         <tr><td>Breng &amp; haal bekijken</td><td>2</td><td>2</td><td class="same">gelijk</td></tr>
         <tr><td>Oppas bekijken of afrekenen</td><td>1 (eigen tab)</td><td>2 (Mensen → Oppas)</td><td class="worse">langzamer</td></tr>
       </tbody>
     </table>
 
-    <h2>Keuzes die ik voor jullie heb gemaakt</h2>
-    <div class="decision"><div class="n">5</div><div><b>Boodschappen en Weekmenu zijn niet weg.</b><span>Ze zijn segmenten in Regelen geworden. Dat kost niets extra (2 tikken, net als nu) en het weekmenu staat nog naast de lijst. Willen jullie ze liever helemaal uit beeld, dan kan dat; het wordt dan 3 tikken via Gezin.</span></div></div>
-    <div class="decision"><div class="n">6</div><div><b>Geen eigen account per persoon.</b><span>De app heeft één gezinswachtwoord, dus “voor jou” kan hij niet zelf weten. Het filter Niels of Irene kies je zelf. Een teller per persoon zou aparte inlog vragen.</span></div></div>
-    <div class="decision"><div class="n">7</div><div><b>De middenknop blijft een agenda-actie.</b><span>Acties voeg je toe via “+ Actie” in Regelen. Alternatief: het invoerblad een keuze laten maken tussen Agenda en Actie, dan werkt de middenknop overal voor beide.</span></div></div>
-    <div class="decision"><div class="n">8</div><div><b>Oppas wordt één tik dieper</b> <span>(Mensen → Oppas). En de grenzen van de tijdstanden (12:00, 18:00) zijn mijn voorstel.</span></div></div>
+    <h2>Wat je moet weten</h2>
+    <div class="decision"><div class="n">7</div><div><b>De signalering is zo goed als wat jullie invullen.</b><span>Staat een van jullie niet in de agenda als weg, dan ziet de app niets. Later kan het koppelen van jullie Gmail-agenda’s dit aanvullen, maar alleen als voorstel: niet elke afspraak betekent dat je weg bent.</span></div></div>
+    <div class="decision"><div class="n">8</div><div><b>Het is een waarschuwing, geen verbod.</b><span>Met “Geen probleem” leggen jullie vast dat het zo bedoeld is. Het verschijnt dan onder Afgerond en komt niet terug.</span></div></div>
+    <div class="decision"><div class="n">9</div><div><b>De eindtijd is nieuw.</b><span>Agenda-items hebben nu alleen een starttijd. Voor Niet thuis en Oppas komt er een eindtijd bij, en de invoer leert “later thuis”, “niet thuis” en “18:00-22:00”. Zonder eindtijd schat de app 3 uur (weg) of 4 uur (oppas) en zegt dat erbij.</span></div></div>
 
     <h2>Wat je hier niet ziet</h2>
-    <p>Alleen de structuur, met voorbeeldgegevens; er wordt niets opgeslagen. Herhalende acties, een melding vlak voor een deadline, snelheid (fase A), kinderkleuren en foto’s (fase C) en de Parro-tekst als voorstel (fase F) zitten er niet in.</p>
+    <p>Alleen de structuur, met voorbeeldgegevens; er wordt niets opgeslagen. Een melding vlak voor een signaal, herhalende taken, snelheid (fase A), kinderkleuren en foto’s (fase C) en de Parro-tekst als voorstel (fase F) zitten er niet in.</p>
   </div>
 </div>
 
@@ -1543,8 +1567,8 @@ const WD=['maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag','zonda
 const WDS=['ma','di','wo','do','vr','za','zo'];
 const MN=['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
 const PL={matthijs:'Matthijs',amelie:'Amélie',lotte:'Lotte',gezin:'Gezin',niels:'Niels',irene:'Irene'};
-const CL={school:'School',psz:'Peuterspeelzaal',opvang:'Opvang',oppas:'Oppas',afspraak:'Afspraak',verjaardag:'Verjaardag',vrij:'Vrij',anders:'Anders'};
-const CI={school:'rugzak',psz:'blokken',opvang:'fles',oppas:'oppas',afspraak:'speld',verjaardag:'taart',vrij:'koffer',anders:'kalender'};
+const CL={weg:'Niet thuis',school:'School',psz:'Peuterspeelzaal',opvang:'Opvang',oppas:'Oppas',afspraak:'Afspraak',verjaardag:'Verjaardag',vrij:'Vrij',anders:'Anders'};
+const CI={weg:'huis',school:'rugzak',psz:'blokken',opvang:'fles',oppas:'oppas',afspraak:'speld',verjaardag:'taart',vrij:'koffer',anders:'kalender'};
 const I=(n,s)=>(window.__ICONS[n]||'').replace(/\{S\}/g,s||20);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const d=s=>{const[y,m,dd]=s.split('-').map(Number);return new Date(Date.UTC(y,m-1,dd))};
@@ -1574,7 +1598,14 @@ const S={
     {id:9,date:TOMORROW,time:'14:00',title:'Knutselmiddag',person:'matthijs',cat:'school',bring:[{id:91,text:'Lege schoenendoos',done:false}]},
     {id:10,date:'2026-10-08',time:'19:30',title:'Ouderavond',person:'gezin',cat:'school',bring:[]},
     {id:11,date:'2026-10-09',allDay:true,title:'Daan is jarig',person:'matthijs',cat:'verjaardag',bring:[{id:111,text:'Cadeautje',done:false}]},
-    {id:12,date:'2026-10-10',time:'19:00',title:'Oppas Marloes',person:'gezin',cat:'oppas',bring:[]},
+    {id:12,date:'2026-10-10',time:'19:00',end:'23:00',title:'Oppas Marloes',person:'gezin',cat:'oppas',bring:[]},
+    {id:13,date:'2026-10-09',time:'17:30',end:'21:00',title:'Borrel collega\'s',person:'niels',cat:'weg',bring:[]},
+    {id:14,date:'2026-10-09',time:'17:30',end:'20:00',title:'Later thuis',person:'irene',cat:'weg',bring:[]},
+    {id:15,date:'2026-10-10',time:'18:30',end:'23:00',title:'Etentje met vrienden',person:'niels',cat:'weg',bring:[]},
+    {id:16,date:'2026-10-10',time:'19:00',end:'23:30',title:'Verjaardag Anne',person:'irene',cat:'weg',bring:[]},
+    {id:17,date:'2026-10-14',time:'18:00',end:'22:00',title:'Zakelijk diner',person:'niels',cat:'weg',bring:[]},
+    {id:18,date:'2026-10-14',time:'17:30',end:'21:00',title:'Later thuis',person:'irene',cat:'weg',bring:[]},
+    {id:19,date:'2026-10-15',time:'19:30',end:'21:00',title:'Yoga',person:'irene',cat:'weg',bring:[]},
   ],
   facts:{
     [TODAY]:{p:[['matthijs','Irene','Niels'],['amelie','Niels','Opa & oma']],dish:'Pasta pesto'},
@@ -1600,6 +1631,7 @@ const S={
   ],
   sheet:{text:'',person:null},
   act:{text:'',owner:null,due:null},
+  dec:{},mode:'agenda',home:'17:30',
   acties:[
     {id:1,title:'Formulier schoolreisje inleveren',owner:'irene',kid:'matthijs',due:'2026-10-05',note:'Handtekening staat er al op, moet nog in de tas.'},
     {id:2,title:'Ouderavond: aanmelden?',owner:'samen',kid:'matthijs',due:'2026-10-07',link:10,note:'Aanmelden kan t/m woensdag via Parro. Gaan we allebei, of één van ons?'},
@@ -1618,7 +1650,7 @@ const openBring=evs=>evs.flatMap(e=>e.bring.filter(b=>!b.done).map(b=>({e,b})));
 /* ------------------------------------------------------------ onderdelen */
 function eventBody(e,dupe){
   const open=e.bring.filter(b=>!b.done);
-  let h=`<button class="event__open" data-act="evt"><span class="event__title">${esc(e.title)}</span><span class="event__meta">${e.person!=='gezin'?PL[e.person]+' · ':''}${CL[e.cat]}${e.source==='parro'?' · Parro':''}${e.series?' · '+I('herhaal',13).replace('<svg','<svg style="vertical-align:-2px" aria-label="reeks"'):''}</span></button>`;
+  let h=`<button class="event__open" data-act="evt"><span class="event__title">${esc(e.title)}</span><span class="event__meta">${e.person!=='gezin'?PL[e.person]+' · ':''}${CL[e.cat]}${(e.cat==='weg'||e.cat==='oppas')&&e.end?' · '+e.time+'–'+e.end:''}${e.source==='parro'?' · Parro':''}${e.series?' · '+I('herhaal',13).replace('<svg','<svg style="vertical-align:-2px" aria-label="reeks"'):''}</span></button>`;
   if(open.length&&dupe){
     h+=`<p class="event__meta iconrow" style="color:var(--warn);font-weight:600;margin-top:4px">${I('rugzak',14)} Mee: ${open.map(b=>esc(b.text)).join(', ')}</p>`;
   } else if(open.length){
@@ -1686,9 +1718,37 @@ function agenda(){
   }).join('')+`</div>`;
   const nav=`<button class="btn btn--ghost btn--sm" data-act="wk" data-n="-7" aria-label="Vorige week">${I('chevron-links',18)}</button><button class="btn btn--ghost btn--sm" data-act="wk" data-n="7" aria-label="Volgende week">${I('chevron-rechts',18)}</button>`;
   return head(MN[x.getUTCMonth()]+' '+x.getUTCFullYear(),`week van ${x.getUTCDate()} ${MN[x.getUTCMonth()].slice(0,3)}`,null,nav)+strip+
-    `<h2 class="cap" style="margin:18px 0 4px">${long(S.sel)}</h2>`+facts(S.sel)+timeline(evOn(S.sel));
+    `<h2 class="cap" style="margin:18px 0 4px">${long(S.sel)}</h2>`+sigOpen().filter(c=>c.date===S.sel).map(c=>`<button class="signalbanner" data-act="signal" data-k="${c.key}">${I('bel',18)}<span class="grow"><b>Niemand thuis ${hm(c.win[0])}–${hm(c.win[1])}</b><span class="tiny">Allebei weg, nog niet geregeld</span></span>${I('chevron-rechts',17)}</button>`).join('')+facts(S.sel)+timeline(evOn(S.sel));
 }
 
+const mm=t=>{const[h,m]=t.split(':').map(Number);return h*60+m};
+const hm=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+const awayOf=e=>{if(e.cat!=='weg')return null;if(e.allDay)return[0,1440];return[mm(e.time),mm(e.end||hm(Math.min(1439,mm(e.time)+180)))]};
+const oppasOf=e=>{if(e.cat!=='oppas'||e.allDay||!e.time)return null;return[mm(e.time),mm(e.end||hm(Math.min(1439,mm(e.time)+240)))]};
+const inter=(a,b)=>{const s=Math.max(a[0],b[0]),e=Math.min(a[1],b[1]);return e-s>=30?[s,e]:null};
+function subtract(win,covers){let gaps=[win];for(const c of covers){const nx=[];for(const g of gaps){if(c[1]<=g[0]||c[0]>=g[1]){nx.push(g);continue}if(c[0]>g[0])nx.push([g[0],c[0]]);if(c[1]<g[1])nx.push([c[1],g[1]])}gaps=nx}return gaps.filter(g=>g[1]-g[0]>30)}
+/* Allebei weg op dezelfde dag, minstens een half uur tegelijk, en niet gedekt door een oppas. */
+function conflictsOn(dt,evs){
+  evs=evs||S.events.filter(e=>e.date===dt);
+  const N=evs.filter(e=>e.person==='niels'&&awayOf(e)),R=evs.filter(e=>e.person==='irene'&&awayOf(e)),out=[];
+  for(const n of N)for(const i of R){
+    const w=inter(awayOf(n),awayOf(i));if(!w)continue;
+    const covers=evs.map(oppasOf).filter(Boolean),gaps=subtract(w,covers);
+    out.push({key:dt+'|'+w[0],date:dt,win:w,niels:n,irene:i,gaps,covered:gaps.length===0?'full':(gaps.length===1&&gaps[0][0]===w[0]&&gaps[0][1]===w[1])?'none':'partial',oppas:evs.filter(oppasOf)});
+  }
+  return out;
+}
+function allSignals(){
+  const dates=[...new Set(S.events.map(e=>e.date))].filter(x=>x>=TODAY).sort();
+  return dates.flatMap(dt=>conflictsOn(dt));
+}
+const sigOpen=()=>allSignals().filter(c=>c.covered!=='full'&&!S.dec[c.key]);
+const sigDone=()=>allSignals().filter(c=>c.covered==='full'||(S.dec[c.key]&&(S.dec[c.key].type==='thuis'||S.dec[c.key].type==='ok')));
+function syncSignals(){
+  for(const c of allSignals()){const dc=S.dec[c.key];
+    if(dc&&dc.type==='oppas'&&c.covered==='full'){const t=S.acties.find(a=>a.id===dc.task);if(t&&!t.done){t.done=true;t.besluit='Opgelost: '+c.oppas[0].title+' '+c.oppas[0].time+'–'+c.oppas[0].end+' staat in de agenda.'}}}
+}
+const sigTitle=c=>`Allebei weg · ${short(c.date)}, ${hm(c.win[0])}–${hm(c.win[1])}`;
 const OW={niels:'Niels',irene:'Irene',samen:'Afstemmen'};
 const diff=dt=>Math.round((d(dt)-d(TODAY))/864e5);
 function dueInfo(dt){
@@ -1699,36 +1759,49 @@ function dueInfo(dt){
   return{t:short(dt),hot:false,sec:n<=7?1:2};
 }
 const openActs=()=>S.acties.filter(a=>!a.done);
-const urgentActs=()=>openActs().filter(a=>{const i=dueInfo(a.due);return i&&i.hot});
+const allOpen=()=>openActs().map(a=>({title:a.title,due:a.due})).concat(sigOpen().map(c=>({title:sigTitle(c),due:c.date})));
+const urgentActs=()=>allOpen().filter(a=>{const i=dueInfo(a.due);return i&&i.hot});
 function actRow(a){
   const i=dueInfo(a.due),ev=a.link&&S.events.find(e=>e.id===a.link);
   const meta=`<span class="chip ${a.owner==='samen'?'chip--gezin':'chip--'+a.owner}">${a.owner==='samen'?I('oppas',13)+' ':''}${OW[a.owner]}</span>${a.kid!=='gezin'?`<span class="chip chip--${a.kid}">${PL[a.kid]}</span>`:''}${i&&!a.done?`<span class="chip ${i.hot?'chip--warn':''}">${I('klok',13)} ${i.t}</span>`:''}`;
   return `<div class="actrow ${a.done?'actrow--done':''}"><label class="actrow__check"><input type="checkbox" data-act="ac" data-i="${a.id}" ${a.done?'checked':''} aria-label="Klaar: ${esc(a.title)}"></label><button class="actrow__main" data-act="detail" data-i="${a.id}"><span class="actrow__title">${esc(a.title)}</span><span class="actrow__meta">${meta}</span>${ev&&!a.done?`<span class="tiny muted iconrow">${I('speld',12)} ${esc(ev.title)} · ${short(ev.date)}</span>`:''}${a.done&&a.besluit?`<span class="tiny muted">Besloten: ${esc(a.besluit)}</span>`:''}</button></div>`;
 }
+function signalRow(c){
+  const i=dueInfo(c.date),gap=c.covered==='partial'?`<span class="chip chip--warn">nog niet gedekt ${c.gaps.map(g=>hm(g[0])+'–'+hm(g[1])).join(', ')}</span>`:'';
+  return `<div class="actrow actrow--signal"><span class="actrow__icon" aria-hidden="true">${I('bel',20)}</span><button class="actrow__main" data-act="signal" data-k="${c.key}"><span class="actrow__title">${sigTitle(c)}</span><span class="actrow__meta"><span class="chip chip--sig">${I('zoeken',13)} Gesignaleerd</span><span class="chip ${i.hot?'chip--warn':''}">${I('klok',13)} ${i.t}</span>${gap}</span><span class="tiny muted">Niels: ${esc(c.niels.title)} · Irene: ${esc(c.irene.title)}</span></button></div>`;
+}
+function signalDoneRow(c){
+  const dc=S.dec[c.key];
+  const txt=dc&&dc.type==='thuis'?`${PL[dc.who]} blijft thuis`:dc&&dc.type==='ok'?'Geen probleem, bewust besloten':`Geregeld: ${esc(c.oppas[0].title)} ${c.oppas[0].time}–${c.oppas[0].end}`;
+  return `<div class="actrow actrow--ok"><span class="actrow__icon" style="color:var(--primary)" aria-hidden="true">${I('vinkje',20)}</span><button class="actrow__main" data-act="signal" data-k="${c.key}"><span class="actrow__title">${sigTitle(c)}</span><span class="tiny muted">${txt}</span></button></div>`;
+}
 function actiesView(){
   const f=S.rf;
-  const list=openActs().filter(a=>f==='alle'||(f==='samen'?a.owner==='samen':a.owner===f||a.owner==='samen'));
+  const tasks=openActs().filter(a=>f==='alle'||(f==='samen'?a.owner==='samen':a.owner===f||a.owner==='samen')).map(a=>({due:a.due,html:actRow(a)}));
+  const sigs=sigOpen().map(c=>({due:c.date,html:signalRow(c)}));
+  const list=tasks.concat(sigs);
   const sec=[[0,'Te laat',true],[1,'Deze week'],[2,'Later'],[3,'Geen datum']];
-  const bucket=a=>{const i=dueInfo(a.due);return i?i.sec:3};
+  const bucket=r=>{const i=dueInfo(r.due);return i?i.sec:3};
   const who=`<div class="picks" role="group" aria-label="Voor wie" style="margin-bottom:6px">`+[['alle','Alle'],['niels','Niels'],['irene','Irene'],['samen','Afstemmen']].map(([v,l])=>`<button class="pick" data-act="rf" data-v="${v}" aria-pressed="${f===v}">${l}</button>`).join('')+`</div>`;
   let h=who;
   if(!list.length)h+=`<div class="emptystate"><div class="emptystate__icon">${I('vinkje',26)}</div><h2 class="emptystate__title">Alles geregeld.</h2><p class="emptystate__hint">Wat nog moet of afgestemd moet worden, zet je hier neer.</p></div>`;
   for(const[k,l,hot]of sec){
-    const it=list.filter(a=>bucket(a)===k).sort((x,y)=>(x.due||'9').localeCompare(y.due||'9'));
+    const it=list.filter(r=>bucket(r)===k).sort((x,y)=>(x.due||'9').localeCompare(y.due||'9'));
     if(!it.length)continue;
-    h+=`<h2 class="grouphead" style="${hot?'color:var(--warn)':''}">${l}<span class="grouphead__count">${it.length}</span></h2><div class="list">${it.map(actRow).join('')}</div>`;
+    h+=`<h2 class="grouphead" style="${hot?'color:var(--warn)':''}">${l}<span class="grouphead__count">${it.length}</span></h2><div class="list">${it.map(r=>r.html).join('')}</div>`;
   }
-  const done=S.acties.filter(a=>a.done);
-  if(done.length)h+=fold('afgerond','Afgerond',`${done.length} klaar`,`<div class="list" style="margin-top:6px">${done.map(actRow).join('')}</div>`);
+  const done=S.acties.filter(a=>a.done),sd=sigDone();
+  const n=done.length+sd.length;
+  if(n)h+=fold('afgerond','Afgerond',`${n} klaar`,`<div class="list" style="margin-top:6px">${sd.map(signalDoneRow).join('')}${done.map(actRow).join('')}</div>`);
   return h;
 }
 function regelen(){
-  const seg=segment('regel',[['acties','Acties'],['lijst','Boodschappen'],['menu','Weekmenu']]);
+  const seg=segment('regel',[['acties','Taken'],['lijst','Boodschappen'],['menu','Weekmenu']]);
   let sub,right='',body;
   if(S.regel==='acties'){
     const o=openActs().length,u=urgentActs().length;
     sub=`${o} open${u?' · '+u+' dringend':''}`;
-    right=`<button class="btn btn--primary btn--sm" data-act="newact">${I('plus',16)} Actie</button>`;
+    right=`<button class="btn btn--primary btn--sm" data-act="newact">${I('plus',16)} Taak</button>`;
     body=actiesView();
   } else {
     body=shopBody();sub=S.regel==='lijst'?`${S.shop.filter(i=>!i.done).length} te halen`:'Wat we deze week eten';
@@ -1736,16 +1809,16 @@ function regelen(){
   return head('Regelen',sub,null,right)+`<div style="margin-bottom:14px">${seg}</div>`+body;
 }
 function regelRow(){
-  const o=openActs().filter(a=>{const i=dueInfo(a.due);return i&&i.sec<=1});
+  const o=allOpen().filter(a=>{const i=dueInfo(a.due);return i&&i.sec<=1});
   if(!o.length)return '';
   const u=urgentActs();
-  return `<button class="regelrow" data-act="tab" data-k="regelen">${I('regelen',19)}<strong>Regelen</strong>${u.length?`<span class="chip chip--warn">${u.length} dringend</span>`:''}<span class="regelrow__prev grow">${o.slice(0,2).map(a=>esc(a.title)).join(', ')}</span>${I('chevron-rechts',17)}</button>`;
+  return `<button class="regelrow" data-act="tab" data-k="regelen">${I('regelen',19)}<strong>Regelen</strong>${u.length?`<span class="chip chip--warn">${u.length} dringend</span>`:`<span class="chip">${o.length} deze week</span>`}<span class="regelrow__prev grow">${o.slice(0,2).map(a=>esc(a.title)).join(', ')}</span>${I('chevron-rechts',17)}</button>`;
 }
 function openDetail(id){
   const a=S.acties.find(x=>x.id==id);if(!a)return;S.detail=id;
   const i=dueInfo(a.due),ev=a.link&&S.events.find(e=>e.id===a.link);
   const sh=document.getElementById('sheet');
-  sh.innerHTML=`<div class="sheet__scrim" data-act="closesheet"></div><form class="sheet" id="detailform" role="dialog" aria-label="Actie"><div class="sheet__grip" aria-hidden="true"></div><div class="row row--between" style="align-items:flex-start;margin-bottom:8px"><h2 style="font-size:1.2rem">${esc(a.title)}</h2><button type="button" class="btn btn--ghost btn--sm" data-act="closesheet" aria-label="Sluit">${I('kruis',18)}</button></div><div class="actrow__meta" style="margin-bottom:10px"><span class="chip ${a.owner==='samen'?'chip--gezin':'chip--'+a.owner}">${a.owner==='samen'?I('oppas',13)+' ':''}${OW[a.owner]}</span>${a.kid!=='gezin'?`<span class="chip chip--${a.kid}">${PL[a.kid]}</span>`:''}${i?`<span class="chip ${i.hot&&!a.done?'chip--warn':''}">${I('klok',13)} ${i.t}</span>`:'<span class="chip">geen deadline</span>'}</div>${a.note?`<p style="margin:0 0 12px">${esc(a.note)}</p>`:''}${ev?`<button type="button" class="rowlink" style="border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px" data-act="golink" data-d="${ev.date}"><span class="rowlink__ico">${I('kalender',18)}</span><span class="grow"><div class="rowlink__t">${esc(ev.title)}</div><div class="rowlink__s">${long(ev.date)}${ev.time?' · '+ev.time:''} · in de agenda</div></span>${I('chevron-rechts',17)}</button>`:''}${a.owner==='samen'?`<div class="field" style="margin-bottom:14px"><label class="field__label" for="besluit">Wat is besloten?</label><input class="input" id="besluit" placeholder="Bijvoorbeeld: Niels gaat, Irene past op" value="${esc(a.besluit||'')}"></div>`:''}<div class="row"><button type="button" class="btn" data-act="toast" data-m="Opent het bewerkformulier">Bewerken</button><button class="btn btn--primary grow" data-act="finish">${a.done?'Weer openen':'Klaar'}</button></div></form>`;
+  sh.innerHTML=`<div class="sheet__scrim" data-act="closesheet"></div><form class="sheet" id="detailform" role="dialog" aria-label="Taak"><div class="sheet__grip" aria-hidden="true"></div><div class="row row--between" style="align-items:flex-start;margin-bottom:8px"><h2 style="font-size:1.2rem">${esc(a.title)}</h2><button type="button" class="btn btn--ghost btn--sm" data-act="closesheet" aria-label="Sluit">${I('kruis',18)}</button></div><div class="actrow__meta" style="margin-bottom:10px"><span class="chip ${a.owner==='samen'?'chip--gezin':'chip--'+a.owner}">${a.owner==='samen'?I('oppas',13)+' ':''}${OW[a.owner]}</span>${a.kid!=='gezin'?`<span class="chip chip--${a.kid}">${PL[a.kid]}</span>`:''}${i?`<span class="chip ${i.hot&&!a.done?'chip--warn':''}">${I('klok',13)} ${i.t}</span>`:'<span class="chip">geen deadline</span>'}</div>${a.note?`<p style="margin:0 0 12px">${esc(a.note)}</p>`:''}${ev?`<button type="button" class="rowlink" style="border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px" data-act="golink" data-d="${ev.date}"><span class="rowlink__ico">${I('kalender',18)}</span><span class="grow"><div class="rowlink__t">${esc(ev.title)}</div><div class="rowlink__s">${long(ev.date)}${ev.time?' · '+ev.time:''} · in de agenda</div></span>${I('chevron-rechts',17)}</button>`:''}${a.owner==='samen'?`<div class="field" style="margin-bottom:14px"><label class="field__label" for="besluit">Wat is besloten?</label><input class="input" id="besluit" placeholder="Bijvoorbeeld: Niels gaat, Irene past op" value="${esc(a.besluit||'')}"></div>`:''}<div class="row"><button type="button" class="btn" data-act="toast" data-m="Opent het bewerkformulier">Bewerken</button><button class="btn btn--primary grow" data-act="finish">${a.done?'Weer openen':'Klaar'}</button></div></form>`;
   sh.hidden=false;
 }
 const EXA=['cadeau halen voor daan vrijdag niels','tandarts afspreken amelie','formulier inleveren irene morgen'];
@@ -1773,13 +1846,46 @@ function renderActChips(){
   document.getElementById('actwho').innerHTML=ow.map(([v,l])=>`<button type="button" class="pick" data-act="aw" data-v="${v}" aria-pressed="${(S.act.owner||(cur&&cur.owner))===v}">${l}</button>`).join('');
   document.getElementById('actdue').innerHTML=du.map(([v,l])=>`<button type="button" class="pick" data-act="ad" data-v="${v}" aria-pressed="${S.act.due===v}">${l}</button>`).join('');
 }
-function openNewAct(text,owner){
-  S.act={text:text||'',owner:owner||null,due:null};
+function fmtDur(w){const m=w[1]-w[0],h=Math.floor(m/60),r=m%60;return h+(r?','+(r/6):'')+' uur'}
+function openSignal(key){
+  const c=allSignals().find(x=>x.key===key);if(!c)return;
+  const dc=S.dec[key];
+  const dl=add(c.date,-2)<TODAY?TODAY:add(c.date,-2);
+  const opt=(ic,t,sub,w,ty)=>`<button type="button" class="rowlink" data-act="decide" data-k="${key}" data-t="${ty}" data-w="${w}"><span class="rowlink__ico">${I(ic,18)}</span><span class="grow"><div class="rowlink__t">${t}</div><div class="rowlink__s">${sub}</div></span>${I('chevron-rechts',17)}</button>`;
   const sh=document.getElementById('sheet');
-  sh.innerHTML=`<div class="sheet__scrim" data-act="closesheet"></div><form class="sheet" id="actform" role="dialog" aria-label="Nieuwe actie"><div class="sheet__grip" aria-hidden="true"></div><div class="row row--between" style="margin-bottom:10px"><h2>Nieuwe actie</h2><button type="button" class="btn btn--ghost btn--sm" data-act="closesheet" aria-label="Sluit">${I('kruis',18)}</button></div><input class="input" id="actin" placeholder="Wat moet er nog geregeld of afgestemd worden?" autocomplete="off" enterkeyhint="done" value="${esc(S.act.text)}" style="border-radius:999px;padding-left:16px"><div class="capture__preview" id="actprev" style="margin:12px 2px 6px;min-height:70px;align-content:flex-start;gap:6px"></div><div class="field__label" style="margin:6px 2px 6px;font-size:.78rem;font-weight:650;color:var(--muted)">Wie moet het doen</div><div class="picks" id="actwho" role="group" style="margin-bottom:10px"></div><div class="field__label" style="margin:2px 2px 6px;font-size:.78rem;font-weight:650;color:var(--muted)">Deadline</div><div class="picks" id="actdue" role="group" style="margin-bottom:14px"></div><button class="btn btn--primary btn--block" id="actgo" disabled>Zet erop</button></form>`;
-  sh.hidden=false;actPreview();renderActChips();
+  sh.innerHTML=`<div class="sheet__scrim" data-act="closesheet"></div><div class="sheet" id="sigbox" role="dialog" aria-label="Allebei weg"><div class="sheet__grip" aria-hidden="true"></div><div class="row row--between" style="align-items:flex-start;margin-bottom:6px"><h2 style="font-size:1.2rem">Allebei weg</h2><button type="button" class="btn btn--ghost btn--sm" data-act="closesheet" aria-label="Sluit">${I('kruis',18)}</button></div><p style="margin:0 0 10px;color:var(--muted)">${long(c.date)} · ${hm(c.win[0])}–${hm(c.win[1])} (${fmtDur(c.win)}). Geen van jullie is dan thuis.</p><div class="card" style="overflow:hidden;margin-bottom:10px"><div class="row" style="padding:10px 14px;border-bottom:1px solid var(--line)"><span class="chip chip--niels">Niels</span><span class="grow"><b>${esc(c.niels.title)}</b><div class="tiny muted">${c.niels.time}–${c.niels.end}</div></span></div><div class="row" style="padding:10px 14px"><span class="chip chip--irene">Irene</span><span class="grow"><b>${esc(c.irene.title)}</b><div class="tiny muted">${c.irene.title==='Later thuis'?'normaal thuis '+S.home+', nu tot '+c.irene.end:c.irene.time+'–'+c.irene.end}</div></span></div></div>${c.covered==='partial'?`<p class="chip chip--warn" style="margin:0 0 10px">Oppas dekt een deel; nog open: ${c.gaps.map(g=>hm(g[0])+'–'+hm(g[1])).join(', ')}</p>`:''}${c.covered==='full'?`<p class="chip chip--gezin" style="margin:0 0 10px">${I('vinkje',13)} Gedekt door ${esc(c.oppas[0].title)} ${c.oppas[0].time}–${c.oppas[0].end}</p>`:''}${dc&&dc.type==='thuis'?`<p class="chip chip--gezin" style="margin:0 0 10px">${I('vinkje',13)} ${PL[dc.who]} blijft thuis</p>`:''}${dc&&dc.type==='ok'?`<p class="chip chip--gezin" style="margin:0 0 10px">${I('vinkje',13)} Geen probleem, bewust besloten</p>`:''}${c.covered==='full'||dc?'':`<div class="field__label" style="margin:2px 2px 6px;font-size:.78rem;font-weight:650;color:var(--muted)">Wat wordt het?</div><div class="card" style="overflow:hidden;margin-bottom:10px">${opt('huis','Niels blijft thuis','Irene gaat. Wordt vastgelegd.','niels','thuis')}${opt('huis','Irene blijft thuis','Niels gaat. Wordt vastgelegd.','irene','thuis')}${opt('oppas','Niels regelt een oppas','Er komt een taak met deadline '+short(dl),'niels','oppas')}${opt('oppas','Irene regelt een oppas','Er komt een taak met deadline '+short(dl),'irene','oppas')}${opt('vinkje','Geen probleem','Bijvoorbeeld: de kinderen zijn elders.','','ok')}</div><p class="tiny muted" style="margin:0 2px 4px">Zodra er een oppas in de agenda staat voor dit tijdvak, verdwijnt dit vanzelf.</p>`}<button type="button" class="btn btn--block" data-act="golink" data-d="${c.date}">${I('kalender',16)} Bekijk de dag</button></div>`;
+  sh.hidden=false;
+}
+function decide(key,type,who){
+  const c=allSignals().find(x=>x.key===key);if(!c)return;
+  if(type==='ok'){S.dec[key]={type:'ok'};closeSheet();render();toast('Genoteerd: geen probleem')}
+  else if(type==='thuis'){S.dec[key]={type:'thuis',who};closeSheet();render();toast(PL[who]+' blijft thuis. Vastgelegd.')}
+  else{
+    const dl=add(c.date,-2)<TODAY?TODAY:add(c.date,-2),id=++uid;
+    S.acties.unshift({id,title:`Oppas regelen voor ${short(c.date)}, ${hm(c.win[0])}–${hm(c.win[1])}`,owner:who,kid:'gezin',due:dl,link:c.niels.id,note:'Jullie zijn dan allebei weg. Zodra er een oppas in de agenda staat voor dit tijdvak, sluit deze taak vanzelf.',signal:key});
+    S.dec[key]={type:'oppas',owner:who,task:id};closeSheet();render();toast('Taak voor '+PL[who]+' aangemaakt');
+  }
+}
+/* ----- nieuw-blad: één blad, twee soorten ----- */
+const defaultMode=()=>S.tab==='regelen'&&!S.gezin?'taak':'agenda';
+function sheetShell(mode){
+  S.mode=mode;
+  const sh=document.getElementById('sheet');
+  sh.innerHTML=`<div class="sheet__scrim" data-act="closesheet"></div><div class="sheet" id="sheetbox" role="dialog" aria-label="Nieuw"><div class="sheet__grip" aria-hidden="true"></div><div class="row row--between" style="margin-bottom:10px"><h2>Wat wil je toevoegen?</h2><button type="button" class="btn btn--ghost btn--sm" data-act="closesheet" aria-label="Sluit">${I('kruis',18)}</button></div><div class="choice" role="group" aria-label="Soort"><button type="button" class="choice__opt" data-act="mode" data-m="agenda" aria-pressed="${mode==='agenda'}">${I('kalender',22)}<span><b>Agenda-item</b><small>Op een dag, met tijd</small></span></button><button type="button" class="choice__opt" data-act="mode" data-m="taak" aria-pressed="${mode==='taak'}">${I('regelen',22)}<span><b>Taak</b><small>Te regelen of af te stemmen</small></span></button></div><div id="sheetbody"></div></div>`;
+  sh.hidden=false;
+  if(mode==='agenda')fillAgenda();else fillTaak();
+}
+function fillAgenda(){
+  document.getElementById('sheetbody').innerHTML=`<form id="sheetform"><input class="input" id="sheetin" placeholder="Wat moet er gebeuren?" autocomplete="off" enterkeyhint="done" value="${esc(S.sheet.text)}" style="border-radius:999px;padding-left:16px"><div class="capture__preview" id="sheetprev" style="margin:12px 2px 6px;min-height:76px;align-content:flex-start;gap:6px"></div><div id="sheetnote"></div><div class="field__label" style="margin:6px 2px 6px;font-size:.78rem;font-weight:650;color:var(--muted)">Voor wie</div><div class="picks" id="sheetwho" role="group" style="margin-bottom:14px"></div><div class="row"><button type="button" class="btn" data-act="toast" data-m="Opent het volledige formulier">Alle opties</button><button class="btn btn--primary grow" id="sheetgo" disabled>Zet in agenda</button></div></form>`;
+  renderWho();sheetPreview();
+  try{document.getElementById('sheetin').focus()}catch(e){}
+}
+function fillTaak(){
+  document.getElementById('sheetbody').innerHTML=`<form id="actform"><input class="input" id="actin" placeholder="Wat moet er nog geregeld of afgestemd worden?" autocomplete="off" enterkeyhint="done" value="${esc(S.act.text)}" style="border-radius:999px;padding-left:16px"><div class="capture__preview" id="actprev" style="margin:12px 2px 6px;min-height:70px;align-content:flex-start;gap:6px"></div><div class="field__label" style="margin:6px 2px 6px;font-size:.78rem;font-weight:650;color:var(--muted)">Wie moet het doen</div><div class="picks" id="actwho" role="group" style="margin-bottom:10px"></div><div class="field__label" style="margin:2px 2px 6px;font-size:.78rem;font-weight:650;color:var(--muted)">Deadline</div><div class="picks" id="actdue" role="group" style="margin-bottom:14px"></div><button class="btn btn--primary btn--block" id="actgo" disabled>Zet erop</button></form>`;
+  actPreview();renderActChips();
   try{document.getElementById('actin').focus()}catch(e){}
 }
+function openNewAct(text,owner){S.act={text:text||'',owner:owner||null,due:null};sheetShell('taak')}
 function shopBody(){
   let body='';
   if(S.regel==='lijst'){
@@ -1822,6 +1928,7 @@ function gezin(){
     `<div class="card" style="overflow:hidden">`+
     row('bel','Meldingen',S.notif?'Elke avond om 20:00 wat er morgen mee moet':'Uit','notif',`<span class="chip ${S.notif?'chip--gezin':''}">${S.notif?'aan':'uit'}</span>`)+
     row('auto','Breng & haal','Wie brengt en wie haalt, per weekdag')+
+    row('huis','Normale thuiskomst',S.home+' · telt voor “later thuis”')+
     row('kalender','Parro-agenda','Laatst bijgewerkt vandaag 07:17')+
     row('delen','Installeren op beginscherm','Zo opent de app zonder adresbalk')+
     row('kruis','Uitloggen','Op dit toestel')+`</div>`;
@@ -1846,6 +1953,7 @@ function tabs(){
 }
 const TIMES={ochtend:'07:45',middag:'14:00',avond:'21:30'};
 function render(){
+  syncSignals();
   const sc=document.getElementById('scroll');const keep=sc.scrollTop;
   sc.innerHTML=S.gezin?gezin():S.tab==='vandaag'?vandaag():S.tab==='agenda'?agenda():S.tab==='regelen'?regelen():mensen();
   document.getElementById('tabs').innerHTML=tabs();
@@ -1863,26 +1971,50 @@ function setView(v){
   document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v));
   document.getElementById('timebox').style.visibility=v==='proto'?'visible':'hidden';
 }
-const EX=['matthijs vrijdag gymtas mee','tandarts lotte 14 oktober 10:30','oppas marloes zaterdag 19:00'];
+const EX=['matthijs vrijdag gymtas mee','irene later thuis 20:00 vrijdag','niels niet thuis 18:00-22:00 woensdag'];
+/* Uitbreiding op de echte parser: "later thuis", "niet thuis" en een eindtijd. */
 function parsed(){
   const v=S.sheet.text;if(!v.trim())return null;
-  const r=window.QP(v,TODAY);if(S.sheet.person)r.person=S.sheet.person;return r;
-}
-function sheetPreview(){
-  const el=document.getElementById('sheetprev'),btn=document.getElementById('sheetgo');
-  const r=parsed();btn.disabled=!r;
-  if(!r){el.innerHTML=`<span class="muted tiny" style="flex-basis:100%">Probeer:</span>`+EX.map(t=>`<button type="button" class="pick" data-act="ex" data-t="${esc(t)}">${esc(t)}</button>`).join('');return null}
-  el.innerHTML=`<strong style="flex-basis:100%;font-size:1rem">${esc(r.title)}</strong><span class="chip">${I('kalender',13)} ${short(r.date)}${r.time?' · '+r.time:r.allDay?' · hele dag':''}</span><span class="chip chip--${r.person}">${PL[r.person]}</span><span class="chip">${CL[r.category]}</span>${r.bring.map(b=>`<span class="chip chip--warn">${I('rugzak',13)} ${esc(b)}</span>`).join('')}`;
+  let t=' '+v+' ',kind=null,end=null;
+  const k=t.match(/\b(later thuis|niet thuis)\b/i);if(k){kind=k[1].toLowerCase();t=t.replace(k[0],' ')}
+  const rg=t.match(/\b(\d{1,2})[:.u](\d{2})\s*(?:-|–|tot)\s*(\d{1,2})[:.u](\d{2})\b/i);
+  if(rg){t=t.replace(rg[0],' '+rg[1].padStart(2,'0')+':'+rg[2]+' ');end=rg[3].padStart(2,'0')+':'+rg[4]}
+  else{const tot=t.match(/\btot\s+(\d{1,2})[:.u](\d{2})\b/i);if(tot){t=t.replace(tot[0],' ');end=tot[1].padStart(2,'0')+':'+tot[2]}}
+  const r=window.QP(t.trim()||'x',TODAY);
+  if(!t.trim()||t.trim()==='x'){r.title='Nieuw item'}
+  if(S.sheet.person)r.person=S.sheet.person;
+  if(kind){
+    r.category='weg';
+    if(kind==='later thuis'){r.end=r.time||end||null;r.time=HOME_();r.allDay=false;r.needTime=!r.end}
+    else{r.end=end||(r.time?hm(Math.min(1439,mm(r.time)+180)):null);r.estEnd=!end;r.needTime=!r.time;r.allDay=false}
+    if(r.title==='Nieuw item')r.title=kind==='later thuis'?'Later thuis':'Niet thuis';
+    r.needWho=!(r.person==='niels'||r.person==='irene');
+    r.kind=kind;
+  } else if(r.category==='oppas'&&r.time){r.end=end||hm(Math.min(1439,mm(r.time)+240));r.estEnd=!end}
+  else if(end&&r.time)r.end=end;
   return r;
 }
-function openSheet(text,person){
-  S.sheet={text:text||'',person:person||null};
-  const sh=document.getElementById('sheet');
-  sh.innerHTML=`<div class="sheet__scrim" data-act="closesheet"></div><form class="sheet" id="sheetform" role="dialog" aria-label="Nieuw agenda-item"><div class="sheet__grip" aria-hidden="true"></div><div class="row row--between" style="margin-bottom:10px"><h2>Nieuw in de agenda</h2><button type="button" class="btn btn--ghost btn--sm" data-act="closesheet" aria-label="Sluit">${I('kruis',18)}</button></div><input class="input" id="sheetin" placeholder="Wat moet er gebeuren?" autocomplete="off" enterkeyhint="done" value="${esc(S.sheet.text)}" style="border-radius:999px;padding-left:16px"><div class="capture__preview" id="sheetprev" style="margin:12px 2px 6px;min-height:70px;align-content:flex-start;gap:6px"></div><div class="field__label" style="margin:6px 2px 6px;font-size:.78rem;font-weight:650;color:var(--muted)">Voor wie</div><div class="picks" id="sheetwho" role="group" style="margin-bottom:14px"></div><div class="row"><button type="button" class="btn" data-act="toast" data-m="Opent het volledige formulier">Alle opties</button><button class="btn btn--primary grow" id="sheetgo" disabled>Zet in agenda</button></div></form>`;
-  sh.hidden=false;renderWho();sheetPreview();
-  const i=document.getElementById('sheetin');try{i.focus()}catch(e){}
+const HOME_=()=>S.home;
+function conflictNote(r){
+  if(r.category!=='weg'||r.needWho||r.needTime)return '';
+  const tmp={id:-1,date:r.date,time:r.time,end:r.end,title:r.title,person:r.person,cat:'weg'};
+  const evs=S.events.filter(e=>e.date===r.date).concat([tmp]);
+  const cs=conflictsOn(r.date,evs).filter(c=>(c.niels===tmp||c.irene===tmp)&&c.covered!=='full');
+  if(!cs.length)return '';
+  const other=r.person==='niels'?'Irene':'Niels',oe=r.person==='niels'?cs[0].irene:cs[0].niels;
+  return `<p class="signalnote">${I('bel',16)}<span><b>${other} is dan ook weg</b> (${esc(oe.title)}, ${oe.time}–${oe.end}). Dit komt als taak op Regelen.</span></p>`;
 }
-function renderWho(){document.getElementById('sheetwho').innerHTML=[['matthijs','Matthijs'],['amelie','Amélie'],['lotte','Lotte'],['gezin','Gezin']].map(([v,l])=>`<button type="button" class="pick pick--${v}" data-act="who" data-v="${v}" aria-pressed="${S.sheet.person===v}">${l}</button>`).join('')}
+function sheetPreview(){
+  const el=document.getElementById('sheetprev'),btn=document.getElementById('sheetgo'),nt=document.getElementById('sheetnote');
+  const r=parsed();btn.disabled=!r||!!r.needWho||!!r.needTime;
+  if(!r){el.innerHTML=`<span class="muted tiny" style="flex-basis:100%">Probeer:</span>`+EX.map(t=>`<button type="button" class="pick" data-act="ex" data-t="${esc(t)}">${esc(t)}</button>`).join('');nt.innerHTML='';return null}
+  const when=r.kind==='later thuis'?(r.end?` · tot ${r.end}`:' · tot ?'):r.time?' · '+r.time+(r.end?'–'+r.end:''):r.allDay?' · hele dag':'';
+  el.innerHTML=`<strong style="flex-basis:100%;font-size:1rem">${esc(r.title)}</strong><span class="chip">${I('kalender',13)} ${short(r.date)}${when}</span>${r.needWho?`<span class="chip chip--warn">kies wie</span>`:`<span class="chip chip--${r.person}">${PL[r.person]}</span>`}<span class="chip">${CL[r.category]}</span>${r.bring.map(b=>`<span class="chip chip--warn">${I('rugzak',13)} ${esc(b)}</span>`).join('')}${r.estEnd?`<span class="muted tiny" style="flex-basis:100%">Eindtijd geschat; typ “tot 22:00” om het aan te passen.</span>`:''}`;
+  nt.innerHTML=conflictNote(r);
+  return r;
+}
+function openSheet(text,person,mode){S.sheet={text:text||'',person:person||null};sheetShell(mode||defaultMode())}
+function renderWho(){document.getElementById('sheetwho').innerHTML=[['matthijs','Matthijs'],['amelie','Amélie'],['lotte','Lotte'],['niels','Niels'],['irene','Irene']].map(([v,l])=>`<button type="button" class="pick pick--${v==='niels'||v==='irene'?'ouder':v}" data-act="who" data-v="${v}" aria-pressed="${S.sheet.person===v}">${l}</button>`).join('')}
 function closeSheet(){document.getElementById('sheet').hidden=true}
 function addShop(t){t=t.trim();if(!t)return;S.shop.unshift({id:++uid,text:t.charAt(0).toUpperCase()+t.slice(1),done:false});S.vaak=S.vaak.filter(x=>x.toLowerCase()!==t.toLowerCase());render();renderVaak()}
 
@@ -1904,6 +2036,9 @@ document.addEventListener('click',ev=>{
   else if(a==='notif'){S.notif=!S.notif;render()}
   else if(a==='vaak'){addShop(b.dataset.t)}
   else if(a==='new'){openSheet()}
+  else if(a==='mode'){if(S.mode!==b.dataset.m)sheetShell(b.dataset.m)}
+  else if(a==='signal'){openSignal(b.dataset.k)}
+  else if(a==='decide'){decide(b.dataset.k,b.dataset.t,b.dataset.w)}
   else if(a==='newact'){openNewAct()}
   else if(a==='detail'){openDetail(b.dataset.i)}
   else if(a==='rf'){S.rf=b.dataset.v;render()}
@@ -1933,17 +2068,19 @@ document.addEventListener('submit',ev=>{
   ev.preventDefault();
   if(ev.target.id==='sheetform'){
     const r=parsed();if(!r)return;
-    S.events.push({id:++uid,date:r.date,time:r.time,allDay:r.allDay,title:r.title,person:r.person,cat:r.category,bring:r.bring.map(t=>({id:++uid,text:t,done:false}))});
+    if(r.needWho||r.needTime)return;
+    S.events.push({id:++uid,date:r.date,time:r.time,end:r.end,allDay:r.allDay,title:r.title,person:r.person,cat:r.category,bring:r.bring.map(t=>({id:++uid,text:t,done:false}))});
     if(S.tab==='agenda'&&!S.gezin){S.sel=r.date;S.week=add(r.date,-wdi(r.date))}
-    closeSheet();render();toast('Gezet op '+short(r.date));
+    const hit=r.category==='weg'&&conflictsOn(r.date).some(c=>c.covered!=='full'&&!S.dec[c.key]);
+    closeSheet();render();toast(hit?'Gezet. Jullie zijn dan allebei weg: staat bij Regelen.':'Gezet op '+short(r.date));
   } else if(ev.target.id==='actform'){
     const r=actParsed();if(!r||!r.owner)return;
     S.acties.unshift({id:++uid,title:r.title,owner:r.owner,kid:r.kid,due:r.due});
-    closeSheet();S.regel='acties';if(S.tab==='regelen')render();else render();toast('Op de lijst gezet');
+    closeSheet();S.regel='acties';if(S.tab==='regelen')render();else render();toast('Taak toegevoegd');
   } else if(ev.target.id==='detailform'){
   } else if(ev.target.id==='shopform'){const i=document.getElementById('shopin');addShop(i.value);i.value=''}
 });
-window.__mock={zet(o){Object.assign(S,o);S._bk=null;closeSheet();render();setView(S.view)},setView,S,openSheet,openDetail,openNewAct,closeSheet};
+window.__mock={zet(o){Object.assign(S,o);S._bk=null;closeSheet();render();setView(S.view)},setView,S,openSheet,openDetail,openNewAct,openSignal,closeSheet};
 setView('proto');render();closeSheet();
 })();
 </script>

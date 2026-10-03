@@ -1,139 +1,232 @@
+/**
+ * Vandaag volgt de tijd. 's Ochtends: wat moet er vandaag mee, en wat staat er
+ * op de planning. 's Middags: wat komt er nog, en morgen klaarzetten als
+ * compacte regel. 's Avonds: morgen, met wat er klaar moet staan.
+ * Zie src/lib/dayPart.ts voor de tijdstippen.
+ */
+
 import { useMemo, useState } from 'react';
 import type { CalendarEvent } from '../../shared/types';
-import { PERSON_LABEL } from '../../shared/types';
-import { addDays, formatLong, todayInNl } from '../../shared/dates';
+import { addDays, formatLong } from '../../shared/dates';
+import { toMin } from '../../shared/signals';
 import { useData, useStore } from '../lib/store';
 import { birthdaysOnDate, eventsOnDate, pickupForDate } from '../lib/events';
-import { EventForm } from '../components/EventForm';
+import { dayPart, nowInNl, useNow } from '../lib/dayPart';
+import { useNav } from '../lib/nav';
+import { useRegel } from '../lib/useRegel';
 import { Timeline } from '../components/Timeline';
 import { DayFacts } from '../components/DayFacts';
 import { Icon } from '../components/Icon';
 import { PushPrompt } from '../components/PushPrompt';
 import { EmptyState } from '../components/EmptyState';
+import { PageHead } from '../components/PageHead';
+import { PrepList, openBring } from '../components/PrepList';
+import { RegelRow } from '../components/RegelRow';
+import { SignalBanner } from '../components/SignalBanner';
 
-export function TodayView({ onOpenDate }: { onOpenDate: (date: string) => void }) {
-  const { events, contacts, pickupRules, pickupOverrides, meals, shopping } = useData();
+/** Is dit item al voorbij? Zonder eindtijd rekenen we een half uur. */
+function isPast(e: CalendarEvent, minutes: number): boolean {
+  if (e.allDay || !e.time) return false;
+  const end = e.endTime ? toMin(e.endTime) : toMin(e.time) + 30;
+  return end <= minutes;
+}
+
+const preview = (events: CalendarEvent[]) =>
+  events.length === 0
+    ? 'niets gepland'
+    : events
+        .slice(0, 2)
+        .map((e) => e.title)
+        .join(', ') + (events.length > 2 ? `, +${events.length - 2}` : '');
+
+export function TodayView() {
+  const { events, contacts, pickupRules, pickupOverrides, meals } = useData();
   const { saveEvent } = useStore();
-  const [editing, setEditing] = useState<CalendarEvent | null>(null);
+  const { openEvent, openDate } = useNav();
+  const regel = useRegel();
 
-  const today = todayInNl();
+  const now = useNow();
+  const { date: today, minutes } = nowInNl(now);
+  const part = dayPart(Math.floor(minutes / 60));
   const tomorrow = addDays(today, 1);
+
+  const [prepOpen, setPrepOpen] = useState(false);
 
   const todayEvents = useMemo(() => eventsOnDate(events, today), [events, today]);
   const tomorrowEvents = useMemo(() => eventsOnDate(events, tomorrow), [events, tomorrow]);
-  const pickups = pickupForDate(today, pickupRules, pickupOverrides);
-  const birthdays = birthdaysOnDate(contacts, today);
-  const dinner = meals.find((m) => m.date === today);
-  const openShopping = shopping.filter((s) => !s.done).length;
 
-  const klaarzetten = tomorrowEvents.flatMap((e) =>
-    e.bring.filter((b) => !b.done).map((b) => ({ event: e, item: b })),
-  );
-  const heeftMeeneemItems = tomorrowEvents.some((e) => e.bring.length > 0);
+  const mustBring = openBring(todayEvents);
+  const prepTomorrow = openBring(tomorrowEvents);
+  const tomorrowHasBring = tomorrowEvents.some((e) => e.bring.length > 0);
 
   const toggleBring = (event: CalendarEvent, itemId: string) => {
     void saveEvent({
       ...event,
       bring: event.bring.map((b) => (b.id === itemId ? { ...b, done: !b.done } : b)),
-    });
+    }).catch(() => {});
   };
 
-  // Eén regel die de dag samenvat, in plaats van drie losse tellers.
-  const samenvatting = [
-    todayEvents.length === 0
-      ? 'niets in de agenda'
-      : `${todayEvents.length} ding${todayEvents.length === 1 ? '' : 'en'} vandaag`,
-    klaarzetten.length > 0 ? `${klaarzetten.length} klaarzetten` : null,
-    openShopping > 0 ? `${openShopping} boodschappen` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const factsFor = (date: string) => ({
+    pickups: pickupForDate(date, pickupRules, pickupOverrides),
+    dish: meals.find((m) => m.date === date)?.dish,
+  });
 
+  const birthdaysFor = (date: string) =>
+    birthdaysOnDate(contacts, date).map((c) => (
+      <p key={c.id} className="banner banner--info iconrow">
+        <Icon name="taart" size={18} /> {c.name} is {date === today ? 'vandaag' : 'morgen'} jarig
+        {c.parents.length > 0 && ` — ouders: ${c.parents.map((p) => p.name).join(', ')}`}
+      </p>
+    ));
+
+  const signalsOn = (date: string) =>
+    regel.open.flatMap((i) =>
+      i.kind === 'signal' && i.signal.date === date ? [<SignalBanner key={i.signal.key} signal={i.signal} />] : [],
+    );
+
+  const allDone = (
+    <p className="allklaar iconrow">
+      <Icon name="vinkje" size={18} /> Alles staat klaar voor morgen.
+    </p>
+  );
+
+  const timeline = (evs: CalendarEvent[], opts: { compact?: boolean; dim?: boolean; empty?: boolean } = {}) =>
+    evs.length === 0 ? (
+      opts.empty ? <EmptyState icon="vandaag" title="Een lege dag." hint="Ook fijn." /> : null
+    ) : (
+      <Timeline
+        events={evs}
+        onOpen={openEvent}
+        onToggleBring={toggleBring}
+        compactBring={opts.compact}
+        dim={opts.dim}
+      />
+    );
+
+  // ------------------------------------------------------------------ ochtend
+  if (part === 'ochtend') {
+    const facts = factsFor(today);
+    return (
+      <div className="page">
+        <PushPrompt />
+        <PageHead
+          title={formatLong(today)}
+          sub={
+            `${todayEvents.length === 0 ? 'niets in de agenda' : `${todayEvents.length} ding${todayEvents.length === 1 ? '' : 'en'} vandaag`}` +
+            (mustBring.length > 0 ? ` · ${mustBring.length} mee` : '')
+          }
+        />
+        <PrepList items={mustBring} title="Vandaag mee" onToggle={toggleBring} />
+        {mustBring.length === 0 && todayEvents.some((e) => e.bring.length > 0) && (
+          <p className="allklaar iconrow">
+            <Icon name="vinkje" size={18} /> Alles zit in de tas.
+          </p>
+        )}
+        {signalsOn(today)}
+        <RegelRow />
+        <DayFacts {...facts} />
+        {birthdaysFor(today)}
+        {timeline(todayEvents, { compact: true, empty: true })}
+
+        <details className="foldout">
+          <summary>
+            <span className="foldout__label">Morgen</span>
+            <span className="foldout__preview grow">
+              {prepTomorrow.length > 0 && `${prepTomorrow.length} klaarzetten · `}
+              {preview(tomorrowEvents)}
+            </span>
+            <Icon name="chevron-rechts" size={17} className="foldout__chevron" />
+          </summary>
+          <PrepList
+            items={prepTomorrow}
+            title="Klaarzetten voor morgen"
+            onToggle={toggleBring}
+            onHead={() => openDate(tomorrow)}
+          />
+          {prepTomorrow.length === 0 && tomorrowHasBring && allDone}
+          <DayFacts {...factsFor(tomorrow)} />
+          {timeline(tomorrowEvents, { compact: true })}
+        </details>
+      </div>
+    );
+  }
+
+  // ------------------------------------------------------------------- middag
+  if (part === 'middag') {
+    const rest = todayEvents.filter((e) => !isPast(e, minutes));
+    const earlier = todayEvents.filter((e) => isPast(e, minutes));
+    const facts = factsFor(today);
+    return (
+      <div className="page">
+        <PushPrompt />
+        <PageHead
+          title={formatLong(today)}
+          sub={`${rest.length} ding${rest.length === 1 ? '' : 'en'} te gaan · morgen ${prepTomorrow.length} klaarzetten`}
+        />
+        {prepTomorrow.length > 0 ? (
+          <>
+            <button className="compactprep" onClick={() => setPrepOpen((o) => !o)} aria-expanded={prepOpen}>
+              <Icon name="rugzak" size={19} />
+              <strong className="grow">Morgen klaarzetten</strong>
+              <span className="chip chip--warn">{prepTomorrow.length}</span>
+              <Icon
+                name="chevron-rechts"
+                size={17}
+                style={{ transform: prepOpen ? 'rotate(90deg)' : undefined }}
+              />
+            </button>
+            {prepOpen && (
+              <PrepList items={prepTomorrow} title="Klaarzetten voor morgen" onToggle={toggleBring} />
+            )}
+          </>
+        ) : (
+          tomorrowHasBring && allDone
+        )}
+        {signalsOn(today)}
+        <RegelRow />
+        <DayFacts {...facts} />
+        {birthdaysFor(today)}
+        {timeline(rest, { empty: true })}
+
+        {earlier.length > 0 && (
+          <details className="foldout">
+            <summary>
+              <span className="foldout__label">Eerder vandaag</span>
+              <span className="foldout__preview grow">{earlier.length} gedaan</span>
+              <Icon name="chevron-rechts" size={17} className="foldout__chevron" />
+            </summary>
+            {timeline(earlier, { dim: true })}
+          </details>
+        )}
+      </div>
+    );
+  }
+
+  // -------------------------------------------------------------------- avond
   return (
     <div className="page">
       <PushPrompt />
-
-      <header className="dayhead">
-        <h1 className="cap">{formatLong(today)}</h1>
-        <p className="page__sub">{samenvatting}</p>
-      </header>
-
-      {klaarzetten.length > 0 ? (
-        <section className="prep">
-          <button className="prep__head" onClick={() => onOpenDate(tomorrow)}>
-            <Icon name="rugzak" size={19} />
-            <strong className="grow">Klaarzetten voor morgen</strong>
-            <Icon name="chevron-rechts" size={17} />
-          </button>
-          <ul className="prep__list">
-            {klaarzetten.map(({ event, item }) => (
-              <li key={item.id}>
-                <label className="prep__row">
-                  <input
-                    type="checkbox"
-                    checked={false}
-                    onChange={() => toggleBring(event, item.id)}
-                  />
-                  <span className="grow">
-                    <span className="prep__text">{item.text}</span>
-                    <span className="prep__for">
-                      {event.person !== 'gezin' ? `${PERSON_LABEL[event.person]} · ` : ''}
-                      {event.title}
-                    </span>
-                  </span>
-                </label>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : (
-        heeftMeeneemItems && (
-          <p className="allklaar iconrow">
-            <Icon name="vinkje" size={18} /> Alles staat klaar voor morgen.
-          </p>
-        )
-      )}
-
-      <DayFacts pickups={pickups} dish={dinner?.dish} />
-
-      {birthdays.map((c) => (
-        <p key={c.id} className="banner banner--info iconrow">
-          <Icon name="taart" size={18} /> {c.name} is vandaag jarig
-          {c.parents.length > 0 && ` — ouders: ${c.parents.map((p) => p.name).join(', ')}`}
-        </p>
-      ))}
-
-      {todayEvents.length === 0 ? (
-        <EmptyState icon="vandaag" title="Een lege dag." hint="Ook fijn." />
-      ) : (
-        <Timeline
-          events={todayEvents}
-          onOpen={setEditing}
-          onToggleBring={toggleBring}
-        />
-      )}
+      <PageHead
+        kicker={`Morgen · ${prepTomorrow.length > 0 ? `${prepTomorrow.length} klaarzetten` : 'alles klaar'}`}
+        title={formatLong(tomorrow)}
+        sub={`${tomorrowEvents.length === 0 ? 'niets gepland' : `${tomorrowEvents.length} ding${tomorrowEvents.length === 1 ? '' : 'en'} morgen`}`}
+      />
+      <PrepList items={prepTomorrow} title="Klaarzetten voor morgen" onToggle={toggleBring} />
+      {prepTomorrow.length === 0 && tomorrowHasBring && allDone}
+      {signalsOn(tomorrow)}
+      <RegelRow />
+      <DayFacts {...factsFor(tomorrow)} />
+      {birthdaysFor(tomorrow)}
+      {timeline(tomorrowEvents, { compact: true, empty: true })}
 
       <details className="foldout">
         <summary>
-          <span className="foldout__label">Morgen</span>
-          <span className="foldout__preview grow">
-            {tomorrowEvents.length === 0
-              ? 'nog niets gepland'
-              : tomorrowEvents
-                  .slice(0, 2)
-                  .map((e) => e.title)
-                  .join(', ') + (tomorrowEvents.length > 2 ? `, +${tomorrowEvents.length - 2}` : '')}
-          </span>
+          <span className="foldout__label">Vandaag</span>
+          <span className="foldout__preview grow">{preview(todayEvents)}</span>
           <Icon name="chevron-rechts" size={17} className="foldout__chevron" />
         </summary>
-        {tomorrowEvents.length > 0 && (
-          <Timeline events={tomorrowEvents} onOpen={setEditing} onToggleBring={toggleBring} />
-        )}
+        {timeline(todayEvents)}
       </details>
-
-      {editing && (
-        <EventForm initial={editing} date={editing.date} onClose={() => setEditing(null)} />
-      )}
     </div>
   );
 }

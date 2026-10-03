@@ -8,6 +8,8 @@ const files = [
   'tests/ics.test.ts',
   'tests/quickparse.test.ts',
   'tests/series.test.ts',
+  'tests/signals.test.ts',
+  'tests/regelen.test.ts',
   'tests/reminder.test.ts',
   'tests/kv.test.ts',
   'tests/supabase-backend.test.ts',

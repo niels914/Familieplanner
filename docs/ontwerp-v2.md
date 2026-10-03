@@ -288,3 +288,56 @@ tikken (2, net als nu).
 Aantal tikken, nu → straks: weten of jullie allebei weg zijn: zelf bedenken → 0, taak vastleggen
 kan nu niet → 2, boodschap toevoegen 2 → 2, instellingen 2 → 1, iets in de agenda zetten 2 → 2,
 Oppas 1 → 2, contact zoeken en breng & haal gelijk.
+
+## 9. Gebouwd: fase A en B
+
+Fase A en B zitten nu in de echte app.
+
+**Fase A, snelheid.** Gemeten met `scripts/measure.mjs`, bij 300 ms vertraging per verzoek (een
+matige 4G-verbinding), mediaan van 5 metingen, in Chromium op telefoonbreedte:
+
+| | voor | na |
+|---|---|---|
+| eerste keer openen (niets op het toestel) | 938 ms | 515 ms |
+| opnieuw openen (laatste stand op het toestel) | 893 ms | 190 ms |
+| afvinken: tikken tot het vinkje er staat | 350 ms | 77 ms |
+
+Wat er veranderd is:
+
+- Eén verzoek bij het opstarten (de gegevens), in plaats van eerst "ben ik ingelogd?" en dan de
+  gegevens. Een verlopen sessie geeft een 401 en dus het inlogscherm.
+- De laatste stand staat op het toestel (`localStorage`) en verschijnt meteen. Bij uitloggen en bij
+  een verlopen sessie wordt die weggegooid.
+- Wijzigingen staan er direct (agenda-items, taken, boodschappen, contacten, menu, instellingen,
+  breng en haal). Mislukt het opslaan, dan zet de app de oude stand terug en meldt het. Reeksen
+  aanmaken en reeksen wijzigen wachten nog op de server, want die rekenen de data daar uit.
+- Terugkomen in de app ververst pas na een minuut, en dan met een ETag: is er niets veranderd dan
+  antwoordt de server met een lege 304. De server leest de gegevens wel nog steeds uit de
+  database om dat te kunnen vaststellen; de winst zit in het verkeer naar de telefoon.
+- Zonder verbinding kun je lezen, met een balk die zegt van wanneer de stand is. Schrijven kan niet
+  (geen wachtrij); je krijgt een duidelijke melding en niets raakt half opgeslagen.
+
+De winst bij openen is gemeten met een kunstmatige vertraging op een lokale testserver. Op de
+echte Netlify-verbinding en Supabase zal het absolute getal anders zijn.
+
+**Fase B, structuur.** Gebouwd zoals in paragraaf 8: vijf knoppen met de Nieuw-knop in het midden,
+Regelen, Mensen (Contacten | Oppas), een Gezin-knop rechtsboven met Breng & haal en Instellingen, en
+Vandaag die de tijd volgt (tot 12:00, tot 18:00, daarna). Daarbij erbij gekomen:
+
+- Agenda-items hebben een **eindtijd** en er is een soort **Niet thuis**.
+- De invoer begrijpt *niet thuis*, *later thuis*, `18:00-22:00`, `van 18 tot 22 uur` en `tot 22:00`.
+  "Later thuis" rekent vanaf de normale thuiskomst (Instellingen, standaard 17:30).
+- **Taken** en **besluiten** zijn nieuwe verzamelingen in de opslag (`tasks`, `decisions`); het
+  databaseschema hoefde niet te veranderen.
+- Signalen worden berekend (`shared/signals.ts`, met tests) en niet opgeslagen. Een oppas-taak
+  sluit vanzelf zodra de oppas in de agenda staat.
+
+**Nog niet gedaan of anders dan het prototype:**
+
+- Nog niet op een echte iPhone geprobeerd; gecontroleerd in Chromium op telefoon- en computerbreedte,
+  licht en donker.
+- De tijdgrenzen van Vandaag (12:00 en 18:00) zijn nog een voorstel.
+- Geen eigen account per persoon, dus het filter op Niels of Irene bij Regelen kies je zelf.
+- Een melding vooraf over een naderend signaal of een deadline bestaat nog niet.
+- Het gezin als hoofdpersoon (fase C) en de bediening (fase D, zoals ongedaan maken in plaats van de
+  browserdialoog bij verwijderen) zijn niet gebouwd.

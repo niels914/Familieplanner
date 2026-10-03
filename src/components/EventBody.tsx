@@ -17,6 +17,7 @@ export const CATEGORY_ICON: Record<Category, IconName> = {
   afspraak: 'speld',
   verjaardag: 'taart',
   vrij: 'koffer',
+  weg: 'auto',
   anders: 'kalender',
 };
 
@@ -24,10 +25,13 @@ export function EventBody({
   event,
   onClick,
   onToggleBring,
+  compactBring = false,
 }: {
   event: CalendarEvent;
   onClick: () => void;
   onToggleBring?: (itemId: string) => void;
+  /** Het meeneem-lijstje staat al elders op de pagina: hier één regel. */
+  compactBring?: boolean;
 }) {
   const open = event.bring.filter((b) => !b.done);
 
@@ -38,6 +42,7 @@ export function EventBody({
         <span className="event__meta">
           {event.person !== 'gezin' && `${PERSON_LABEL[event.person]} · `}
           {CATEGORY_LABEL[event.category]}
+          {event.endTime && !event.allDay && ` · tot ${event.endTime}`}
           {event.sitter && ` · ${event.sitter.name} ${event.sitter.start}–${event.sitter.end}`}
           {event.source === 'parro' && ' · Parro'}
           {event.series && (
@@ -51,7 +56,12 @@ export function EventBody({
       </button>
 
       {/* Wat nog klaar moet staat groot; wat af is krimpt tot één regel. */}
-      {open.length > 0 ? (
+      {compactBring && open.length > 0 ? (
+        <p className="bring bring--compact iconrow">
+          <Icon name="rugzak" size={15} />
+          Mee: {open.map((b) => b.text).join(', ')}
+        </p>
+      ) : open.length > 0 ? (
         <div className="bring">
           <div className="iconrow" style={{ marginBottom: 3 }}>
             <Icon name="rugzak" size={16} />

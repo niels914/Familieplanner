@@ -13,6 +13,8 @@ export interface QuickResult {
   title: string;
   date: string;
   time?: string;
+  /** Eindtijd, als je een tijdvak noemde ("18:00-22:00", "tot 22:00"). */
+  endTime?: string;
   allDay: boolean;
   person: PersonId;
   category: Category;
@@ -73,7 +75,21 @@ function nextWeekday(today: string, target: number): string {
   return addDays(today, delta);
 }
 
-export function quickParse(input: string, today: string): QuickResult {
+export interface QuickOptions {
+  /** Wanneer jullie normaal thuis zijn; "later thuis" telt vanaf dat uur. */
+  homeTime?: string;
+}
+
+const pad2 = (n: number) => String(n).padStart(2, '0');
+function clock(h: string | undefined, m: string | undefined): string | undefined {
+  if (h === undefined) return undefined;
+  const hh = Number(h);
+  const mm = Number(m ?? 0);
+  if (hh < 0 || hh > 23 || mm < 0 || mm > 59) return undefined;
+  return `${pad2(hh)}:${pad2(mm)}`;
+}
+
+export function quickParse(input: string, today: string, options: QuickOptions = {}): QuickResult {
   let rest = ` ${input.trim()} `;
   const matched: string[] = [];
 
@@ -94,6 +110,26 @@ export function quickParse(input: string, today: string): QuickResult {
       rest = rest.replace(re, ' ');
       matched.push(id);
       break;
+    }
+  }
+
+  // --- tijdvak ---
+  // Vóór de datum: in "19:00-21:00 8-10" mag "00-21" nooit als dag-maand gelezen worden.
+  let time: string | undefined;
+  let endTime: string | undefined;
+
+  // Een tijdvak: "18:00-22:00", "18:00 tot 22:00", "van 18 tot 22 uur".
+  const range =
+    rest.match(/\b(\d{1,2})[:.u](\d{2})\s*(?:-|–|tot)\s*(\d{1,2})[:.u](\d{2})\b/i) ??
+    rest.match(/\bvan\s+(\d{1,2})(?:[:.u](\d{2}))?\s*(?:uur\s*)?(?:tot|-|–)\s*(\d{1,2})(?:[:.u](\d{2}))?\s*(?:uur)?\b/i);
+  if (range) {
+    const start = clock(range[1], range[2]);
+    const end = clock(range[3], range[4]);
+    if (start && end) {
+      time = start;
+      endTime = end;
+      rest = rest.replace(range[0], ' ');
+      matched.push(range[0].trim());
     }
   }
 
@@ -163,25 +199,58 @@ export function quickParse(input: string, today: string): QuickResult {
     }
   }
 
+  // --- niet thuis / later thuis ---
+  // Eerst deze uitdrukkingen, zodat hun tijden hieronder goed gelezen worden.
+  const laterThuis = consume(/\blater\s+thuis\b/i);
+  const nietThuis = laterThuis ? null : consume(/\bniet\s+thuis\b/i);
+
   // --- tijd ---
-  let time: string | undefined;
-  const timeMatch = rest.match(/\b(?:om\s+)?(\d{1,2})[:.u](\d{2})\b|\bom\s+(\d{1,2})\s*uur\b/i);
-  if (timeMatch) {
-    const h = Number(timeMatch[1] ?? timeMatch[3]);
-    const m = Number(timeMatch[2] ?? 0);
-    if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
-      time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-      rest = rest.replace(timeMatch[0], ' ');
-      matched.push(timeMatch[0].trim());
+  // "tot 22:00" of "tot 22 uur" geeft de eindtijd.
+  if (!endTime) {
+    const until = rest.match(/\btot\s+(\d{1,2})(?:[:.u](\d{2})|\s*uur)\b/i);
+    if (until) {
+      const t = clock(until[1], until[2]);
+      if (t) {
+        endTime = t;
+        rest = rest.replace(until[0], ' ');
+        matched.push(until[0].trim());
+      }
+    }
+  }
+
+  if (!time) {
+    const timeMatch = rest.match(/\b(?:om\s+)?(\d{1,2})[:.u](\d{2})\b|\bom\s+(\d{1,2})\s*uur\b/i);
+    if (timeMatch) {
+      const t = clock(timeMatch[1] ?? timeMatch[3], timeMatch[2]);
+      if (t) {
+        time = t;
+        rest = rest.replace(timeMatch[0], ' ');
+        matched.push(timeMatch[0].trim());
+      }
+    }
+  }
+
+  // "Later thuis 20:00": je bent dan om 20:00 thuis, en weg vanaf je normale
+  // thuiskomst. Eén tijd is hier dus de eindtijd.
+  if (laterThuis) {
+    if (time && !endTime) {
+      endTime = time;
+      time = options.homeTime ?? '17:30';
+    } else if (!time) {
+      time = options.homeTime ?? '17:30';
     }
   }
 
   // --- categorie ---
   let category: Category = 'anders';
-  for (const [re, cat] of CATEGORIES) {
-    if (re.test(rest)) {
-      category = cat;
-      break;
+  if (laterThuis || nietThuis) {
+    category = 'weg';
+  } else {
+    for (const [re, cat] of CATEGORIES) {
+      if (re.test(rest)) {
+        category = cat;
+        break;
+      }
     }
   }
 
@@ -204,6 +273,8 @@ export function quickParse(input: string, today: string): QuickResult {
   if (!title && bring.length > 0) {
     title = `Meenemen: ${bring.join(', ')}`;
   }
+  if (!title && laterThuis) title = 'Later thuis';
+  if (!title && nietThuis) title = 'Niet thuis';
   if (!title) title = 'Nieuw item';
 
   if (category === 'anders' && bring.length > 0) {
@@ -216,6 +287,7 @@ export function quickParse(input: string, today: string): QuickResult {
     title: capitalize(title),
     date,
     time,
+    endTime,
     allDay: !time,
     person,
     category,

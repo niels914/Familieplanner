@@ -37,6 +37,7 @@ export type IconName =
   | 'delen'
   | 'plusvak'
   | 'herhaal'
+  | 'regelen'
   | 'bel';
 
 const PATHS: Record<IconName, JSX.Element> = {
@@ -197,6 +198,12 @@ const PATHS: Record<IconName, JSX.Element> = {
     <>
       <path d="M4.5 11V9.5a3 3 0 0 1 3-3h11M15.5 3.5l3 3-3 3" />
       <path d="M19.5 13v1.5a3 3 0 0 1-3 3h-11M8.5 20.5l-3-3 3-3" />
+    </>
+  ),
+  regelen: (
+    <>
+      <path d="M4 6.2l1.5 1.5L8.2 4.8M4 12.2l1.5 1.5 2.7-2.9M4 18.2l1.5 1.5 2.7-2.9" />
+      <path d="M12 6.5h8M12 12.5h8M12 18.5h8" />
     </>
   ),
   bel: (

@@ -16,7 +16,7 @@ const PERIOD_LABEL: Record<Period, string> = {
   alles: 'Alles',
 };
 
-export function SittersView() {
+export function SittersView({ embedded = false }: { embedded?: boolean }) {
   const { events, contacts } = useData();
   const { saveEvent } = useStore();
   const [period, setPeriod] = useState<Period>('komend');
@@ -86,7 +86,7 @@ export function SittersView() {
   };
 
   return (
-    <div className="page">
+    <div className={`page ${embedded ? 'page--embedded' : ''}`}>
       <div className="page__head">
         <div>
           <h1>Oppas</h1>

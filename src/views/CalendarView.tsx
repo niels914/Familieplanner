@@ -19,6 +19,9 @@ import { Timeline } from '../components/Timeline';
 import { DayFacts } from '../components/DayFacts';
 import { Icon } from '../components/Icon';
 import { EmptyState } from '../components/EmptyState';
+import { GezinButton } from '../components/PageHead';
+import { SignalBanner } from '../components/SignalBanner';
+import { useRegel } from '../lib/useRegel';
 
 type Filter = 'alles' | PersonId;
 const FILTERS: Filter[] = ['alles', 'matthijs', 'amelie', 'lotte', 'gezin'];
@@ -36,6 +39,7 @@ export function CalendarView({
 }) {
   const { events, contacts, pickupRules, pickupOverrides, meals } = useData();
   const { saveEvent } = useStore();
+  const regel = useRegel();
 
   /** De dag waaruit de zichtbare week en maand volgen. */
   const [anchor, setAnchor] = useState(selected);
@@ -102,7 +106,7 @@ export function CalendarView({
     void saveEvent({
       ...event,
       bring: event.bring.map((b) => (b.id === itemId ? { ...b, done: !b.done } : b)),
-    });
+    }).catch(() => {});
   };
 
   // Vegen over de weekstrip bladert een week vooruit of terug.
@@ -154,6 +158,7 @@ export function CalendarView({
               Vandaag
             </button>
           )}
+          <GezinButton />
         </div>
 
         <div className="cal__controls">
@@ -283,6 +288,12 @@ export function CalendarView({
             <Icon name="plus" size={16} /> Item
           </button>
         </div>
+
+        {regel.open.map((i) =>
+          i.kind === 'signal' && i.signal.date === selected ? (
+            <SignalBanner key={i.signal.key} signal={i.signal} />
+          ) : null,
+        )}
 
         <DayFacts pickups={pickups} dish={dinner?.dish} />
 

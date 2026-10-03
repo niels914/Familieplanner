@@ -15,15 +15,16 @@ gedraagt zich als een gewone app.
 
 | Onderdeel | Wat het doet |
 |---|---|
-| **Vandaag** | Wat er vandaag speelt, plus een aanvinklijst met wat je vanavond voor morgen moet klaarzetten. |
-| **Agenda** | Maandoverzicht, filterbaar per persoon. Elk item kan een meeneem-lijstje hebben. |
+| **Vandaag** | Volgt de tijd: 's ochtends wat er vandaag mee moet, 's middags wat er nog komt, 's avonds morgen met wat er klaar moet staan. Daaronder één regel als er iets te regelen valt. |
+| **Agenda** | Week of maand, filterbaar per persoon. Elk item kan een meeneem-lijstje en een eindtijd hebben. |
+| **Nieuw** (middenknop) | Eén blad met de keuze *Agenda-item* of *Taak*. Typ *"Matthijs vrijdag gymtas mee"* of *"Niels niet thuis 18:00-22:00"* en de app maakt er het juiste item van. |
+| **Regelen** | Openstaande taken om te regelen of af te stemmen, gegroepeerd op urgentie. Daarnaast Boodschappen en Weekmenu. Zie ook *Signaleren* hieronder. |
+| **Signaleren** | Zetten Niels en Irene in de agenda wanneer ze *niet thuis* of *later thuis* zijn, dan ziet de app zelf wanneer jullie allebei weg zijn zonder oppas. Dat komt bij Regelen, met keuzes: iemand blijft thuis, een oppas regelen (wordt een taak) of geen probleem. |
 | **Reeksen** | Zwemles elke dinsdag, of om de week, tot een einddatum. Elke keer is een eigen item: vink in het reeksoverzicht de lessen aan waarin met kleren gezwommen wordt en zet er in één keer "kleren om in te zwemmen" bij. Wijzigen of verwijderen kan voor één keer of voor deze en alle volgende. |
-| **Snel toevoegen** | Typ *"Matthijs volgende week donderdag lege schoenendoos mee"* en de app maakt er het juiste item op de juiste dag van. |
-| **Oppas** | Alle oppasmomenten filterbaar op periode en oppas, met uren, uurtarief, maandtotaal en wat er nog openstaat. |
-| **Contacten** | Klasgenootjes met de naam en het telefoonnummer van vader en moeder, tikbaar om direct te bellen. Ook oppassen en overige contacten. |
-| **Breng & haal** | Vast weekschema per kind, met afwijkingen per dag voor de komende twee weken. |
-| **Eten** | Gedeelde boodschappenlijst en weekmenu; ingrediënten gaan met één knop naar de boodschappenlijst. |
+| **Mensen** | Contacten (klasgenootjes met de telefoonnummers van de ouders, tikbaar om te bellen) en Oppas (alle momenten met uren, tarief en wat er nog openstaat). |
+| **Gezin** (knop rechtsboven) | Breng & haal (vast weekschema met afwijkingen) en Instellingen. |
 | **Parro** | De schoolagenda wordt elke drie uur opgehaald. Jouw notities en meeneem-lijstjes bij een Parro-item blijven bij een synchronisatie staan. |
+| **Snel en offline** | De laatste stand staat op het toestel en verschijnt meteen bij openen. Wijzigingen staan er direct, nog voor de server antwoordt; mislukt het, dan draait de app het terug en zegt waarom. Zonder verbinding kun je lezen. Schrijven niet. |
 | **Herinnering** | Elke avond om 19:00 (instelbaar) één pushmelding met alles van morgen, inclusief wat er mee moet en je eigen notities. Aanzetten met één tik vanaf Vandaag; daarna komt er meteen een testbericht op alleen dat toestel. |
 
 ---
@@ -102,7 +103,7 @@ npm run vapid
   werken op iOS **alleen** vanaf het beginscherm, niet in de browser zelf.
 - **Android**: Chrome biedt *App installeren* aan in het menu.
 
-Daarna in de app: *Meer → Instellingen → Meldingen aanzetten*. Doe dat op elk toestel
+Daarna in de app: *huisje rechtsboven → Instellingen → Meldingen aanzetten*. Doe dat op elk toestel
 apart; de melding gaat naar alle toestellen die je hebt aangemeld.
 
 ---

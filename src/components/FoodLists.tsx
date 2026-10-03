@@ -4,33 +4,7 @@ import { useData, useStore } from '../lib/store';
 import { Icon } from '../components/Icon';
 import { EmptyState } from '../components/EmptyState';
 
-export function FoodView() {
-  const [tab, setTab] = useState<'boodschappen' | 'menu'>('boodschappen');
-
-  return (
-    <div className="page">
-      <div className="page__head">
-        <div>
-          <h1>Eten</h1>
-          <div className="page__sub">Boodschappenlijst en het weekmenu, gedeeld met z'n tweeën.</div>
-        </div>
-      </div>
-
-      <div className="segmented" role="group" aria-label="Weergave" style={{ marginBottom: 14 }}>
-        <button aria-pressed={tab === 'boodschappen'} onClick={() => setTab('boodschappen')}>
-          Boodschappen
-        </button>
-        <button aria-pressed={tab === 'menu'} onClick={() => setTab('menu')}>
-          Weekmenu
-        </button>
-      </div>
-
-      {tab === 'boodschappen' ? <Shopping /> : <WeekMenu />}
-    </div>
-  );
-}
-
-function Shopping() {
+export function Shopping() {
   const { shopping } = useData();
   const { addShopping, toggleShopping, deleteShopping, clearDoneShopping } = useStore();
   const [text, setText] = useState('');
@@ -126,7 +100,7 @@ function Shopping() {
   );
 }
 
-function WeekMenu() {
+export function WeekMenu() {
   const { meals } = useData();
   const { saveMeal, addShoppingBulk, setNotice } = useStore();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(todayInNl()));

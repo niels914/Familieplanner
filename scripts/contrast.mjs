@@ -51,6 +51,8 @@ const PAREN = [
   ['primaire knop', 'primary-ink', 'primary', 4.5],
   ['primair als tekst', 'primary', 'bg', 4.5],
   ['meenemen-blok', 'warn', 'warn-soft', 4.5],
+  ['teller op Regelen', 'bg', 'warn', 4.5],
+  ['chip Gesignaleerd', 'primary', 'primary-soft', 4.5],
   ['chip Matthijs', 'matthijs', 'matthijs-soft', 4.5],
   ['chip Amélie', 'amelie', 'amelie-soft', 4.5],
   ['chip Lotte', 'lotte', 'lotte-soft', 4.5],

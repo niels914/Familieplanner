@@ -8,6 +8,8 @@ import type {
 } from '../../shared/types';
 import { CATEGORY_LABEL, SERIES_SHARED_FIELDS } from '../../shared/types';
 import { addDays, formatLong } from '../../shared/dates';
+import { spanLabel } from '../../shared/signals';
+import { DRAFT_ID, useAwayWarnings } from '../lib/useAwayWarnings';
 import { seriesCount } from '../../shared/series';
 import { Modal } from './Modal';
 import { ChipPicker, type ChipOption } from './ChipPicker';
@@ -26,7 +28,7 @@ const PERSON_OPTIONS: ChipOption<PersonId>[] = [
 ];
 
 const CATEGORY_OPTIONS: ChipOption<Category>[] = (
-  ['school', 'psz', 'opvang', 'oppas', 'afspraak', 'verjaardag', 'vrij', 'anders'] as Category[]
+  ['school', 'psz', 'opvang', 'oppas', 'weg', 'afspraak', 'verjaardag', 'vrij', 'anders'] as Category[]
 ).map((c) => ({ value: c, label: CATEGORY_LABEL[c], icon: CATEGORY_ICON[c] }));
 
 const STANDAARD_TIJDEN = ['08:30', '12:00', '15:00', '18:00'];
@@ -98,6 +100,11 @@ export function EventForm({
   const isParro = draft.source === 'parro';
   const isSitter = draft.category === 'oppas';
   const heeftTijd = Boolean(draft.time);
+  const isAway = draft.category === 'weg';
+  const awayWithoutParent = isAway && draft.person !== 'niels' && draft.person !== 'irene';
+
+  // Terwijl je invult: botst dit met wat de ander al heeft aangegeven?
+  const warnings = useAwayWarnings(draft);
 
   const sitters = useMemo(() => contacts.filter((c) => c.kind === 'oppas'), [contacts]);
 
@@ -141,19 +148,25 @@ export function EventForm({
       ...draft,
       title: draft.title.trim(),
       allDay: !draft.time,
+      endTime: draft.time ? draft.endTime : undefined,
       sitter: isSitter ? draft.sitter : undefined,
     };
     try {
       if (!isEditing && herhaal) {
         const aantal = await createSeries(opgeschoond, herhaal, tot);
         setNotice(`${opgeschoond.title}: ${aantal} keer ingepland.`);
-      } else {
+      } else if (reeks && initial && bereik === 'volgende' && gedeeldGewijzigd) {
         await saveEvent(opgeschoond);
-        if (reeks && initial && bereik === 'volgende' && gedeeldGewijzigd) {
-          const gedeeld = Object.fromEntries(
-            SERIES_SHARED_FIELDS.map((veld) => [veld, opgeschoond[veld]]),
-          ) as Partial<CalendarEvent>;
-          await updateSeriesFrom(reeks.id, initial.date, gedeeld);
+        const gedeeld = Object.fromEntries(
+          SERIES_SHARED_FIELDS.map((veld) => [veld, opgeschoond[veld]]),
+        ) as Partial<CalendarEvent>;
+        await updateSeriesFrom(reeks.id, initial.date, gedeeld);
+      } else {
+        // Het staat er meteen; het formulier hoeft niet op de server te wachten.
+        // Mislukt het opslaan, dan draait de store het terug en meldt het.
+        void saveEvent(opgeschoond).catch(() => {});
+        if (warnings.length > 0) {
+          setNotice(`Opgeslagen. Allebei weg ${spanLabel(warnings[0].window)} staat nu bij Regelen.`);
         }
       }
       onClose();
@@ -176,7 +189,7 @@ export function EventForm({
     setBusy(true);
     try {
       if (reeks && welke === 'volgende') await deleteSeries(reeks.id, initial.date);
-      else await deleteEvent(initial.id);
+      else void deleteEvent(initial.id).catch(() => {});
       onClose();
     } finally {
       setBusy(false);
@@ -320,7 +333,50 @@ export function EventForm({
               </div>
             </div>
           )}
+
+          {heeftTijd && !isSitter && (
+            <div className="row row--wrap" style={{ marginTop: 2 }}>
+              <label htmlFor="ev-eind" className="small muted">
+                Tot
+              </label>
+              <input
+                id="ev-eind"
+                className="input"
+                style={{ width: 152 }}
+                type="time"
+                value={draft.endTime ?? ''}
+                disabled={isParro}
+                onChange={(e) => set('endTime', e.target.value || undefined)}
+              />
+              {!draft.endTime && (
+                <span className="small muted">
+                  {isAway ? 'Zonder eindtijd rekenen we met 3 uur.' : 'Eindtijd is niet verplicht.'}
+                </span>
+              )}
+            </div>
+          )}
         </div>
+
+        {isAway && awayWithoutParent && (
+          <p className="signalnote">
+            <Icon name="huis" size={17} />
+            <span>Kies hieronder Niels of Irene: bij een kind of het gezin kunnen we niets vergelijken.</span>
+          </p>
+        )}
+
+        {warnings.map((w) => (
+          <p key={w.key} className="signalnote" role="status">
+            <Icon name="bel" size={17} />
+            <span>
+              <b>Dan is niemand thuis, {spanLabel(w.window)}.</b>{' '}
+              {w.niels.id === (draft.id ?? DRAFT_ID) ? `${w.irene.title} van Irene` : `${w.niels.title} van Niels`}{' '}
+              staat al in de agenda.{' '}
+              {w.coverage === 'partial'
+                ? `Een oppas dekt een deel; nog open: ${w.gaps.map(spanLabel).join(', ')}.`
+                : 'Er staat geen oppas in de agenda. Na opslaan komt dit bij Regelen.'}
+            </span>
+          </p>
+        ))}
 
         {!isEditing && !isParro && (
           <div className="field">
@@ -391,6 +447,8 @@ export function EventForm({
             setDraft((d) => ({
               ...d,
               category: v,
+              // Een "niet thuis" hoeft niet in de avondherinnering.
+              reminder: v === 'weg' ? false : d.category === 'weg' ? true : d.reminder,
               // Meteen de standaardtijden zetten, anders staat er 18:00–22:00 in
               // beeld terwijl het item zonder oppasgegevens opgeslagen zou worden.
               sitter: v === 'oppas' ? (d.sitter ?? { ...LEGE_OPPAS }) : d.sitter,

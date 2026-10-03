@@ -15,6 +15,8 @@ export type Category =
   | 'afspraak'
   | 'verjaardag'
   | 'vrij'
+  /** Niels of Irene is niet thuis (of later thuis). Voedt de signalering. */
+  | 'weg'
   | 'anders';
 
 export interface BringItem {
@@ -163,6 +165,51 @@ export interface Meal {
   ingredients: string[];
 }
 
+export type TaskOwner = 'niels' | 'irene' | 'samen';
+
+/**
+ * Iets dat nog geregeld of afgestemd moet worden: een cadeau halen, je
+ * aanmelden voor de ouderavond. Het scherm Regelen is de lijst hiervan.
+ */
+export interface Task {
+  id: string;
+  title: string;
+  /** 'samen' = nog af te stemmen wie het doet. */
+  owner: TaskOwner;
+  kid?: ChildId;
+  /** 'YYYY-MM-DD'. Leeg = geen deadline. */
+  due?: string;
+  note?: string;
+  /** Wat er besloten is, bij iets dat afgestemd moest worden. */
+  decision?: string;
+  /** Het agenda-item waar deze taak bij hoort. */
+  eventId?: string;
+  /** Sleutel van het signaal waaruit deze taak ontstond (zie shared/signals.ts). */
+  signalKey?: string;
+  done: boolean;
+  doneAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Wat jullie besloten bij een signaal "allebei weg". Het signaal zelf wordt
+ * berekend uit de agenda en niet bewaard; alleen de keuze erbij staat hier.
+ */
+export type SignalDecision =
+  | { type: 'thuis'; who: 'niels' | 'irene'; at: string }
+  | { type: 'oppas'; who: 'niels' | 'irene'; taskId: string; at: string }
+  | { type: 'ok'; at: string };
+
+/** Een keuze zoals het scherm die doorgeeft; het tijdstip zet de server erbij. */
+export type NewSignalDecision =
+  | { type: 'thuis'; who: 'niels' | 'irene' }
+  | { type: 'oppas'; who: 'niels' | 'irene'; taskId: string }
+  | { type: 'ok' };
+
+/** Per signaalsleutel de gemaakte keuze. */
+export type Decisions = Record<string, SignalDecision>;
+
 export interface PushSubscriptionRecord {
   id: string;
   endpoint: string;
@@ -183,6 +230,8 @@ export interface Settings {
   parroPerson?: ChildId;
   /** Vaste info die je met de oppas deelt. */
   sitterBriefing?: string;
+  /** Wanneer je normaal thuis bent, 'HH:MM'. Daarvan telt "later thuis" tot het opgegeven tijdstip. */
+  homeTime?: string;
 }
 
 export interface AppData {
@@ -193,6 +242,8 @@ export interface AppData {
   shopping: ShoppingItem[];
   meals: Meal[];
   settings: Settings;
+  tasks: Task[];
+  decisions: Decisions;
 }
 
 export const PERSON_LABEL: Record<PersonId, string> = {
@@ -212,5 +263,6 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   afspraak: 'Afspraak',
   verjaardag: 'Verjaardag',
   vrij: 'Vrij / vakantie',
+  weg: 'Niet thuis',
   anders: 'Anders',
 };

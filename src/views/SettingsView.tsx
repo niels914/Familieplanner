@@ -1,3 +1,4 @@
+import { DEFAULT_HOME_TIME } from '../../shared/signals';
 import { useEffect, useState } from 'react';
 import type { ChildId } from '../../shared/types';
 import { CHILDREN, PERSON_LABEL } from '../../shared/types';
@@ -140,6 +141,28 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
               Stuur een testbericht
             </button>
           )}
+        </div>
+
+        {/* ------------------------------------------------ thuiskomst */}
+        <div className="card card--pad stack stack--sm">
+          <strong>Normale thuiskomst</strong>
+          <p className="small muted">
+            Wanneer jullie doordeweeks meestal thuis zijn. Zet je een "later thuis" in de agenda,
+            dan rekenen we vanaf dit tijdstip tot het uur dat je opgeeft. Daarmee ziet de app
+            wanneer jullie allebei weg zijn.
+          </p>
+          <div className="field" style={{ maxWidth: 160 }}>
+            <label htmlFor="home-time">Thuis om</label>
+            <input
+              id="home-time"
+              className="input"
+              type="time"
+              value={settings.homeTime ?? DEFAULT_HOME_TIME}
+              onChange={(e) => {
+                if (e.target.value) void saveSettings({ homeTime: e.target.value }).catch(() => {});
+              }}
+            />
+          </div>
         </div>
 
         {/* -------------------------------------------------------- parro */}

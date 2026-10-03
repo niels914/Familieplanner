@@ -11,8 +11,10 @@ import type {
   Meal,
   PickupOverride,
   PickupRule,
+  Decisions,
   Settings,
   ShoppingItem,
+  Task,
 } from '../shared/types';
 
 export type Collection =
@@ -23,6 +25,8 @@ export type Collection =
   | 'shopping'
   | 'meals'
   | 'settings'
+  | 'tasks'
+  | 'decisions'
   | 'pushSubs';
 
 export const DEFAULT_SETTINGS: Settings = { reminderHour: 19 };
@@ -35,6 +39,8 @@ const LEEG: Record<Collection, unknown> = {
   shopping: [],
   meals: [],
   settings: DEFAULT_SETTINGS,
+  tasks: [],
+  decisions: {},
   pushSubs: [],
 };
 
@@ -67,5 +73,7 @@ export async function readAll(): Promise<AppData> {
     shopping: await read<ShoppingItem[]>('shopping'),
     meals: await read<Meal[]>('meals'),
     settings: { ...DEFAULT_SETTINGS, ...(await read<Settings>('settings')) },
+    tasks: await read<Task[]>('tasks'),
+    decisions: await read<Decisions>('decisions'),
   };
 }

@@ -18,7 +18,7 @@ const FILTER_LABEL: Record<Filter, string> = {
   overig: 'Overig',
 };
 
-export function ContactsView() {
+export function ContactsView({ embedded = false }: { embedded?: boolean }) {
   const { contacts } = useData();
   const [filter, setFilter] = useState<Filter>('alle');
   const [query, setQuery] = useState('');
@@ -91,7 +91,7 @@ export function ContactsView() {
   }, [contacts, filter, query]);
 
   return (
-    <div className="page">
+    <div className={`page ${embedded ? 'page--embedded' : ''}`}>
       <div className="page__head">
         <div>
           <h1>Contacten</h1>

@@ -13,15 +13,23 @@ export function setUnauthorizedHandler(fn: () => void): void {
   onUnauthorized = fn;
 }
 
+/** Status 0 betekent: het verzoek kwam niet eens aan (geen verbinding). */
+export const isOffline = (err: unknown): boolean => err instanceof ApiError && err.status === 0;
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`/api/${path}`, {
-    credentials: 'same-origin',
-    ...init,
-    headers: {
-      ...(init.body ? { 'content-type': 'application/json' } : {}),
-      ...(init.headers ?? {}),
-    },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`/api/${path}`, {
+      credentials: 'same-origin',
+      ...init,
+      headers: {
+        ...(init.body ? { 'content-type': 'application/json' } : {}),
+        ...(init.headers ?? {}),
+      },
+    });
+  } catch {
+    throw new ApiError('Geen verbinding. Dit is niet opgeslagen.', 0);
+  }
 
   if (res.status === 401) {
     onUnauthorized?.();

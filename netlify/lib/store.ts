@@ -15,8 +15,10 @@ import type {
   PickupOverride,
   PickupRule,
   PushSubscriptionRecord,
+  Decisions,
   Settings,
   ShoppingItem,
+  Task,
 } from '../../shared/types';
 import { createKv } from './kv';
 import { leesUitBlobs } from './legacy-blobs';
@@ -30,6 +32,8 @@ export type Collection =
   | 'shopping'
   | 'meals'
   | 'settings'
+  | 'tasks'
+  | 'decisions'
   | 'pushSubs';
 
 export const DEFAULT_SETTINGS: Settings = { reminderHour: 19 };
@@ -42,6 +46,8 @@ const EMPTY: Record<Collection, unknown> = {
   shopping: [] as ShoppingItem[],
   meals: [] as Meal[],
   settings: DEFAULT_SETTINGS,
+  tasks: [] as Task[],
+  decisions: {} as Decisions,
   pushSubs: [] as PushSubscriptionRecord[],
 };
 
@@ -87,7 +93,7 @@ export const overwrite = <T>(collection: Collection, value: T): Promise<void> =>
 
 /** Alles in één keer, voor het openen van de app. */
 export async function readAll(): Promise<AppData> {
-  const [events, contacts, pickupRules, pickupOverrides, shopping, meals, settings] =
+  const [events, contacts, pickupRules, pickupOverrides, shopping, meals, settings, tasks, decisions] =
     await Promise.all([
       read<CalendarEvent[]>('events'),
       read<Contact[]>('contacts'),
@@ -96,6 +102,8 @@ export async function readAll(): Promise<AppData> {
       read<ShoppingItem[]>('shopping'),
       read<Meal[]>('meals'),
       read<Settings>('settings'),
+      read<Task[]>('tasks'),
+      read<Decisions>('decisions'),
     ]);
   return {
     events,
@@ -105,5 +113,7 @@ export async function readAll(): Promise<AppData> {
     shopping,
     meals,
     settings: { ...DEFAULT_SETTINGS, ...settings },
+    tasks,
+    decisions,
   };
 }

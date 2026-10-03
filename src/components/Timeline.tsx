@@ -12,15 +12,20 @@ export function Timeline({
   events,
   onOpen,
   onToggleBring,
+  compactBring = false,
+  dim = false,
 }: {
   events: CalendarEvent[];
   onOpen: (event: CalendarEvent) => void;
   onToggleBring: (event: CalendarEvent, itemId: string) => void;
+  compactBring?: boolean;
+  /** Voorbij: gedimd, bijvoorbeeld onder "Eerder vandaag". */
+  dim?: boolean;
 }) {
   return (
     <ol className="timeline">
       {events.map((event) => (
-        <li key={event.id} className={`tl tl--${event.person}`}>
+        <li key={event.id} className={`tl tl--${event.person} ${dim ? 'tl--passed' : ''}`}>
           <div className="tl__time">
             {event.allDay ? (
               <Icon name={CATEGORY_ICON[event.category]} size={19} />
@@ -37,6 +42,7 @@ export function Timeline({
               event={event}
               onClick={() => onOpen(event)}
               onToggleBring={(id) => onToggleBring(event, id)}
+              compactBring={compactBring}
             />
           </div>
         </li>

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type {
   BringItem,
   CalendarEvent,
@@ -6,9 +7,12 @@ import type {
   PickupOverride,
   PickupRule,
   PushSubscriptionRecord,
+  Decisions,
   Settings,
   ShoppingItem,
   SeriesInfo,
+  SignalDecision,
+  Task,
   SeriesSharedField,
 } from '../../shared/types';
 import { SERIES_SHARED_FIELDS } from '../../shared/types';
@@ -65,11 +69,7 @@ export default async function handler(req: Request): Promise<Response> {
 
     switch (resource) {
       case 'data':
-        return json({
-          ...(await readAll()),
-          push: { configured: pushConfigured(), publicKey: publicKey() },
-          parroConfigured: Boolean(process.env.PARRO_ICS_URL),
-        });
+        return await handleData(req);
 
       case 'events':
         if (id === 'series') return await handleSeries(req, action, url);
@@ -91,6 +91,12 @@ export default async function handler(req: Request): Promise<Response> {
       case 'meals':
         return await handleMeals(req, id);
 
+      case 'tasks':
+        return await handleTasks(req, id);
+
+      case 'decisions':
+        return await handleDecisions(req, id);
+
       case 'settings':
         return await handleSettings(req);
 
@@ -107,6 +113,31 @@ export default async function handler(req: Request): Promise<Response> {
   } catch (err) {
     return error((err as Error).message || 'Er ging iets mis.', 500);
   }
+}
+
+// ------------------------------------------------------------------ data
+
+/**
+ * Alles in één keer, voor het openen van de app. Met een ETag: is er niets
+ * veranderd sinds de vorige keer, dan antwoordt de server met een lege 304 en
+ * hoeft de telefoon niets opnieuw te downloaden.
+ */
+async function handleData(req: Request): Promise<Response> {
+  const body = JSON.stringify({
+    ...(await readAll()),
+    push: { configured: pushConfigured(), publicKey: publicKey() },
+    parroConfigured: Boolean(process.env.PARRO_ICS_URL),
+  });
+  const etag = `"${createHash('sha1').update(body).digest('base64url')}"`;
+  // 'no-cache' bewaart het antwoord wel, maar vraagt eerst of het nog klopt.
+  const headers = { etag, 'cache-control': 'private, no-cache', vary: 'cookie' };
+
+  if (req.headers.get('if-none-match') === etag) {
+    return new Response(null, { status: 304, headers });
+  }
+  return new Response(body, {
+    headers: { ...headers, 'content-type': 'application/json; charset=utf-8' },
+  });
 }
 
 // ---------------------------------------------------------------- events
@@ -466,6 +497,88 @@ async function handleMeals(req: Request, id?: string): Promise<Response> {
   if (req.method === 'DELETE' && id) {
     const saved = await update<Meal[]>('meals', (m) => m.filter((x) => x.date !== id));
     return json({ meals: saved });
+  }
+
+  return error('Methode niet ondersteund.', 405);
+}
+
+// ---------------------------------------------------------------- taken
+
+const TASK_OWNERS = ['niels', 'irene', 'samen'];
+
+async function handleTasks(req: Request, id?: string): Promise<Response> {
+  if (req.method === 'POST') {
+    const body = await readBody<Partial<Task>>(req);
+    if (!body.title?.trim()) return error('Geef de taak een titel.');
+    if (body.owner && !TASK_OWNERS.includes(body.owner)) return error('Onbekende eigenaar.');
+
+    const saved = await update<Task[]>('tasks', (tasks) => {
+      const now = nowIso();
+      const index = body.id ? tasks.findIndex((t) => t.id === body.id) : -1;
+
+      if (index >= 0) {
+        const current = tasks[index];
+        const done = body.done ?? current.done;
+        tasks[index] = {
+          ...current,
+          ...body,
+          title: body.title!.trim(),
+          id: current.id,
+          done,
+          // Het moment van afronden alleen vastleggen bij de overgang.
+          doneAt: done ? (current.done ? current.doneAt : now) : undefined,
+          createdAt: current.createdAt,
+          updatedAt: now,
+        } as Task;
+      } else {
+        tasks.push({
+          id: body.id ?? newId(),
+          title: body.title!.trim(),
+          owner: body.owner ?? 'samen',
+          kid: body.kid,
+          due: body.due,
+          note: body.note,
+          decision: body.decision,
+          eventId: body.eventId,
+          signalKey: body.signalKey,
+          done: body.done ?? false,
+          doneAt: body.done ? now : undefined,
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+      return tasks;
+    });
+    return json({ tasks: saved });
+  }
+
+  if (req.method === 'DELETE' && id) {
+    const saved = await update<Task[]>('tasks', (t) => t.filter((x) => x.id !== id));
+    return json({ tasks: saved });
+  }
+
+  return error('Methode niet ondersteund.', 405);
+}
+
+/** De keuze bij een signaal "allebei weg". Sleutel is bijvoorbeeld '2026-10-09|1050'. */
+async function handleDecisions(req: Request, id?: string): Promise<Response> {
+  if (req.method === 'POST') {
+    const body = await readBody<{ key?: string; decision?: SignalDecision }>(req);
+    if (!body.key || !body.decision?.type) return error('Welk signaal, en welke keuze?');
+    const saved = await update<Decisions>('decisions', (d) => ({
+      ...d,
+      [body.key!]: { ...body.decision!, at: nowIso() } as SignalDecision,
+    }));
+    return json({ decisions: saved });
+  }
+
+  if (req.method === 'DELETE' && id) {
+    const key = decodeURIComponent(id);
+    const saved = await update<Decisions>('decisions', (d) => {
+      const { [key]: _weg, ...rest } = d;
+      return rest;
+    });
+    return json({ decisions: saved });
   }
 
   return error('Methode niet ondersteund.', 405);

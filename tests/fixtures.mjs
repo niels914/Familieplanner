@@ -19,6 +19,12 @@ export function voorbeeldData() {
     { id: uid(), source: 'local', title: 'Consultatiebureau Lotte', date: today, time: '11:15', allDay: false, person: 'lotte', category: 'afspraak', bring: [{ id: uid(), text: 'Groeiboekje', done: false }], reminder: true, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Consultatiebureau', date: plus(3), time: '10:00', allDay: false, person: 'lotte', category: 'afspraak', bring: [{ id: uid(), text: 'Groeiboekje', done: false }], reminder: true, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Wenmiddag opvang', date: plus(1), allDay: true, person: 'lotte', category: 'opvang', bring: [{ id: uid(), text: 'Reservekleertjes', done: false }, { id: uid(), text: 'Speen', done: false }], reminder: true, createdAt: '', updatedAt: '' },
+    // Allebei weg over drie dagen, nog niet geregeld: dit geeft een signaal.
+    { id: uid(), source: 'local', title: 'Borrel', date: plus(3), time: '17:30', endTime: '21:00', allDay: false, person: 'niels', category: 'weg', bring: [], reminder: false, createdAt: '', updatedAt: '' },
+    { id: uid(), source: 'local', title: 'Later thuis', date: plus(3), time: '17:30', endTime: '20:00', allDay: false, person: 'irene', category: 'weg', bring: [], reminder: false, createdAt: '', updatedAt: '' },
+    // Allebei weg, maar de oppas van overmorgen dekt het: geen signaal.
+    { id: uid(), source: 'local', title: 'Etentje', date: plus(2), time: '19:00', endTime: '22:00', allDay: false, person: 'niels', category: 'weg', bring: [], reminder: false, createdAt: '', updatedAt: '' },
+    { id: uid(), source: 'local', title: 'Etentje', date: plus(2), time: '19:00', endTime: '22:00', allDay: false, person: 'irene', category: 'weg', bring: [], reminder: false, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'parro', parroUid: 'p2', title: 'Studiedag — alle kinderen vrij', date: plus(12), allDay: true, person: 'matthijs', category: 'school', bring: [], reminder: true, createdAt: '', updatedAt: '' },
   ],
   contacts: [
@@ -39,6 +45,13 @@ export function voorbeeldData() {
     { id: uid(), weekday: 5, child: 'amelie', dropoff: 'Niels', pickup: 'Opa & oma' },
   ],
   pickupOverrides: [],
+  tasks: [
+    { id: uid(), title: 'Cadeau halen voor Daan', owner: 'niels', kid: 'matthijs', due: plus(-1), done: false, createdAt: '', updatedAt: '' },
+    { id: uid(), title: 'Aanmelden ouderavond', owner: 'samen', due: plus(4), done: false, createdAt: '', updatedAt: '' },
+    { id: uid(), title: 'Tandarts afspreken', owner: 'irene', kid: 'amelie', done: false, createdAt: '', updatedAt: '' },
+    { id: uid(), title: 'Formulier schoolreisje', owner: 'irene', done: true, decision: 'Irene heeft het ingeleverd', createdAt: '', updatedAt: '' },
+  ],
+  decisions: {},
   shopping: [
     { id: uid(), text: 'Melk', done: false, createdAt: '' },
     { id: uid(), text: 'Luiers maat 5', done: false, createdAt: '' },

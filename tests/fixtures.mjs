@@ -7,6 +7,7 @@ const plus = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d
 export function voorbeeldData() {
   return {
   events: [
+    { id: uid(), source: 'agenda', agendaFeed: 'niels', agendaUid: 'g1', title: 'Klantgesprek Den Haag', date: plus(1), time: '10:00', endTime: '15:00', allDay: false, person: 'niels', category: 'afspraak', bring: [], reminder: false, location: 'Den Haag', createdAt: '', updatedAt: '' },
     { id: uid(), source: 'parro', parroUid: 'p1', title: 'Schoolreisje groep 1/2', date: plus(6), allDay: true, person: 'matthijs', category: 'school', bring: [{ id: uid(), text: 'Rugzak met lunch', done: false }, { id: uid(), text: 'Regenjas', done: true }], notes: 'Vertrek om 8:45 vanaf het plein.', reminder: true, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Lege schoenendoos mee', date: plus(1), allDay: true, person: 'matthijs', category: 'school', bring: [{ id: uid(), text: 'Lege schoenendoos', done: false }], reminder: true, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Knuffeldag', date: plus(1), allDay: true, person: 'amelie', category: 'psz', bring: [{ id: uid(), text: 'Knuffel', done: false }], reminder: true, createdAt: '', updatedAt: '' },
@@ -58,6 +59,6 @@ export function voorbeeldData() {
     { id: uid(), text: 'Brood', done: true, createdAt: '' },
   ],
   meals: [{ date: today, dish: 'Pasta pesto', ingredients: ['pesto', 'pijnboompitten'] }],
-  settings: { reminderHour: 19, parroLastSync: new Date().toISOString(), parroLastResult: 'Parro gesynchroniseerd: 2 nieuw, 0 bijgewerkt, 0 verwijderd.' },
+  settings: { reminderHour: 19, parroLastSync: new Date().toISOString(), parroLastResult: 'Parro gesynchroniseerd: 2 nieuw, 0 bijgewerkt, 0 verwijderd.', agendaSync: { niels: { at: new Date().toISOString(), ok: true, message: 'Gmail van Niels: 3 nieuw, 0 bijgewerkt, 0 verwijderd.', count: 42 } } },
 };
 }

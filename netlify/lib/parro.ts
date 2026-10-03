@@ -108,8 +108,10 @@ export async function syncParro(): Promise<SyncResult> {
         existing.syncedNotes = description;
         // Eigen notities laten staan; alleen bijwerken als jij ze niet hebt aangeraakt.
         if (unchangedNotes) existing.notes = description;
-        existing.updatedAt = now;
-        if (JSON.stringify(existing) !== before) updated++;
+        if (JSON.stringify(existing) !== before) {
+          existing.updatedAt = now;
+          updated++;
+        }
       } else {
         events.push({
           id: crypto.randomUUID(),

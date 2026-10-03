@@ -2,32 +2,21 @@
 
 ## Agenda's van Irene en Niels koppelen
 
-**Doel.** Afspraken uit de eigen agenda's als rustige achtergrond in de
-gezinsagenda, zodat je ziet of de ander kan brengen of halen. Alleen lezen:
-de app schrijft niets terug naar die agenda's.
+**Gebouwd voor Niels (Gmail).** `netlify/lib/agenda.ts`, elk uur via
+`netlify/functions/sync-agenda.ts`, link in `NIELS_ICS_URL`. Alleen lezen, volledige
+titels (ook privé), alle afspraken tot 400 dagen vooruit en 14 dagen terug, als gewone
+items op naam van Niels (soort *Afspraak*, niet in de avondmelding). Herhalingen,
+verplaatste en geannuleerde afspraken en andere tijdzones worden verwerkt.
 
-**Wat er al ligt.** De Parro-koppeling (`netlify/lib/ics.ts`, `parro.ts`) leest al
-iCal-links. Dezelfde route werkt voor Google-agenda's. Het werk zit vooral in
-het uitbreiden van één feed naar meerdere, elk met een naam, een eigenaar
-(`niels` of `irene`, die bestaan al) en een eigen weergave.
+**Nog open.**
 
-**Wat jij moet regelen.**
-
-- *Gmail van Niels:* Google Agenda → instellingen voor je agenda → agenda
-  integreren → **Geheim adres in iCal-indeling**. (De exacte namen kunnen
-  verschillen.) Die link is een wachtwoord: wie hem heeft, leest de hele agenda.
-  Hij hoort alleen in een omgevingsvariabele in Netlify, net als de
-  Parro-link, nooit in de code.
-- *Agenda van Irene:* die moet een iCal-link kunnen geven. Bij een werkagenda
-  staat delen vaak uit, of kan alleen "bezet/vrij" worden gedeeld. Zij beslist
-  wat ze deelt; het is haar agenda.
-
-**Nog te kiezen.**
-
-- Volledige titels tonen, of alleen "bezet"?
-- Privé-afspraken verbergen?
-- Hoe ver vooruit meenemen?
-- Als achtergrond naast de gezinsitems, of in een eigen laag die je aan en uit zet?
+- *Irene:* `IRENE_ICS_URL` werkt al zodra zij een iCal-link geeft. Bij een werkagenda
+  staat delen vaak uit, of kan alleen "bezet/vrij" worden gedeeld. Zij beslist wat ze deelt.
+- Afspraken in Google verwijderen of verplaatsen na het koppelen: de app volgt dat bij
+  de volgende ronde. Wijzigen in de app kan niet, want de bron wint.
+- Een afspraak als *Niet thuis* markeren (soort wijzigen in het item) voedt de
+  signalering van "allebei weg". Automatisch afleiden uit een agenda kan niet: niet elke
+  afspraak betekent dat je weg bent. Dit komt terug bij de werkagenda hieronder.
 
 ## Werkagenda van Niels: signaleren bij vroeg weg of laat thuis
 

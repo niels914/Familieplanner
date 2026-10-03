@@ -25,11 +25,11 @@ function sortByTime(a: CalendarEvent, b: CalendarEvent): number {
   return (a.time ?? '').localeCompare(b.time ?? '');
 }
 
-/** Een eigen notitie gaat mee, een lange Parro-omschrijving niet. */
+/** Een eigen notitie gaat mee, een lange omschrijving uit Parro of een agenda niet. */
 function eigenNotitie(e: CalendarEvent): string | undefined {
   const notitie = e.notes?.trim();
   if (!notitie) return undefined;
-  if (e.source === 'parro' && notitie === (e.syncedNotes ?? '').trim()) return undefined;
+  if (e.source !== 'local' && notitie === (e.syncedNotes ?? '').trim()) return undefined;
   return notitie.length > 80 ? `${notitie.slice(0, 78)}…` : notitie;
 }
 

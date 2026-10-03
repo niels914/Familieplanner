@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import type {
+  AgendaFeedId,
   AppData,
   CalendarEvent,
   Contact,
@@ -28,6 +29,8 @@ import { clearCache, readCache, writeCache } from './cache';
 export interface DataResponse extends AppData {
   push: { configured: boolean; publicKey: string };
   parroConfigured: boolean;
+  /** Gekoppelde persoonlijke agenda's (Gmail), voor de instellingen. */
+  agendaFeeds: { id: AgendaFeedId; label: string }[];
 }
 
 /** Terugkomen in de app ververst pas na zoveel milliseconden, niet bij elke blik. */
@@ -76,6 +79,7 @@ interface StoreValue {
   setDecision: (key: string, decision: NewSignalDecision) => Promise<void>;
   clearDecision: (key: string) => Promise<void>;
   syncParro: () => Promise<string>;
+  syncAgenda: () => Promise<string>;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -103,6 +107,8 @@ function upsertEvent(events: CalendarEvent[], body: Partial<CalendarEvent> & { i
       ...body,
       source: current.source,
       parroUid: current.parroUid,
+      agendaFeed: current.agendaFeed,
+      agendaUid: current.agendaUid,
       series: current.series,
       id: current.id,
       bring: body.bring ?? current.bring,
@@ -607,6 +613,13 @@ export function StoreProvider({
         await reload();
         return r.message;
       },
+
+      syncAgenda: async () => {
+        const r = await api.post<{ message: string; events: CalendarEvent[] }>('agenda');
+        patch({ events: r.events });
+        await reload();
+        return r.message;
+      },
     }),
     [data, error, notice, offline, syncedAt, seriesOpen, reload, mutate, patch],
   );
@@ -621,7 +634,11 @@ export function useStore(): StoreValue {
 }
 
 /** Handige, altijd-gevulde weergave van de data. */
-export function useData(): AppData & { push: DataResponse['push']; parroConfigured: boolean } {
+export function useData(): AppData & {
+  push: DataResponse['push'];
+  parroConfigured: boolean;
+  agendaFeeds: DataResponse['agendaFeeds'];
+} {
   const { data } = useStore();
   return (
     data ?? {
@@ -636,6 +653,7 @@ export function useData(): AppData & { push: DataResponse['push']; parroConfigur
       decisions: {},
       push: { configured: false, publicKey: '' },
       parroConfigured: false,
+      agendaFeeds: [],
     }
   );
 }

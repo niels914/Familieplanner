@@ -31,6 +31,7 @@ import {
 import { passwordMatches, hasValidSession } from '../lib/session';
 import { DEFAULT_SETTINGS, overwrite, read, readAll, update } from '../lib/store';
 import { publicKey, pushConfigured, sendToAll } from '../lib/push';
+import { configuredFeeds, runAgendaSync } from '../lib/agenda';
 import { syncParro } from '../lib/parro';
 
 export const config = { path: '/api/*' };
@@ -107,6 +108,12 @@ export default async function handler(req: Request): Promise<Response> {
         if (req.method !== 'POST') return error('Alleen POST.', 405);
         return json(await runParroSync());
 
+      case 'agenda': {
+        if (req.method !== 'POST') return error('Alleen POST.', 405);
+        const result = await runAgendaSync();
+        return json({ ...result, events: await read<CalendarEvent[]>('events') });
+      }
+
       default:
         return error('Onbekend eindpunt.', 404);
     }
@@ -127,6 +134,7 @@ async function handleData(req: Request): Promise<Response> {
     ...(await readAll()),
     push: { configured: pushConfigured(), publicKey: publicKey() },
     parroConfigured: Boolean(process.env.PARRO_ICS_URL),
+    agendaFeeds: configuredFeeds().map((f) => ({ id: f.id, label: f.label })),
   });
   const etag = `"${createHash('sha1').update(body).digest('base64url')}"`;
   // 'no-cache' bewaart het antwoord wel, maar vraagt eerst of het nog klopt.
@@ -157,9 +165,11 @@ async function handleEvents(req: Request, id?: string): Promise<Response> {
         events[index] = {
           ...current,
           ...body,
-          // De Parro-koppeling blijft eigendom van de sync, de reeks van de reeks.
+          // De koppeling met Parro of een agenda blijft eigendom van de sync, de reeks van de reeks.
           source: current.source,
           parroUid: current.parroUid,
+          agendaFeed: current.agendaFeed,
+          agendaUid: current.agendaUid,
           series: current.series,
           id: current.id,
           bring: body.bring ?? current.bring,

@@ -97,7 +97,8 @@ export function EventForm({
   const gedeeldGewijzigd =
     Boolean(reeks) &&
     SERIES_SHARED_FIELDS.some((veld) => veld !== 'allDay' && (draft[veld] ?? '') !== (initial?.[veld] ?? ''));
-  const isParro = draft.source === 'parro';
+  // Uit Parro of een gekoppelde agenda: de bron bepaalt titel, datum en tijd.
+  const isParro = draft.source === 'parro' || draft.source === 'agenda';
   const isSitter = draft.category === 'oppas';
   const heeftTijd = Boolean(draft.time);
   const isAway = draft.category === 'weg';
@@ -239,8 +240,9 @@ export function EventForm({
       <div className="stack">
         {isParro && (
           <div className="banner banner--info">
-            Dit item komt uit Parro. Titel, datum en tijd worden bij elke synchronisatie
-            overschreven — je meeneem-lijstje en notitie blijven wel staan.
+            {draft.source === 'agenda'
+              ? 'Dit item komt uit je gekoppelde agenda. Titel, datum en tijd worden bij elke synchronisatie overschreven. Wijzig ze daar. Je meeneem-lijstje en notitie blijven wel staan.'
+              : 'Dit item komt uit Parro. Titel, datum en tijd worden bij elke synchronisatie overschreven — je meeneem-lijstje en notitie blijven wel staan.'}
           </div>
         )}
 

@@ -23,6 +23,7 @@ gedraagt zich als een gewone app.
 | **Reeksen** | Zwemles elke dinsdag, of om de week, tot een einddatum. Elke keer is een eigen item: vink in het reeksoverzicht de lessen aan waarin met kleren gezwommen wordt en zet er in één keer "kleren om in te zwemmen" bij. Wijzigen of verwijderen kan voor één keer of voor deze en alle volgende. |
 | **Mensen** | Contacten (klasgenootjes met de telefoonnummers van de ouders, tikbaar om te bellen) en Oppas (alle momenten met uren, tarief en wat er nog openstaat). |
 | **Gezin** (knop rechtsboven) | Breng & haal (vast weekschema met afwijkingen) en Instellingen. |
+| **Gmail-agenda** | De agenda van Niels komt elk uur binnen, alleen lezen, met volledige titels (ook privé) en op zijn naam. Het zijn gewone items: meeneem-lijstje, notitie en soort (bijvoorbeeld *Niet thuis*) blijven van jullie en blijven bij een synchronisatie staan. |
 | **Parro** | De schoolagenda wordt elke drie uur opgehaald. Jouw notities en meeneem-lijstjes bij een Parro-item blijven bij een synchronisatie staan. |
 | **Snel en offline** | De laatste stand staat op het toestel en verschijnt meteen bij openen. Wijzigingen staan er direct, nog voor de server antwoordt; mislukt het, dan draait de app het terug en zegt waarom. Zonder verbinding kun je lezen. Schrijven niet. |
 | **Herinnering** | Elke avond om 19:00 (instelbaar) één pushmelding met alles van morgen, inclusief wat er mee moet en je eigen notities. Aanzetten met één tik vanaf Vandaag; daarna komt er meteen een testbericht op alleen dat toestel. |
@@ -76,6 +77,8 @@ Netlify → *Site configuration* → *Environment variables*. Zie ook `.env.exam
 | `FAMILY_PASSWORD` | Het gedeelde wachtwoord waarmee jullie inloggen. |
 | `SESSION_SECRET` | Lange willekeurige tekst waarmee de sessiecookie ondertekend wordt. |
 | `PARRO_ICS_URL` | De iCal-link uit Parro. |
+| `NIELS_ICS_URL` | Het geheime iCal-adres van Google Agenda (Niels). Leeg = niet gekoppeld. |
+| `IRENE_ICS_URL` | Idem voor Irene, als zij haar agenda wil koppelen. |
 | `VAPID_PUBLIC_KEY` | Voor pushmeldingen. |
 | `VAPID_PRIVATE_KEY` | Voor pushmeldingen. |
 | `VAPID_SUBJECT` | `mailto:` plus je e-mailadres. |
@@ -96,6 +99,11 @@ npm run vapid
 > lezen. Zet hem daarom alleen in de omgevingsvariabelen — nooit in de code, nooit in
 > een commit. Kun je hem niet meer terugvinden of is hij uitgelekt? Vraag in Parro een
 > nieuwe link aan; de oude vervalt dan.
+
+> **Dat geldt ook voor het geheime adres van Google Agenda.** Je vindt het onder
+> *Instellingen voor mijn agenda* → *Agenda integreren* → *Geheim adres in iCal-indeling*.
+> Is het uitgelekt, kies dan op dezelfde plek *Geheime link opnieuw instellen*; de oude
+> vervalt, en je zet de nieuwe in Netlify.
 
 ### 4. Op je telefoon zetten
 

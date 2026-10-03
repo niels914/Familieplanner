@@ -14,8 +14,9 @@ import {
 } from '../lib/push';
 
 export function SettingsView({ onLogout }: { onLogout: () => void }) {
-  const { settings, push, parroConfigured } = useData();
-  const { saveSettings, syncParro, setNotice } = useStore();
+  const { settings, push, parroConfigured, agendaFeeds: gekoppeld } = useData();
+  const agendaFeeds = gekoppeld ?? [];
+  const { saveSettings, syncParro, syncAgenda, setNotice } = useStore();
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -46,6 +47,17 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
     setBusy(true);
     try {
       setNotice(await syncParro());
+    } catch (err) {
+      setNotice((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const syncAgendas = async () => {
+    setBusy(true);
+    try {
+      setNotice(await syncAgenda());
     } catch (err) {
       setNotice((err as Error).message);
     } finally {
@@ -205,6 +217,42 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
               ))}
             </select>
           </div>
+        </div>
+
+        {/* ------------------------------------------------- agenda's */}
+        <div className="card card--pad stack stack--sm">
+          <strong>Agenda's (Gmail)</strong>
+          {agendaFeeds.length > 0 ? (
+            <>
+              <p className="small muted">
+                Afspraken komen elk uur binnen, alleen lezen, met volledige titel en op naam van de
+                eigenaar. Wijzigen doe je in Google Agenda. Je meeneem-lijstjes en notities blijven
+                bij een synchronisatie staan.
+              </p>
+              {agendaFeeds.map((f) => {
+                const last = settings.agendaSync?.[f.id];
+                return (
+                  <div key={f.id} className="small muted">
+                    <b>{f.label}</b>
+                    {': '}
+                    {!last
+                      ? 'nog niet gesynchroniseerd.'
+                      : last.ok
+                        ? `${new Date(last.at).toLocaleString('nl-NL')}, ${last.count} afspraken.`
+                        : `mislukt op ${new Date(last.at).toLocaleString('nl-NL')}. ${last.message}`}
+                  </div>
+                );
+              })}
+              <button className="btn btn--sm" onClick={syncAgendas} disabled={busy}>
+                {busy ? 'Bezig…' : 'Nu ophalen'}
+              </button>
+            </>
+          ) : (
+            <div className="banner">
+              Er is nog geen agenda gekoppeld. Zet de geheime iCal-link van Google Agenda in
+              Netlify als <code>NIELS_ICS_URL</code>.
+            </div>
+          )}
         </div>
 
         {/* ------------------------------------------------ oppasbriefing */}

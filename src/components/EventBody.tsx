@@ -5,7 +5,7 @@
  */
 
 import type { CalendarEvent, Category } from '../../shared/types';
-import { CATEGORY_LABEL, PERSON_LABEL } from '../../shared/types';
+import { AGENDA_FEED_LABEL, CATEGORY_LABEL, PERSON_LABEL } from '../../shared/types';
 import { Icon, type IconName } from './Icon';
 
 /** Welk icoon hoort bij welke soort item. */
@@ -45,6 +45,7 @@ export function EventBody({
           {event.endTime && !event.allDay && ` · tot ${event.endTime}`}
           {event.sitter && ` · ${event.sitter.name} ${event.sitter.start}–${event.sitter.end}`}
           {event.source === 'parro' && ' · Parro'}
+          {event.source === 'agenda' && ` · ${AGENDA_FEED_LABEL[event.agendaFeed ?? 'niels']}`}
           {event.series && (
             <>
               {' · '}

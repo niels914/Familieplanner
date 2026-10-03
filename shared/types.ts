@@ -19,6 +19,15 @@ export type Category =
   | 'weg'
   | 'anders';
 
+/** Welke persoonlijke agenda's we kunnen koppelen. */
+export type AgendaFeedId = 'niels' | 'irene';
+
+/** Hoe een gekoppelde agenda in de lijst heet. */
+export const AGENDA_FEED_LABEL: Record<AgendaFeedId, string> = {
+  niels: 'Gmail',
+  irene: 'Agenda',
+};
+
 export interface BringItem {
   id: string;
   text: string;
@@ -51,9 +60,13 @@ export interface SeriesInfo {
 
 export interface CalendarEvent {
   id: string;
-  /** 'parro' komt uit de schoolagenda en wordt bij elke sync overschreven. */
-  source: 'local' | 'parro';
+  /** 'parro' en 'agenda' komen uit een gekoppelde agenda en worden bij elke sync
+   *  overschreven (titel, datum, tijd). Meeneem-lijstje en notitie blijven van jou. */
+  source: 'local' | 'parro' | 'agenda';
   parroUid?: string;
+  /** Bij source 'agenda': uit wiens agenda, en het id van de afspraak daar. */
+  agendaFeed?: AgendaFeedId;
+  agendaUid?: string;
   title: string;
   /** 'YYYY-MM-DD' */
   date: string;
@@ -67,7 +80,7 @@ export interface CalendarEvent {
   category: Category;
   bring: BringItem[];
   notes?: string;
-  /** Wat Parro bij de laatste sync als omschrijving gaf. Zo weten we of jij de
+  /** Wat de gekoppelde agenda bij de laatste sync als omschrijving gaf. Zo weten we of jij de
    *  notitie hebt aangepast en laten we die met rust. */
   syncedNotes?: string;
   /** Meenemen in de avondherinnering van de dag ervoor. */
@@ -218,6 +231,15 @@ export interface PushSubscriptionRecord {
   createdAt: string;
 }
 
+export interface AgendaSyncState {
+  /** Laatste poging. */
+  at: string;
+  ok: boolean;
+  message: string;
+  /** Aantal afspraken bij de laatste geslaagde poging. */
+  count: number;
+}
+
 export interface Settings {
   /** Uur in Europe/Amsterdam waarop de avondherinnering gaat. */
   reminderHour: number;
@@ -225,6 +247,8 @@ export interface Settings {
   parroLastSync?: string;
   parroLastResult?: string;
   parroEventCount?: number;
+  /** Laatste sync per gekoppelde persoonlijke agenda. */
+  agendaSync?: Partial<Record<AgendaFeedId, AgendaSyncState>>;
   lastReminderDate?: string;
   /** Aan welk kind Parro-items gekoppeld worden. */
   parroPerson?: ChildId;

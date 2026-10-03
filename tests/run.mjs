@@ -6,6 +6,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const files = [
   'tests/ics.test.ts',
+  'tests/agenda.test.ts',
   'tests/quickparse.test.ts',
   'tests/series.test.ts',
   'tests/signals.test.ts',
@@ -35,6 +36,20 @@ try {
       outfile: out,
       packages: 'external',
       logLevel: 'error',
+      plugins: [
+        {
+          // De synchronisatie praat met netlify/lib/store; in de test is dat het geheugen.
+          name: 'opslag-in-geheugen',
+          setup(b) {
+            b.onResolve({ filter: /(^|\/)store$/ }, (args) => {
+              const doel = join(args.resolveDir, args.path);
+              return doel === join(root, 'netlify/lib/store')
+                ? { path: join(root, 'tests/memory-store.ts') }
+                : undefined;
+            });
+          },
+        },
+      ],
     });
     console.log(`\n— ${file}`);
     await import(pathToFileURL(out).href);

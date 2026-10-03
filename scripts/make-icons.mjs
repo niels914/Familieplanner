@@ -10,9 +10,9 @@ import { dirname, join } from 'node:path';
 
 const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
-const GREEN = [26, 95, 78]; // #1A5F4E, de primaire kleur van de app
-const GREEN_DARK = [18, 70, 57];
-const CREAM = [247, 245, 240];
+const GREEN = [30, 58, 95]; // #1E3A5F, de hoofdkleur van de app
+const GREEN_DARK = [21, 41, 66];
+const CREAM = [244, 246, 248];
 const WHITE = [255, 255, 255];
 
 function canvas(size) {
@@ -98,7 +98,7 @@ function draw(size, inset, maskable = false) {
       const cx = x0 + ((x1 - x0) / (cols + 1)) * (col + 1);
       const cy = gridTop + ((gridBottom - gridTop) / (rows + 1)) * (r + 1);
       // Eén stip in het accent: de dag waarop er iets mee moet.
-      circle(c, cx, cy, dot, r === 0 && col === 2 ? [154, 74, 18] : GREEN);
+      circle(c, cx, cy, dot, r === 0 && col === 2 ? [188, 60, 28] : GREEN);
     }
   }
 

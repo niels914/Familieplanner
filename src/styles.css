@@ -1,44 +1,46 @@
 /* ---------------------------------------------------------------- tokens */
 :root {
-  --bg: #f7f5f0;
+  color-scheme: light dark;
+
+  --bg: #f4f6f8;
   --surface: #ffffff;
-  --surface-2: #f1eee7;
-  --text: #23211d;
-  --muted: #6f6a61;
-  --line: #e4dfd5;
-  --line-strong: #cfc8ba;
+  --surface-2: #e9edf2;
+  --text: #121821;
+  --muted: #666a71;
+  --line: #dce1e8;
+  --line-strong: #c7cacd;
 
-  --primary: #1a5f4e;
+  --primary: #1e3a5f;
   --primary-ink: #ffffff;
-  --primary-soft: #e2efea;
+  --primary-soft: #e2e5ea;
 
-  --matthijs: #2c6ba8;
-  --matthijs-soft: #e3edf7;
-  --amelie: #a8437a;
-  --amelie-soft: #f9e7f1;
-  --lotte: #6a4fa6;
-  --lotte-soft: #ece7f8;
-  --gezin: #1f6f5c;
-  --gezin-soft: #e2efea;
-  --ouder: #706137;
-  --ouder-soft: #f2ecdb;
+  --matthijs: #2a5bc4;
+  --matthijs-soft: #e3eaf7;
+  --amelie: #b92d77;
+  --amelie-soft: #f6e4ed;
+  --lotte: #0a737e;
+  --lotte-soft: #dfedee;
+  --gezin: #1e3a5f;
+  --gezin-soft: #e2e5ea;
+  --ouder: #596579;
+  --ouder-soft: #e9ebee;
 
   /* Accent: alleen voor meenemen en urgentie. Donkerder dan het oude
      #b45f1c, dat op zacht oranje maar 3,98:1 haalde. */
-  --warn: #9a4a12;
-  --warn-soft: #f6e9de;
-  --danger: #a93a34;
-  --danger-soft: #f8e5e3;
+  --warn: #bc3c1c;
+  --warn-soft: #f9e8e4;
+  --danger: #c2301f;
+  --danger-soft: #f8e6e4;
 
-  --radius: 12px;
-  --radius-sm: 8px;
+  --radius: 8px;
+  --radius-sm: 6px;
   /* Eén schaduw, alleen voor wat echt zweeft: knop, venster, melding. */
   --shadow-lg: 0 10px 40px rgba(30, 25, 15, 0.18);
   --nav-height: 62px;
 
-  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
-  --font-ui: 'Inter Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+  --font-display: 'Manrope Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
+  --font-ui: var(--font-display);
 
   --dur: 170ms;
   --ease: cubic-bezier(0.2, 0.7, 0.3, 1);
@@ -46,33 +48,33 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #16171a;
-    --surface: #1f2126;
-    --surface-2: #282b31;
-    --text: #eceae5;
-    --muted: #a09a91;
-    --line: #34373e;
-    --line-strong: #474b54;
+    --bg: #0f141b;
+    --surface: #171e27;
+    --surface-2: #202a36;
+    --text: #eaeff5;
+    --muted: #8e9399;
+    --line: #2a3441;
+    --line-strong: #484d54;
 
-    --primary: #4fb096;
-    --primary-ink: #10231e;
-    --primary-soft: #1d3a33;
+    --primary: #8fb4ea;
+    --primary-ink: #14100a;
+    --primary-soft: #2f3c4e;
 
-    --matthijs: #74aee6;
-    --matthijs-soft: #1e2c3b;
-    --amelie: #e88cbd;
-    --amelie-soft: #37202e;
-    --lotte: #b39ce8;
-    --lotte-soft: #2a2440;
-    --gezin: #4fb096;
-    --gezin-soft: #1d3a33;
-    --ouder: #cbb87f;
-    --ouder-soft: #322d1e;
+    --matthijs: #7fa6f2;
+    --matthijs-soft: #2a364c;
+    --amelie: #f28dc0;
+    --amelie-soft: #3e3243;
+    --lotte: #5ccfd8;
+    --lotte-soft: #233e47;
+    --gezin: #8fb4ea;
+    --gezin-soft: #2f3c4e;
+    --ouder: #a9b6c8;
+    --ouder-soft: #313944;
 
-    --warn: #eaa971;
-    --warn-soft: #35271c;
-    --danger: #e58278;
-    --danger-soft: #37211f;
+    --warn: #ff8a65;
+    --warn-soft: #413132;
+    --danger: #f28b7e;
+    --danger-soft: #3e3237;
 
     --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.55);
   }
@@ -96,7 +98,7 @@ body {
 
 h1, h2, h3, h4 { margin: 0; font-weight: 650; line-height: 1.25; letter-spacing: -0.01em; }
 
-/* Fraunces alleen waar hij groot genoeg is om gezien te worden. */
+/* Koppen in dezelfde letter als de tekst, maar zwaarder en iets strakker. */
 h1, .display {
   font-family: var(--font-display);
   font-weight: 600;

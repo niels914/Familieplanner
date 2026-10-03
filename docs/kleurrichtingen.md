@@ -1,5 +1,9 @@
 # Kleurrichtingen
 
+> **Gekozen: D, Noords licht.** Staat sinds die keuze in de app (`src/styles.css`, Manrope
+> als enige letter, hoeken van 8 en 6 px). De andere vier blijven hieronder staan als
+> vastgelegde alternatieven.
+
 Vijf richtingen voor het kleurgebruik, de letters en de vorm van de app. De borden staan
 in `docs/moodboards/`; dit bestand bevat de exacte waarden, zodat een gekozen richting
 1-op-1 in `src/styles.css` kan.

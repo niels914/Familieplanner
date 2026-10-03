@@ -1,5 +1,10 @@
 # Ontwerpplan Familieplanner
 
+> **Bijgewerkt na de keuze voor richting D (zie `kleurrichtingen.md`).** De kleuren en de
+> letters uit sectie 2 (dennengroen, terracotta, Fraunces en Inter) zijn sindsdien vervangen
+> door inktblauw, tomaatrood en Manrope. Alles wat hier staat over aanpak, principes,
+> toegankelijkheid en fasering geldt nog.
+
 Richting: **rustig en warm**. Het moet aanvoelen als een mooie papieren
 gezinskalender aan de muur — warm, maar volwassen. Geen speelgoed, geen
 beheerpaneel.

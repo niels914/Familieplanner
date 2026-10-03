@@ -233,29 +233,39 @@ Het kleurcontrast en de toegankelijkheidsmeting blijven meedraaien.
 
 ---
 
-## 8. Bevindingen uit het prototype van fase B
+## 8. Fase B uitgewerkt: prototype en bevindingen
 
 Het aantikbare prototype staat in `docs/mockups/fase-b.html` (open het in een browser) met
 beelden in dezelfde map. Het bouwt op de echte stijl en de echte invoerparser.
 
-**Gekozen structuur:** vijf knoppen in de balk. Vier bestemmingen (Vandaag, Agenda,
-Boodschappen, Mensen) en in het midden een grotere Nieuw-knop die vanuit elk scherm een
-invoerblad opent voor een nieuw agenda-item. Dat vervangt de zwevende plusknop en de
-invoerbalk onderin de Agenda. Oppas zit in Mensen (Contacten | Oppas).
+**Gekozen structuur:** vijf knoppen in de balk. Vier schermen (Vandaag, Agenda, Regelen,
+Mensen) en in het midden een grotere Nieuw-knop die vanuit elk scherm een invoerblad opent
+voor een nieuw agenda-item. Dat vervangt de zwevende plusknop. Oppas zit in Mensen
+(Contacten | Oppas).
 
-Wat het prototype zichtbaar maakte:
+**Regelen vervangt Boodschappen als scherm.** Het bevat drie segmenten: Acties,
+Boodschappen en Weekmenu. Een actie is iets dat nog moet gebeuren of afgestemd moet worden:
+een titel, wie het doet (Niels, Irene of afstemmen), een kind, een deadline en eventueel een
+koppeling aan een agenda-item. Ontwerpkeuzes:
 
-1. **Het weekmenu had geen plek.** Voorstel: een segment naast de lijst in *Boodschappen*
-   (Lijst | Weekmenu), met "zet ingrediënten op de lijst" één tik verderop.
-2. **Oppas wordt één tik dieper**, achter *Mensen*. Bewust: het gebruik is maandelijks.
-3. **De tijdstanden van Vandaag zijn een voorstel**: tot 12:00 ochtend ("Vandaag mee"
-   bovenaan), tot 18:00 middag (alleen wat nog moet, morgen als één regel), daarna avond
-   (morgen voorop). Het afkappunt voor de avond kan ook het uur van de avondmelding zijn.
-4. **De middenknop is een actie, geen bestemming.** Hij is niet sneller in tikken (2, net
-   als nu: knop, dan Zet in agenda), wel beter bereikbaar en hij dekt geen inhoud meer af.
-   Hij voegt altijd een agenda-item toe; Boodschappen en Mensen houden hun eigen invoer.
-5. **"Boodschappen" is het langste label** en past op 390 punten, maar krap. Op een
-   iPhone SE (375) is dat te controleren.
+1. **Gegroepeerd op urgentie** (te laat, deze week, later, geen datum), met een filter op wie.
+   Niels ziet bij zijn filter ook wat samen afgestemd moet worden.
+2. **Afstemmen houdt het besluit vast.** Bij afvinken kun je opschrijven wat het werd.
+3. **Acties komen naar je toe:** het dringende staat als één regel op Vandaag en de tab
+   krijgt een teller. Voorstel, nog niet gebouwd: de avondmelding noemt ook wat morgen verloopt.
+4. **Gekoppeld aan de agenda**, zodat "ouderavond: aanmelden?" naar het agenda-item wijst.
+5. **Geen eigen account per persoon.** De app heeft één gezinswachtwoord; het filter op Niels
+   of Irene kies je zelf.
 
-Aantal tikken, nu → straks: boodschap toevoegen 2 → 1, instellingen 2 → 1, iets vastleggen
-2 → 2, Oppas 1 → 2, contact zoeken en breng & haal gelijk.
+Overige bevindingen:
+
+- Boodschappen en Weekmenu zijn niet weggehaald maar segmenten van Regelen (2 tikken, net als nu).
+- Oppas wordt één tik dieper, achter Mensen.
+- De tijdstanden van Vandaag zijn een voorstel: tot 12:00 ochtend ("Vandaag mee" bovenaan),
+  tot 18:00 middag (alleen wat nog moet), daarna avond (morgen voorop).
+- De middenknop is een actie en geen bestemming. Hij is niet sneller in tikken (2, net als
+  nu), wel beter bereikbaar, en hij dekt geen inhoud meer af.
+
+Aantal tikken, nu → straks: actie vastleggen kan nu niet → 3, dringende acties zien kan nu
+niet → 0, boodschap toevoegen 2 → 2, instellingen 2 → 1, iets in de agenda zetten 2 → 2,
+Oppas 1 → 2, contact zoeken en breng & haal gelijk.

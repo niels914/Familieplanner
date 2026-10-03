@@ -1438,6 +1438,21 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui)}
 .sheet h2{font-size:1.1rem}
 @keyframes sheetup{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
 @media (prefers-reduced-motion:reduce){.sheet{animation:none}.tabbar__disc{transition:none}}
+
+/* regelen */
+.dev .tabbar__item{position:relative}
+.tabbar__badge{position:absolute;top:6px;left:calc(50% + 7px);min-width:17px;height:17px;padding:0 5px;border-radius:9px;background:var(--warn);color:var(--bg);font-size:.66rem;font-weight:800;line-height:17px;text-align:center;border:2px solid var(--surface);box-sizing:content-box}
+.regelrow{display:flex;align-items:center;gap:9px;width:100%;min-height:52px;padding:6px 14px;border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);color:var(--primary);font-size:.92rem;cursor:pointer;margin-bottom:16px;text-align:left}
+.regelrow__prev{font-size:.8rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.regelrow .chip{flex-shrink:0}
+.regelrow>svg:last-child{flex-shrink:0;color:var(--muted)}
+.actrow{display:flex;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-sm)}
+.actrow__check{display:grid;place-items:center;flex-shrink:0;width:50px;min-height:56px;cursor:pointer}
+.actrow__main{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:5px;padding:11px 12px 11px 0;border:0;background:none;text-align:left;cursor:pointer;color:var(--text)}
+.actrow__title{font-weight:650}
+.actrow__meta{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+.actrow--done .actrow__title{text-decoration:line-through;color:var(--muted);font-weight:550}
+.actrow--done{opacity:.8}
 </style>
 <div class="mk">
   <div class="mk__bar">
@@ -1480,38 +1495,46 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui)}
         <ul><li>Meer → Eten (boodschappen + weekmenu)</li><li>Meer → Breng &amp; haal</li><li>Meer → Instellingen</li><li>Zwevende plusknop over de inhoud, op elk scherm</li></ul>
       </div>
       <div class="navbox">
-        <h3>Straks · 4 tabs en een middenknop</h3>
-        <div class="tabsrow"><span class="tabpill">Vandaag</span><span class="tabpill">Agenda</span><span class="tabpill" style="background:var(--primary);color:var(--primary-ink);border-color:var(--primary)">＋ Nieuw</span><span class="tabpill">Boodschappen</span><span class="tabpill">Mensen</span></div>
-        <ul><li>Mensen = Contacten | Oppas</li><li>Boodschappen = Lijst | Weekmenu</li><li>Ronde Gezin-knop rechtsboven: Meldingen, Breng &amp; haal, Parro, Installeren, Uitloggen</li><li>Middenknop: invoerblad voor een nieuw agenda-item, vanuit elk scherm</li></ul>
+        <h3>Straks · 4 schermen en een middenknop</h3>
+        <div class="tabsrow"><span class="tabpill">Vandaag</span><span class="tabpill">Agenda</span><span class="tabpill" style="background:var(--primary);color:var(--primary-ink);border-color:var(--primary)">＋ Nieuw</span><span class="tabpill">Regelen</span><span class="tabpill">Mensen</span></div>
+        <ul><li><b>Regelen</b> = Acties | Boodschappen | Weekmenu</li><li>Mensen = Contacten | Oppas</li><li>Gezin-knop rechtsboven: Meldingen, Breng &amp; haal, Parro, Installeren, Uitloggen</li><li>Middenknop: nieuw agenda-item, vanuit elk scherm</li></ul>
       </div>
     </div>
+
+    <h2>Regelen: openstaande acties</h2>
+    <p>Een actie is iets dat nog moet gebeuren of afgestemd moet worden. Ze heeft een titel, wie het doet (Niels, Irene of afstemmen), een kind, een deadline en eventueel een koppeling aan een agenda-item.</p>
+    <div class="decision"><div class="n">1</div><div><b>Gegroepeerd op urgentie, niet op wie.</b><span>Te laat, deze week, later, geen datum. Het filter Niels, Irene of Afstemmen staat erboven. Niels ziet bij zijn filter ook wat samen afgestemd moet worden.</span></div></div>
+    <div class="decision"><div class="n">2</div><div><b>Afstemmen houdt het besluit vast.</b><span>“Ouderavond: aanmelden?” blijft open tot jullie hebt besloten. Bij afvinken kun je opschrijven wat het werd. Dat staat daarna onder Afgerond.</span></div></div>
+    <div class="decision"><div class="n">3</div><div><b>Acties komen naar je toe.</b><span>Een lijst die je zelf moet openen raakt vergeten. Daarom staat het dringende op Vandaag (één regel), en krijgt de tab een teller. Voorstel: de avondmelding noemt ook wat morgen verloopt.</span></div></div>
+    <div class="decision"><div class="n">4</div><div><b>Gekoppeld aan de agenda.</b><span>De ouderavond-actie wijst naar het agenda-item; één tik brengt je erheen. De cadeau-actie hangt aan Daans verjaardag.</span></div></div>
 
     <h2>Aantal tikken</h2>
     <table class="tbl">
       <thead><tr><th>Wat je wilt</th><th>Nu</th><th>Straks</th><th></th></tr></thead>
       <tbody>
-        <tr><td>Boodschap toevoegen</td><td>2 (Meer → Eten)</td><td>1 (tab, invoer staat al klaar)</td><td class="better">sneller</td></tr>
+        <tr><td>Actie vastleggen</td><td>kan niet</td><td>3 (Regelen, + Actie, Zet erop)</td><td class="better">nieuw</td></tr>
+        <tr><td>Zien wat dringend is</td><td>kan niet</td><td>0 (staat op Vandaag)</td><td class="better">nieuw</td></tr>
+        <tr><td>Boodschap toevoegen</td><td>2 (Meer → Eten)</td><td>2 (Regelen, Boodschappen)</td><td class="same">gelijk</td></tr>
         <tr><td>Meldingen of instellingen</td><td>2 (Meer → Instellingen)</td><td>1 (Gezin-knop)</td><td class="better">sneller</td></tr>
-        <tr><td>Iets vastleggen, waar je ook bent</td><td>2 (plus, daarna Opslaan)</td><td>2 (middenknop, daarna Zet in agenda)</td><td class="same">gelijk</td></tr>
+        <tr><td>Iets in de agenda zetten</td><td>2 (plus, Opslaan)</td><td>2 (middenknop, Zet in agenda)</td><td class="same">gelijk</td></tr>
         <tr><td>Contact zoeken</td><td>1</td><td>1</td><td class="same">gelijk</td></tr>
         <tr><td>Breng &amp; haal bekijken</td><td>2</td><td>2</td><td class="same">gelijk</td></tr>
         <tr><td>Oppas bekijken of afrekenen</td><td>1 (eigen tab)</td><td>2 (Mensen → Oppas)</td><td class="worse">langzamer</td></tr>
       </tbody>
     </table>
 
-    <h2>Wat dit prototype zichtbaar maakt</h2>
-    <div class="decision"><div class="n">1</div><div><b>Het weekmenu had in plan v2 nog geen plek.</b><span>Voorstel: een segment naast de lijst in Boodschappen. Het menu bepaalt wat je koopt, en “zet ingrediënten op de lijst” zit dan één tik verderop.</span></div></div>
-    <div class="decision"><div class="n">2</div><div><b>Oppas wordt één tik dieper.</b><span>Je gebruikt het maar een paar keer per maand, en de tab die vrijkomt gaat naar Boodschappen, dat je wekelijks meermaals opent. Wie Oppas vaker nodig heeft, houdt liever vijf tabs.</span></div></div>
-    <div class="decision"><div class="n">3</div><div><b>De grenzen van de tijdstanden zijn een voorstel.</b><span>Tot 12:00 ochtend, tot 18:00 middag, daarna avond. De avond kan ook beginnen op het uur van je melding. Zeg het als dat anders moet; het is één getal.</span></div></div>
-    <div class="decision"><div class="n">4</div><div><b>De middenknop is geen bestemming, maar een actie.</b><span>Vijf plekken in de balk, vier schermen. De winst zit in plek en bereik, niet in het aantal tikken: de knop zit in je duimzone en dekt geen inhoud meer af. Hij voegt altijd een agenda-item toe, ook in Boodschappen en Mensen; die houden hun eigen invoer.</span></div></div>
-    <div class="decision"><div class="n">5</div><div><b>“Boodschappen” is het langste label.</b><span>Het past nog op een telefoon van 390 punten, maar niet met veel ruimte. Op een smalle iPhone SE kan het een kleinere letter of een korter woord worden.</span></div></div>
+    <h2>Keuzes die ik voor jullie heb gemaakt</h2>
+    <div class="decision"><div class="n">5</div><div><b>Boodschappen en Weekmenu zijn niet weg.</b><span>Ze zijn segmenten in Regelen geworden. Dat kost niets extra (2 tikken, net als nu) en het weekmenu staat nog naast de lijst. Willen jullie ze liever helemaal uit beeld, dan kan dat; het wordt dan 3 tikken via Gezin.</span></div></div>
+    <div class="decision"><div class="n">6</div><div><b>Geen eigen account per persoon.</b><span>De app heeft één gezinswachtwoord, dus “voor jou” kan hij niet zelf weten. Het filter Niels of Irene kies je zelf. Een teller per persoon zou aparte inlog vragen.</span></div></div>
+    <div class="decision"><div class="n">7</div><div><b>De middenknop blijft een agenda-actie.</b><span>Acties voeg je toe via “+ Actie” in Regelen. Alternatief: het invoerblad een keuze laten maken tussen Agenda en Actie, dan werkt de middenknop overal voor beide.</span></div></div>
+    <div class="decision"><div class="n">8</div><div><b>Oppas wordt één tik dieper</b> <span>(Mensen → Oppas). En de grenzen van de tijdstanden (12:00, 18:00) zijn mijn voorstel.</span></div></div>
 
     <h2>Wat je hier niet ziet</h2>
-    <p>Alleen de structuur: de schermen zijn gevuld met voorbeeldgegevens en er wordt niets opgeslagen. Snelheid (fase A), kinderkleuren en foto’s (fase C) en de Parro-tekst als meeneemvoorstel (fase F) zitten er niet in.</p>
+    <p>Alleen de structuur, met voorbeeldgegevens; er wordt niets opgeslagen. Herhalende acties, een melding vlak voor een deadline, snelheid (fase A), kinderkleuren en foto’s (fase C) en de Parro-tekst als voorstel (fase F) zitten er niet in.</p>
   </div>
 </div>
 
-<script>window.__ICONS={"vandaag":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"12\" cy=\"12\" r=\"4\"></circle><path d=\"M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8\"></path></svg>","kalender":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2.5\"></rect><path d=\"M3 10h18M8 3v3.5M16 3v3.5\"></path><circle cx=\"8\" cy=\"14.5\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"></circle></svg>","oppas":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"8.5\" cy=\"7\" r=\"3\"></circle><path d=\"M3.5 20c0-3.6 2.2-5.6 5-5.6s5 2 5 5.6\"></path><circle cx=\"17\" cy=\"12.6\" r=\"2.2\"></circle><path d=\"M13.6 20c0-2.2 1.5-3.5 3.4-3.5s3.5 1.3 3.5 3.5\"></path></svg>","contacten":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"9.5\" cy=\"8\" r=\"3.2\"></circle><path d=\"M3 20c0-3.9 2.9-6.1 6.5-6.1S16 16.1 16 20\"></path><path d=\"M17 4.7a3.2 3.2 0 0 1 0 6.6M18.6 14.4c2.4.6 4.4 2.5 4.4 5.6\"></path></svg>","meer":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"5.5\" cy=\"12\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"></circle><circle cx=\"12\" cy=\"12\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"></circle><circle cx=\"18.5\" cy=\"12\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"></circle></svg>","rugzak":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4.5 11a5.5 5.5 0 0 1 5.5-5.5h4A5.5 5.5 0 0 1 19.5 11v7.5A2.5 2.5 0 0 1 17 21H7a2.5 2.5 0 0 1-2.5-2.5Z\"></path><path d=\"M4.5 13.5h15\"></path><rect x=\"10.25\" y=\"11.8\" width=\"3.5\" height=\"3.4\" rx=\"1.2\"></rect><path d=\"M9.5 5.7V4.6A1.6 1.6 0 0 1 11.1 3h1.8a1.6 1.6 0 0 1 1.6 1.6v1.1\"></path></svg>","fles":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M10.5 4.5v-1a1.5 1.5 0 0 1 3 0v1\"></path><rect x=\"9.4\" y=\"4.5\" width=\"5.2\" height=\"2.2\" rx=\"1.1\"></rect><path d=\"M9 6.7h6a3 3 0 0 1 3 3v8.8a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 6 18.5V9.7a3 3 0 0 1 3-3Z\"></path><path d=\"M8.6 11.8h2.6M8.6 14.8h1.8\"></path></svg>","blokken":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M12 8.5V20\"></path><circle cx=\"12\" cy=\"6.3\" r=\"1.8\"></circle><rect x=\"8.5\" y=\"10.5\" width=\"7\" height=\"3\" rx=\"1.5\"></rect><rect x=\"6.5\" y=\"14\" width=\"11\" height=\"3\" rx=\"1.5\"></rect><rect x=\"4.5\" y=\"17.5\" width=\"15\" height=\"3\" rx=\"1.5\"></rect></svg>","taart":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"4\" y=\"13.8\" width=\"16\" height=\"6.7\" rx=\"2.2\"></rect><path d=\"M4 16c1.6 0 1.6 1.6 3.2 1.6S8.8 16 10.4 16s1.6 1.6 3.2 1.6S15.2 16 16.8 16s1.6 1.6 3.2 1.6\"></path><path d=\"M12 9.8v4\"></path><path d=\"M12 6.6c1.3 1.1 1.3 2.8 0 2.8s-1.3-1.7 0-2.8Z\"></path></svg>","koffer":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"3\" y=\"7.5\" width=\"18\" height=\"12.5\" rx=\"2.5\"></rect><path d=\"M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5\"></path><path d=\"M12 11v5.5\"></path></svg>","speld":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M9 3.5h6v1.2l-1 4.3 3 2.5v1H7v-1l3-2.5-1-4.3Z\"></path><path d=\"M12 12.5V21\"></path></svg>","klok":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"12\" cy=\"12\" r=\"8.5\"></circle><path d=\"M12 7.2V12l3.2 2\"></path></svg>","telefoon":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 5.5 5.5l1.5-2 4 1.5v3a1.8 1.8 0 0 1-2 1.8C11 18.4 5.6 13 4.7 5.3A1.8 1.8 0 0 1 6.5 3.5Z\"></path></svg>","zoeken":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"11\" cy=\"11\" r=\"6.5\"></circle><path d=\"M15.8 15.8 21 21\"></path></svg>","plus":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M12 5v14M5 12h14\"></path></svg>","vinkje":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 12.5 9.5 17 19 7\"></path></svg>","kruis":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M6 6l12 12M18 6L6 18\"></path></svg>","chevron-links":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M15 5 8.5 12 15 19\"></path></svg>","chevron-rechts":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M9 5l6.5 7L9 19\"></path></svg>","potlood":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 20.5l.9-3.6L16.3 5.5l2.7 2.7L7.6 19.6Z\"></path><path d=\"M14.6 7.2l2.7 2.7\"></path></svg>","prullenbak":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 6.5h16\"></path><path d=\"M9.5 6.5V4.8a1.3 1.3 0 0 1 1.3-1.3h2.4a1.3 1.3 0 0 1 1.3 1.3v1.7\"></path><path d=\"M6.5 6.5l1 13a1.5 1.5 0 0 0 1.5 1.4h6a1.5 1.5 0 0 0 1.5-1.4l1-13\"></path></svg>","terugdraaien":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 9.5h7a6 6 0 1 1-6 6\"></path><path d=\"M4 9.5 7.5 6M4 9.5 7.5 13\"></path></svg>","eten":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M6 3v5a2 2 0 0 0 4 0V3M8 8v13\"></path><path d=\"M16.5 3c2.4 1.6 2.4 6 0 7.6V21\"></path></svg>","auto":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 16.5v-3l1.8-4.2a2 2 0 0 1 1.8-1.2h8.8a2 2 0 0 1 1.8 1.2L20 13.5v3\"></path><path d=\"M3.5 13.5h17\"></path><circle cx=\"7.5\" cy=\"16.8\" r=\"1.7\"></circle><circle cx=\"16.5\" cy=\"16.8\" r=\"1.7\"></circle></svg>","instellingen":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 7h16M4 12h16M4 17h16\"></path><path d=\"M9 5v4M15 10v4M8 15v4\"></path></svg>","mandje":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M3 8h18l-1.8 10.6a2 2 0 0 1-2 1.7H6.8a2 2 0 0 1-2-1.7Z\"></path><path d=\"M8.5 8l2-4.5M15.5 8l-2-4.5\"></path><path d=\"M9.5 12v4.5M14.5 12v4.5\"></path></svg>","huis":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M3.5 10.5 12 3.5l8.5 7\"></path><path d=\"M5.5 12v7.5a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5V12\"></path></svg>","delen":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M8.5 9H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1.5\"></path><path d=\"M12 3v11.5M8.5 6.5 12 3l3.5 3.5\"></path></svg>","plusvak":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"3.5\"></rect><path d=\"M12 8.5v7M8.5 12h7\"></path></svg>","herhaal":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4.5 11V9.5a3 3 0 0 1 3-3h11M15.5 3.5l3 3-3 3\"></path><path d=\"M19.5 13v1.5a3 3 0 0 1-3 3h-11M8.5 20.5l-3-3 3-3\"></path></svg>","bel":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15Z\"></path><path d=\"M10 20.5a2 2 0 0 0 4 0\"></path></svg>"};
+<script>window.__ICONS=Object.assign({"vandaag":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"12\" cy=\"12\" r=\"4\"></circle><path d=\"M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8\"></path></svg>","kalender":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2.5\"></rect><path d=\"M3 10h18M8 3v3.5M16 3v3.5\"></path><circle cx=\"8\" cy=\"14.5\" r=\"1.1\" fill=\"currentColor\" stroke=\"none\"></circle></svg>","oppas":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"8.5\" cy=\"7\" r=\"3\"></circle><path d=\"M3.5 20c0-3.6 2.2-5.6 5-5.6s5 2 5 5.6\"></path><circle cx=\"17\" cy=\"12.6\" r=\"2.2\"></circle><path d=\"M13.6 20c0-2.2 1.5-3.5 3.4-3.5s3.5 1.3 3.5 3.5\"></path></svg>","contacten":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"9.5\" cy=\"8\" r=\"3.2\"></circle><path d=\"M3 20c0-3.9 2.9-6.1 6.5-6.1S16 16.1 16 20\"></path><path d=\"M17 4.7a3.2 3.2 0 0 1 0 6.6M18.6 14.4c2.4.6 4.4 2.5 4.4 5.6\"></path></svg>","meer":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"5.5\" cy=\"12\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"></circle><circle cx=\"12\" cy=\"12\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"></circle><circle cx=\"18.5\" cy=\"12\" r=\"1.4\" fill=\"currentColor\" stroke=\"none\"></circle></svg>","rugzak":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4.5 11a5.5 5.5 0 0 1 5.5-5.5h4A5.5 5.5 0 0 1 19.5 11v7.5A2.5 2.5 0 0 1 17 21H7a2.5 2.5 0 0 1-2.5-2.5Z\"></path><path d=\"M4.5 13.5h15\"></path><rect x=\"10.25\" y=\"11.8\" width=\"3.5\" height=\"3.4\" rx=\"1.2\"></rect><path d=\"M9.5 5.7V4.6A1.6 1.6 0 0 1 11.1 3h1.8a1.6 1.6 0 0 1 1.6 1.6v1.1\"></path></svg>","fles":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M10.5 4.5v-1a1.5 1.5 0 0 1 3 0v1\"></path><rect x=\"9.4\" y=\"4.5\" width=\"5.2\" height=\"2.2\" rx=\"1.1\"></rect><path d=\"M9 6.7h6a3 3 0 0 1 3 3v8.8a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 6 18.5V9.7a3 3 0 0 1 3-3Z\"></path><path d=\"M8.6 11.8h2.6M8.6 14.8h1.8\"></path></svg>","blokken":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M12 8.5V20\"></path><circle cx=\"12\" cy=\"6.3\" r=\"1.8\"></circle><rect x=\"8.5\" y=\"10.5\" width=\"7\" height=\"3\" rx=\"1.5\"></rect><rect x=\"6.5\" y=\"14\" width=\"11\" height=\"3\" rx=\"1.5\"></rect><rect x=\"4.5\" y=\"17.5\" width=\"15\" height=\"3\" rx=\"1.5\"></rect></svg>","taart":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"4\" y=\"13.8\" width=\"16\" height=\"6.7\" rx=\"2.2\"></rect><path d=\"M4 16c1.6 0 1.6 1.6 3.2 1.6S8.8 16 10.4 16s1.6 1.6 3.2 1.6S15.2 16 16.8 16s1.6 1.6 3.2 1.6\"></path><path d=\"M12 9.8v4\"></path><path d=\"M12 6.6c1.3 1.1 1.3 2.8 0 2.8s-1.3-1.7 0-2.8Z\"></path></svg>","koffer":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"3\" y=\"7.5\" width=\"18\" height=\"12.5\" rx=\"2.5\"></rect><path d=\"M9 7.5V6a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 6v1.5\"></path><path d=\"M12 11v5.5\"></path></svg>","speld":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M9 3.5h6v1.2l-1 4.3 3 2.5v1H7v-1l3-2.5-1-4.3Z\"></path><path d=\"M12 12.5V21\"></path></svg>","klok":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"12\" cy=\"12\" r=\"8.5\"></circle><path d=\"M12 7.2V12l3.2 2\"></path></svg>","telefoon":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 5.5 5.5l1.5-2 4 1.5v3a1.8 1.8 0 0 1-2 1.8C11 18.4 5.6 13 4.7 5.3A1.8 1.8 0 0 1 6.5 3.5Z\"></path></svg>","zoeken":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><circle cx=\"11\" cy=\"11\" r=\"6.5\"></circle><path d=\"M15.8 15.8 21 21\"></path></svg>","plus":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M12 5v14M5 12h14\"></path></svg>","vinkje":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M5 12.5 9.5 17 19 7\"></path></svg>","kruis":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M6 6l12 12M18 6L6 18\"></path></svg>","chevron-links":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M15 5 8.5 12 15 19\"></path></svg>","chevron-rechts":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M9 5l6.5 7L9 19\"></path></svg>","potlood":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 20.5l.9-3.6L16.3 5.5l2.7 2.7L7.6 19.6Z\"></path><path d=\"M14.6 7.2l2.7 2.7\"></path></svg>","prullenbak":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 6.5h16\"></path><path d=\"M9.5 6.5V4.8a1.3 1.3 0 0 1 1.3-1.3h2.4a1.3 1.3 0 0 1 1.3 1.3v1.7\"></path><path d=\"M6.5 6.5l1 13a1.5 1.5 0 0 0 1.5 1.4h6a1.5 1.5 0 0 0 1.5-1.4l1-13\"></path></svg>","terugdraaien":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 9.5h7a6 6 0 1 1-6 6\"></path><path d=\"M4 9.5 7.5 6M4 9.5 7.5 13\"></path></svg>","eten":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M6 3v5a2 2 0 0 0 4 0V3M8 8v13\"></path><path d=\"M16.5 3c2.4 1.6 2.4 6 0 7.6V21\"></path></svg>","auto":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 16.5v-3l1.8-4.2a2 2 0 0 1 1.8-1.2h8.8a2 2 0 0 1 1.8 1.2L20 13.5v3\"></path><path d=\"M3.5 13.5h17\"></path><circle cx=\"7.5\" cy=\"16.8\" r=\"1.7\"></circle><circle cx=\"16.5\" cy=\"16.8\" r=\"1.7\"></circle></svg>","instellingen":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 7h16M4 12h16M4 17h16\"></path><path d=\"M9 5v4M15 10v4M8 15v4\"></path></svg>","mandje":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M3 8h18l-1.8 10.6a2 2 0 0 1-2 1.7H6.8a2 2 0 0 1-2-1.7Z\"></path><path d=\"M8.5 8l2-4.5M15.5 8l-2-4.5\"></path><path d=\"M9.5 12v4.5M14.5 12v4.5\"></path></svg>","huis":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M3.5 10.5 12 3.5l8.5 7\"></path><path d=\"M5.5 12v7.5a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5V12\"></path></svg>","delen":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M8.5 9H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1.5\"></path><path d=\"M12 3v11.5M8.5 6.5 12 3l3.5 3.5\"></path></svg>","plusvak":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"4\" y=\"4\" width=\"16\" height=\"16\" rx=\"3.5\"></rect><path d=\"M12 8.5v7M8.5 12h7\"></path></svg>","herhaal":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4.5 11V9.5a3 3 0 0 1 3-3h11M15.5 3.5l3 3-3 3\"></path><path d=\"M19.5 13v1.5a3 3 0 0 1-3 3h-11M8.5 20.5l-3-3 3-3\"></path></svg>","bel":"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15Z\"></path><path d=\"M10 20.5a2 2 0 0 0 4 0\"></path></svg>"},{regelen:"<svg width=\"{S}\" height=\"{S}\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 6.2l1.5 1.5L8.2 4.8M4 12.2l1.5 1.5 2.7-2.9M4 18.2l1.5 1.5 2.7-2.9\"/><path d=\"M12 6.5h8M12 12.5h8M12 18.5h8\"/></svg>"});
 (()=>{function f(n){let r=n.getFullYear(),e=String(n.getMonth()+1).padStart(2,"0"),i=String(n.getDate()).padStart(2,"0");return`${r}-${e}-${i}`}function v(n){let[r,e,i]=n.split("-").map(Number);return new Date(r,(e??1)-1,i??1)}function g(n,r){let e=v(n);return e.setDate(e.getDate()+r),f(e)}function D(n){let r=v(n).getDay();return r===0?7:r}var N={maandag:1,ma:1,dinsdag:2,di:2,woensdag:3,wo:3,donderdag:4,do:4,vrijdag:5,vr:5,zaterdag:6,za:6,zondag:7,zo:7},M={januari:1,jan:1,februari:2,feb:2,maart:3,mrt:3,maa:3,april:4,apr:4,mei:5,juni:6,jun:6,juli:7,jul:7,augustus:8,aug:8,september:9,sep:9,sept:9,oktober:10,okt:10,november:11,nov:11,december:12,dec:12},E=[[/\bmatthijs\b/i,"matthijs"],[/\bam[ée]lie\b|\bamelie\b|\bameli\b/i,"amelie"],[/\blotte\b/i,"lotte"],[/\birene\b/i,"irene"],[/\bniels\b/i,"niels"]],A=[[/\boppas(sen)?\b/i,"oppas"],[/\bjarig\b|\bverjaardag\b|\bfeestje\b/i,"verjaardag"],[/\bvakantie\b|\bvrije? dag\b|\bstudiedag\b/i,"vrij"],[/\bpeuterspeelzaal\b|\bpsz\b|\bpeuter\b/i,"psz"],[/\bopvang\b|\bcr[èe]che\b|\bkinderdagverblijf\b|\bkdv\b/i,"opvang"],[/\bschool\b|\bgym\b|\bjuf\b|\bmeester\b|\bklas\b/i,"school"]];function C(n){return n.charAt(0).toUpperCase()+n.slice(1)}function I(n,r){let e=(r-D(n)+7)%7;return g(n,e)}function S(n,r){let e=` ${n.trim()} `,i=[],u=t=>{let a=e.match(t);return a&&(e=e.replace(a[0]," "),i.push(a[0].trim())),a},l="gezin";for(let[t,a]of E)if(t.test(e)){l=a,e=e.replace(t," "),i.push(a);break}let s=r,o=!1,k=u(/\b(vandaag|morgen|overmorgen|volgende week|komende week)\b/i),w=0;if(k){let t=k[1].toLowerCase();t==="vandaag"?(s=r,o=!0):t==="morgen"?(s=g(r,1),o=!0):t==="overmorgen"?(s=g(r,2),o=!0):(w=1,s=g(r,7),o=!0)}u(/\b(aanstaande|a\.s\.|as)\b/i);let h=e.match(/\b(maandag|dinsdag|woensdag|donderdag|vrijdag|zaterdag|zondag)\b/i);if(h){let t=N[h[1].toLowerCase()];if(w>0){let a=g(r,8-D(r));s=g(a,t-1)}else s=I(r,t);e=e.replace(h[0]," "),i.push(h[1]),o=!0}if(!o){let t=e.match(/\b(\d{1,2})\s+(januari|jan|februari|feb|maart|mrt|maa|april|apr|mei|juni|jun|juli|jul|augustus|aug|september|sept|sep|oktober|okt|november|nov|december|dec)\b/i);if(t){let a=Number(t[1]),d=M[t[2].toLowerCase()];s=$(r,a,d),e=e.replace(t[0]," "),i.push(t[0].trim()),o=!0}}if(!o){let t=e.match(/\b(\d{1,2})[-/](\d{1,2})(?:[-/](\d{2,4}))?\b/);if(t){let a=Number(t[1]),d=Number(t[2]);if(d>=1&&d<=12&&a>=1&&a<=31){if(t[3]){let z=Number(t[3].length===2?`20${t[3]}`:t[3]);s=f(new Date(z,d-1,a))}else s=$(r,a,d);e=e.replace(t[0]," "),i.push(t[0]),o=!0}}}let j,m=e.match(/\b(?:om\s+)?(\d{1,2})[:.u](\d{2})\b|\bom\s+(\d{1,2})\s*uur\b/i);if(m){let t=Number(m[1]??m[3]),a=Number(m[2]??0);t>=0&&t<=23&&a>=0&&a<=59&&(j=`${String(t).padStart(2,"0")}:${String(a).padStart(2,"0")}`,e=e.replace(m[0]," "),i.push(m[0].trim()))}let c="anders";for(let[t,a]of A)if(t.test(e)){c=a;break}let b=[],y=e.match(/\bmee\s*(?:nemen|geven)?\s*[:\-]\s*(.+)$/i);if(y)b.push(...x(y[1])),e=e.replace(y[0]," ");else{let t=e.match(/(.+?)\s+mee(?:nemen|geven)?\s*$/i);t&&(b.push(...x(t[1])),e=" ")}let p=e.replace(/\s+/g," ").trim().replace(/^[,;:\-\s]+|[,;:\-\s]+$/g,"");return!p&&b.length>0&&(p=`Meenemen: ${b.join(", ")}`),p||(p="Nieuw item"),c==="anders"&&b.length>0&&(l==="matthijs"?c="school":l==="amelie"?c="psz":l==="lotte"&&(c="opvang")),{title:C(p),date:s,time:j,allDay:!j,person:l,category:c,bring:b,matched:i}}function x(n){return n.split(/,| en /i).map(r=>r.replace(/\s+/g," ").trim()).filter(Boolean)}function $(n,r,e){let i=v(n),u=new Date(i.getFullYear(),e-1,r);return f(u)<n&&u.setFullYear(i.getFullYear()+1),f(u)}globalThis.QP=S;})();
 
 (function(){
@@ -1535,9 +1558,9 @@ let uid=100;
 
 const S={
   view:'proto',tab:'vandaag',gezin:false,time:'ochtend',
-  mensen:'contacten',cf:'alle',q:'',boodschap:'lijst',
+  mensen:'contacten',cf:'alle',q:'',regel:'acties',rf:'alle',
   sel:TODAY,week:'2026-10-05',
-  fold:{morgen:false,vandaag:false,eerder:false,prep:false},
+  fold:{morgen:false,vandaag:false,eerder:false,prep:false,afgerond:false},
   notif:true,
   events:[
     {id:1,date:'2026-10-05',time:'09:00',title:'Peuterspeelzaal',person:'amelie',cat:'psz',bring:[]},
@@ -1576,6 +1599,17 @@ const S={
     {id:3,date:'2026-09-17',who:'Tim',h:3.5,start:'09:00',end:'12:30',paid:true},
   ],
   sheet:{text:'',person:null},
+  act:{text:'',owner:null,due:null},
+  acties:[
+    {id:1,title:'Formulier schoolreisje inleveren',owner:'irene',kid:'matthijs',due:'2026-10-05',note:'Handtekening staat er al op, moet nog in de tas.'},
+    {id:2,title:'Ouderavond: aanmelden?',owner:'samen',kid:'matthijs',due:'2026-10-07',link:10,note:'Aanmelden kan t/m woensdag via Parro. Gaan we allebei, of één van ons?'},
+    {id:3,title:'Cadeau halen voor Daan',owner:'niels',kid:'matthijs',due:'2026-10-08',link:11,note:'Feestje vrijdag. Iets van max. €10.'},
+    {id:4,title:'Zwemdiploma aanmelden',owner:'irene',kid:'matthijs',due:'2026-10-15'},
+    {id:5,title:'Tandarts afspreken',owner:'niels',kid:'amelie',due:null},
+    {id:6,title:'Kerstcadeau opa en oma',owner:'samen',kid:'gezin',due:'2026-11-15'},
+    {id:7,title:'Wie haalt Matthijs op bij zwemles?',owner:'samen',kid:'matthijs',due:null,done:true,besluit:'Niels op dinsdag, Irene als het uitloopt.'},
+    {id:8,title:'Fotodag Amélie: formulier',owner:'irene',kid:'amelie',due:null,done:true},
+  ],
 };
 const RATE=12;
 const evOn=dt=>S.events.filter(e=>e.date===dt).sort((a,b)=>(a.allDay?'00:00':a.time||'99').localeCompare(b.allDay?'00:00':b.time||'99'));
@@ -1628,18 +1662,18 @@ function vandaag(){
   if(t==='ochtend'){
     const mee=vandaagMee.length;
     return head(long(TODAY),`${td.length} dingen vandaag${mee?' · '+mee+' mee':''}`)+
-      prep(vandaagMee,'Vandaag mee','Alles zit in de tas.')+facts(TODAY)+timeline(td,true)+
+      prep(vandaagMee,'Vandaag mee','Alles zit in de tas.')+regelRow()+facts(TODAY)+timeline(td,true)+
       fold('morgen','Morgen',`${klaar.length?klaar.length+' klaarzetten · ':''}${prevOf(tm)}`,prep(klaar,'Klaarzetten voor morgen','Alles staat klaar voor morgen.')+facts(TOMORROW)+timeline(tm,true));
   }
   if(t==='middag'){
     const rest=td.filter(e=>!e.allDay&&e.time>='14:00'),eerder=td.filter(e=>!rest.includes(e));
     const compact=klaar.length?`<button class="compactprep" data-act="fold" data-k="prep">${I('rugzak',19)}<strong class="grow">Morgen klaarzetten</strong><span class="chip chip--warn">${klaar.length}</span><span class="fold__chev" style="${S.fold.prep?'transform:rotate(90deg)':''}">${I('chevron-rechts',17)}</span></button>${S.fold.prep?prep(klaar,'Klaarzetten voor morgen',''):''}`:`<p class="allklaar iconrow">${I('vinkje',18)} Alles staat klaar voor morgen.</p>`;
     return head(long(TODAY),`${rest.length} ding${rest.length===1?'':'en'} te gaan · morgen ${klaar.length} klaarzetten`)+
-      compact+facts(TODAY)+timeline(rest)+
+      compact+regelRow()+facts(TODAY)+timeline(rest)+
       fold('eerder','Eerder vandaag',`${eerder.length} gedaan`,timeline(eerder).replace(/class="tl /g,'class="tl tl--passed '));
   }
   return head(long(TOMORROW),`${tm.length} dingen morgen`,{t:`Morgen · ${klaar.length?klaar.length+' klaarzetten':'alles klaar'}`})+
-    prep(klaar,'Klaarzetten voor morgen','Alles staat klaar voor morgen.')+facts(TOMORROW)+timeline(tm,true)+
+    prep(klaar,'Klaarzetten voor morgen','Alles staat klaar voor morgen.')+regelRow()+facts(TOMORROW)+timeline(tm,true)+
     fold('vandaag','Vandaag',prevOf(td),timeline(td));
 }
 function agenda(){
@@ -1654,10 +1688,101 @@ function agenda(){
   return head(MN[x.getUTCMonth()]+' '+x.getUTCFullYear(),`week van ${x.getUTCDate()} ${MN[x.getUTCMonth()].slice(0,3)}`,null,nav)+strip+
     `<h2 class="cap" style="margin:18px 0 4px">${long(S.sel)}</h2>`+facts(S.sel)+timeline(evOn(S.sel));
 }
-function boodschappen(){
-  const seg=segment('boodschap',[['lijst','Lijst'],['menu','Weekmenu']]);
+
+const OW={niels:'Niels',irene:'Irene',samen:'Afstemmen'};
+const diff=dt=>Math.round((d(dt)-d(TODAY))/864e5);
+function dueInfo(dt){
+  if(!dt)return null;const n=diff(dt);
+  if(n<0)return{t:n===-1?'1 dag te laat':(-n)+' dagen te laat',hot:true,sec:0};
+  if(n===0)return{t:'vandaag',hot:true,sec:1};
+  if(n===1)return{t:'morgen',hot:true,sec:1};
+  return{t:short(dt),hot:false,sec:n<=7?1:2};
+}
+const openActs=()=>S.acties.filter(a=>!a.done);
+const urgentActs=()=>openActs().filter(a=>{const i=dueInfo(a.due);return i&&i.hot});
+function actRow(a){
+  const i=dueInfo(a.due),ev=a.link&&S.events.find(e=>e.id===a.link);
+  const meta=`<span class="chip ${a.owner==='samen'?'chip--gezin':'chip--'+a.owner}">${a.owner==='samen'?I('oppas',13)+' ':''}${OW[a.owner]}</span>${a.kid!=='gezin'?`<span class="chip chip--${a.kid}">${PL[a.kid]}</span>`:''}${i&&!a.done?`<span class="chip ${i.hot?'chip--warn':''}">${I('klok',13)} ${i.t}</span>`:''}`;
+  return `<div class="actrow ${a.done?'actrow--done':''}"><label class="actrow__check"><input type="checkbox" data-act="ac" data-i="${a.id}" ${a.done?'checked':''} aria-label="Klaar: ${esc(a.title)}"></label><button class="actrow__main" data-act="detail" data-i="${a.id}"><span class="actrow__title">${esc(a.title)}</span><span class="actrow__meta">${meta}</span>${ev&&!a.done?`<span class="tiny muted iconrow">${I('speld',12)} ${esc(ev.title)} · ${short(ev.date)}</span>`:''}${a.done&&a.besluit?`<span class="tiny muted">Besloten: ${esc(a.besluit)}</span>`:''}</button></div>`;
+}
+function actiesView(){
+  const f=S.rf;
+  const list=openActs().filter(a=>f==='alle'||(f==='samen'?a.owner==='samen':a.owner===f||a.owner==='samen'));
+  const sec=[[0,'Te laat',true],[1,'Deze week'],[2,'Later'],[3,'Geen datum']];
+  const bucket=a=>{const i=dueInfo(a.due);return i?i.sec:3};
+  const who=`<div class="picks" role="group" aria-label="Voor wie" style="margin-bottom:6px">`+[['alle','Alle'],['niels','Niels'],['irene','Irene'],['samen','Afstemmen']].map(([v,l])=>`<button class="pick" data-act="rf" data-v="${v}" aria-pressed="${f===v}">${l}</button>`).join('')+`</div>`;
+  let h=who;
+  if(!list.length)h+=`<div class="emptystate"><div class="emptystate__icon">${I('vinkje',26)}</div><h2 class="emptystate__title">Alles geregeld.</h2><p class="emptystate__hint">Wat nog moet of afgestemd moet worden, zet je hier neer.</p></div>`;
+  for(const[k,l,hot]of sec){
+    const it=list.filter(a=>bucket(a)===k).sort((x,y)=>(x.due||'9').localeCompare(y.due||'9'));
+    if(!it.length)continue;
+    h+=`<h2 class="grouphead" style="${hot?'color:var(--warn)':''}">${l}<span class="grouphead__count">${it.length}</span></h2><div class="list">${it.map(actRow).join('')}</div>`;
+  }
+  const done=S.acties.filter(a=>a.done);
+  if(done.length)h+=fold('afgerond','Afgerond',`${done.length} klaar`,`<div class="list" style="margin-top:6px">${done.map(actRow).join('')}</div>`);
+  return h;
+}
+function regelen(){
+  const seg=segment('regel',[['acties','Acties'],['lijst','Boodschappen'],['menu','Weekmenu']]);
+  let sub,right='',body;
+  if(S.regel==='acties'){
+    const o=openActs().length,u=urgentActs().length;
+    sub=`${o} open${u?' · '+u+' dringend':''}`;
+    right=`<button class="btn btn--primary btn--sm" data-act="newact">${I('plus',16)} Actie</button>`;
+    body=actiesView();
+  } else {
+    body=shopBody();sub=S.regel==='lijst'?`${S.shop.filter(i=>!i.done).length} te halen`:'Wat we deze week eten';
+  }
+  return head('Regelen',sub,null,right)+`<div style="margin-bottom:14px">${seg}</div>`+body;
+}
+function regelRow(){
+  const o=openActs().filter(a=>{const i=dueInfo(a.due);return i&&i.sec<=1});
+  if(!o.length)return '';
+  const u=urgentActs();
+  return `<button class="regelrow" data-act="tab" data-k="regelen">${I('regelen',19)}<strong>Regelen</strong>${u.length?`<span class="chip chip--warn">${u.length} dringend</span>`:''}<span class="regelrow__prev grow">${o.slice(0,2).map(a=>esc(a.title)).join(', ')}</span>${I('chevron-rechts',17)}</button>`;
+}
+function openDetail(id){
+  const a=S.acties.find(x=>x.id==id);if(!a)return;S.detail=id;
+  const i=dueInfo(a.due),ev=a.link&&S.events.find(e=>e.id===a.link);
+  const sh=document.getElementById('sheet');
+  sh.innerHTML=`<div class="sheet__scrim" data-act="closesheet"></div><form class="sheet" id="detailform" role="dialog" aria-label="Actie"><div class="sheet__grip" aria-hidden="true"></div><div class="row row--between" style="align-items:flex-start;margin-bottom:8px"><h2 style="font-size:1.2rem">${esc(a.title)}</h2><button type="button" class="btn btn--ghost btn--sm" data-act="closesheet" aria-label="Sluit">${I('kruis',18)}</button></div><div class="actrow__meta" style="margin-bottom:10px"><span class="chip ${a.owner==='samen'?'chip--gezin':'chip--'+a.owner}">${a.owner==='samen'?I('oppas',13)+' ':''}${OW[a.owner]}</span>${a.kid!=='gezin'?`<span class="chip chip--${a.kid}">${PL[a.kid]}</span>`:''}${i?`<span class="chip ${i.hot&&!a.done?'chip--warn':''}">${I('klok',13)} ${i.t}</span>`:'<span class="chip">geen deadline</span>'}</div>${a.note?`<p style="margin:0 0 12px">${esc(a.note)}</p>`:''}${ev?`<button type="button" class="rowlink" style="border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px" data-act="golink" data-d="${ev.date}"><span class="rowlink__ico">${I('kalender',18)}</span><span class="grow"><div class="rowlink__t">${esc(ev.title)}</div><div class="rowlink__s">${long(ev.date)}${ev.time?' · '+ev.time:''} · in de agenda</div></span>${I('chevron-rechts',17)}</button>`:''}${a.owner==='samen'?`<div class="field" style="margin-bottom:14px"><label class="field__label" for="besluit">Wat is besloten?</label><input class="input" id="besluit" placeholder="Bijvoorbeeld: Niels gaat, Irene past op" value="${esc(a.besluit||'')}"></div>`:''}<div class="row"><button type="button" class="btn" data-act="toast" data-m="Opent het bewerkformulier">Bewerken</button><button class="btn btn--primary grow" data-act="finish">${a.done?'Weer openen':'Klaar'}</button></div></form>`;
+  sh.hidden=false;
+}
+const EXA=['cadeau halen voor daan vrijdag niels','tandarts afspreken amelie','formulier inleveren irene morgen'];
+function actParsed(){
+  const v=S.act.text;if(!v.trim())return null;
+  const r=window.QP(v,TODAY);
+  const personish=/^(matthijs|amelie|amélie|lotte|irene|niels)$/i;
+  const hasDate=r.matched.some(m=>!personish.test(m));
+  let due=hasDate?r.date:null;
+  if(S.act.due==='none')due=null;else if(S.act.due!==null)due=add(TODAY,Number(S.act.due));
+  const owner=S.act.owner||(r.person==='niels'||r.person==='irene'?r.person:null);
+  const kid=['matthijs','amelie','lotte'].includes(r.person)?r.person:'gezin';
+  return{title:r.title,due,owner,kid};
+}
+function actPreview(){
+  const el=document.getElementById('actprev'),btn=document.getElementById('actgo');const r=actParsed();btn.disabled=!r||!r.owner;
+  if(!r){el.innerHTML=`<span class="muted tiny" style="flex-basis:100%">Probeer:</span>`+EXA.map(t=>`<button type="button" class="pick" data-act="exa" data-t="${esc(t)}">${esc(t)}</button>`).join('');return null}
+  const i=dueInfo(r.due);
+  el.innerHTML=`<strong style="flex-basis:100%;font-size:1rem">${esc(r.title)}</strong>${r.owner?`<span class="chip ${r.owner==='samen'?'chip--gezin':'chip--'+r.owner}">${OW[r.owner]}</span>`:`<span class="chip chip--warn">kies wie</span>`}${r.kid!=='gezin'?`<span class="chip chip--${r.kid}">${PL[r.kid]}</span>`:''}<span class="chip ${i&&i.hot?'chip--warn':''}">${I('klok',13)} ${i?i.t:'geen deadline'}</span>`;
+  return r;
+}
+function renderActChips(){
+  const ow=[['niels','Niels'],['irene','Irene'],['samen','Samen afstemmen']],du=[['0','Vandaag'],['1','Morgen'],['7','Over een week'],['none','Geen']];
+  const cur=actParsed();
+  document.getElementById('actwho').innerHTML=ow.map(([v,l])=>`<button type="button" class="pick" data-act="aw" data-v="${v}" aria-pressed="${(S.act.owner||(cur&&cur.owner))===v}">${l}</button>`).join('');
+  document.getElementById('actdue').innerHTML=du.map(([v,l])=>`<button type="button" class="pick" data-act="ad" data-v="${v}" aria-pressed="${S.act.due===v}">${l}</button>`).join('');
+}
+function openNewAct(text,owner){
+  S.act={text:text||'',owner:owner||null,due:null};
+  const sh=document.getElementById('sheet');
+  sh.innerHTML=`<div class="sheet__scrim" data-act="closesheet"></div><form class="sheet" id="actform" role="dialog" aria-label="Nieuwe actie"><div class="sheet__grip" aria-hidden="true"></div><div class="row row--between" style="margin-bottom:10px"><h2>Nieuwe actie</h2><button type="button" class="btn btn--ghost btn--sm" data-act="closesheet" aria-label="Sluit">${I('kruis',18)}</button></div><input class="input" id="actin" placeholder="Wat moet er nog geregeld of afgestemd worden?" autocomplete="off" enterkeyhint="done" value="${esc(S.act.text)}" style="border-radius:999px;padding-left:16px"><div class="capture__preview" id="actprev" style="margin:12px 2px 6px;min-height:70px;align-content:flex-start;gap:6px"></div><div class="field__label" style="margin:6px 2px 6px;font-size:.78rem;font-weight:650;color:var(--muted)">Wie moet het doen</div><div class="picks" id="actwho" role="group" style="margin-bottom:10px"></div><div class="field__label" style="margin:2px 2px 6px;font-size:.78rem;font-weight:650;color:var(--muted)">Deadline</div><div class="picks" id="actdue" role="group" style="margin-bottom:14px"></div><button class="btn btn--primary btn--block" id="actgo" disabled>Zet erop</button></form>`;
+  sh.hidden=false;actPreview();renderActChips();
+  try{document.getElementById('actin').focus()}catch(e){}
+}
+function shopBody(){
   let body='';
-  if(S.boodschap==='lijst'){
+  if(S.regel==='lijst'){
     const open=S.shop.filter(i=>!i.done),done=S.shop.filter(i=>i.done);
     body=`<div class="list shoplist">`+(open.length?open.map(i=>shopRow(i)).join(''):`<p class="muted small center" style="margin:20px 0">Alles gehaald.</p>`)+`</div>`+
       (done.length?`<div class="row row--between" style="margin:18px 0 8px"><div class="section-title" style="margin:0">Afgevinkt</div><button class="btn btn--sm btn--ghost" data-act="clr">Wis</button></div><div class="list shoplist">${done.map(shopRow).join('')}</div>`:'');
@@ -1667,8 +1792,7 @@ function boodschappen(){
       return `<div class="menurow ${dt===TODAY?'menurow--today':''}"><span class="menurow__wd">${WDS[i]} ${Number(dt.slice(8))}</span><span class="menurow__d">${m}</span></div>`;
     }).join('')+`</div><button class="btn btn--primary btn--block" style="margin-top:14px" data-act="toast" data-m="Ingrediënten op de lijst gezet">Zet ingrediënten op de lijst</button>`;
   }
-  const n=S.shop.filter(i=>!i.done).length;
-  return head('Boodschappen',`${n} te halen`)+`<div style="margin-bottom:14px">${seg}</div>`+body;
+  return body;
 }
 function shopRow(i){return `<div class="shopitem ${i.done?'shopitem--done':''}"><label class="shopitem__label grow"><input type="checkbox" data-act="shop" data-i="${i.id}" ${i.done?'checked':''}><span class="shopitem__text">${esc(i.text)}${i.src?` <span class="muted tiny">· ${i.src}</span>`:''}</span></label></div>`}
 function segment(key,opts){return `<div class="segmented" role="group">`+opts.map(([v,l])=>`<button data-act="seg" data-key="${key}" data-v="${v}" aria-pressed="${S[key]===v}">${l}</button>`).join('')+`</div>`}
@@ -1704,7 +1828,7 @@ function gezin(){
 }
 
 /* ----------------------------------------------------------------- render */
-function bottomKey(){return S.gezin?'none':S.tab==='boodschappen'&&S.boodschap==='lijst'?'shop':'none'}
+function bottomKey(){return S.gezin?'none':S.tab==='regelen'&&S.regel==='lijst'?'shop':'none'}
 function renderBottom(){
   const k=bottomKey();if(k===S._bk)return;S._bk=k;
   const el=document.getElementById('slot');
@@ -1715,14 +1839,15 @@ function renderBottom(){
 }
 function renderVaak(){const v=document.getElementById('vaak');if(v)v.innerHTML=S.vaak.map(t=>`<button class="pick" type="button" data-act="vaak" data-t="${t}">${I('plus',14)} ${t}</button>`).join('')}
 function tabs(){
-  const T=[['vandaag','Vandaag','vandaag'],['agenda','Agenda','kalender'],null,['boodschappen','Boodschappen','mandje'],['mensen','Mensen','contacten']];
-  return T.map(t=>t?`<button class="tabbar__item" data-act="tab" data-k="${t[0]}" aria-current="${!S.gezin&&S.tab===t[0]}"><span class="tabbar__icon">${I(t[2],22)}</span>${t[1]}</button>`
+  const u=urgentActs().length;
+  const T=[['vandaag','Vandaag','vandaag'],['agenda','Agenda','kalender'],null,['regelen','Regelen','regelen'],['mensen','Mensen','contacten']];
+  return T.map(t=>t?`<button class="tabbar__item" data-act="tab" data-k="${t[0]}" aria-current="${!S.gezin&&S.tab===t[0]}"><span class="tabbar__icon">${I(t[2],22)}</span>${t[1]}${t[0]==='regelen'&&u?`<span class="tabbar__badge" role="img" aria-label="${u} dringend">${u}</span>`:''}</button>`
     :`<button class="tabbar__add" data-act="new" aria-label="Nieuw agenda-item" aria-haspopup="dialog"><span class="tabbar__disc">${I('plus',26)}</span></button>`).join('');
 }
 const TIMES={ochtend:'07:45',middag:'14:00',avond:'21:30'};
 function render(){
   const sc=document.getElementById('scroll');const keep=sc.scrollTop;
-  sc.innerHTML=S.gezin?gezin():S.tab==='vandaag'?vandaag():S.tab==='agenda'?agenda():S.tab==='boodschappen'?boodschappen():mensen();
+  sc.innerHTML=S.gezin?gezin():S.tab==='vandaag'?vandaag():S.tab==='agenda'?agenda():S.tab==='regelen'?regelen():mensen();
   document.getElementById('tabs').innerHTML=tabs();
   document.getElementById('clock').textContent=TIMES[S.time];
   renderBottom();
@@ -1779,6 +1904,14 @@ document.addEventListener('click',ev=>{
   else if(a==='notif'){S.notif=!S.notif;render()}
   else if(a==='vaak'){addShop(b.dataset.t)}
   else if(a==='new'){openSheet()}
+  else if(a==='newact'){openNewAct()}
+  else if(a==='detail'){openDetail(b.dataset.i)}
+  else if(a==='rf'){S.rf=b.dataset.v;render()}
+  else if(a==='golink'){closeSheet();S.tab='agenda';S.gezin=false;S.sel=b.dataset.d;S.week=add(b.dataset.d,-wdi(b.dataset.d));render()}
+  else if(a==='exa'){S.act.text=b.dataset.t;document.getElementById('actin').value=b.dataset.t;actPreview();renderActChips()}
+  else if(a==='aw'){S.act.owner=S.act.owner===b.dataset.v?null:b.dataset.v;actPreview();renderActChips()}
+  else if(a==='ad'){S.act.due=S.act.due===b.dataset.v?null:b.dataset.v;actPreview();renderActChips()}
+  else if(a==='finish'){const x=S.acties.find(y=>y.id==S.detail);const bi=document.getElementById('besluit');if(bi)x.besluit=bi.value.trim();x.done=!x.done;closeSheet();render();toast(x.done?'Klaar':'Weer open gezet')}
   else if(a==='closesheet'){closeSheet()}
   else if(a==='ex'){S.sheet.text=b.dataset.t;document.getElementById('sheetin').value=b.dataset.t;sheetPreview()}
   else if(a==='who'){S.sheet.person=S.sheet.person===b.dataset.v?null:b.dataset.v;renderWho();sheetPreview()}
@@ -1788,11 +1921,13 @@ document.addEventListener('change',ev=>{
   const c=ev.target;if(c.dataset.act==='tg'){
     const e=S.events.find(x=>x.id==c.dataset.e),it=e.bring.find(x=>x.id==c.dataset.b);it.done=c.checked;
     setTimeout(render,180);
+  } else if(c.dataset.act==='ac'){const x=S.acties.find(y=>y.id==c.dataset.i);x.done=c.checked;setTimeout(render,180)
   } else if(c.dataset.act==='shop'){const i=S.shop.find(x=>x.id==c.dataset.i);i.done=c.checked;setTimeout(render,180)}
 });
 document.addEventListener('input',ev=>{
   if(ev.target.id==='q'){S.q=ev.target.value;document.getElementById('clist').innerHTML=contactList()}
   if(ev.target.id==='sheetin'){S.sheet.text=ev.target.value;sheetPreview()}
+  if(ev.target.id==='actin'){S.act.text=ev.target.value;actPreview();renderActChips()}
 });
 document.addEventListener('submit',ev=>{
   ev.preventDefault();
@@ -1801,9 +1936,14 @@ document.addEventListener('submit',ev=>{
     S.events.push({id:++uid,date:r.date,time:r.time,allDay:r.allDay,title:r.title,person:r.person,cat:r.category,bring:r.bring.map(t=>({id:++uid,text:t,done:false}))});
     if(S.tab==='agenda'&&!S.gezin){S.sel=r.date;S.week=add(r.date,-wdi(r.date))}
     closeSheet();render();toast('Gezet op '+short(r.date));
+  } else if(ev.target.id==='actform'){
+    const r=actParsed();if(!r||!r.owner)return;
+    S.acties.unshift({id:++uid,title:r.title,owner:r.owner,kid:r.kid,due:r.due});
+    closeSheet();S.regel='acties';if(S.tab==='regelen')render();else render();toast('Op de lijst gezet');
+  } else if(ev.target.id==='detailform'){
   } else if(ev.target.id==='shopform'){const i=document.getElementById('shopin');addShop(i.value);i.value=''}
 });
-window.__mock={zet(o){Object.assign(S,o);S._bk=null;closeSheet();render();setView(S.view)},setView,S,openSheet,closeSheet};
+window.__mock={zet(o){Object.assign(S,o);S._bk=null;closeSheet();render();setView(S.view)},setView,S,openSheet,openDetail,openNewAct,closeSheet};
 setView('proto');render();closeSheet();
 })();
 </script>

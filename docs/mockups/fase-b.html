@@ -1352,8 +1352,8 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui)}
 .mk__stage{display:flex;justify-content:center}
 .dev{position:relative;width:390px;max-width:100%;height:800px;max-height:calc(100dvh - 120px);min-height:560px;display:flex;flex-direction:column;background:var(--bg);border:1px solid var(--line-strong);border-radius:34px;overflow:hidden;box-shadow:var(--shadow-lg);transform:translateZ(0)}
 .dev__status{display:flex;justify-content:space-between;padding:12px 26px 4px;font-size:.78rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text);flex-shrink:0}
-.dev__scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:6px 16px 20px}
-.dev .tabbar{position:static;flex-shrink:0;backdrop-filter:none;background:var(--surface);padding-bottom:10px}
+.dev__scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:6px 16px 36px}
+.dev .tabbar{position:relative;z-index:5;flex-shrink:0;backdrop-filter:none;background:var(--surface);padding-bottom:10px}
 .dev .tabbar__item{height:58px;font-size:.68rem}
 .mk--embedded .dev{height:100dvh;max-height:none;border-radius:0;border:0;box-shadow:none}
 @media (max-width:520px){
@@ -1422,6 +1422,22 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui)}
 .decision b{display:block;margin-bottom:2px}
 .decision span{color:var(--muted);font-size:.9rem}
 [hidden]{display:none!important}
+
+/* middenknop in de tabbalk */
+.dev .tabbar__item{font-size:.66rem;letter-spacing:0}
+.tabbar__add{display:flex;justify-content:center;align-items:flex-start;height:var(--nav-height);border:0;background:none;padding:0;cursor:pointer;color:var(--primary-ink)}
+.tabbar__disc{display:grid;place-items:center;width:56px;height:56px;margin-top:-22px;border-radius:50%;background:var(--primary);color:var(--primary-ink);border:5px solid var(--surface);box-shadow:0 5px 14px rgba(8,14,24,.28);transition:transform var(--dur) var(--ease)}
+.tabbar__disc svg{width:24px;height:24px}
+.tabbar__add:active .tabbar__disc{transform:scale(.93)}
+.tabbar__add:focus-visible .tabbar__disc{outline:3px solid var(--primary);outline-offset:3px}
+/* invoerblad */
+.sheetwrap{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:flex-end}
+.sheet__scrim{position:absolute;inset:0;background:rgba(10,15,22,.45)}
+.sheet{position:relative;background:var(--surface);border-radius:22px 22px 0 0;padding:8px 16px 18px;box-shadow:var(--shadow-lg);animation:sheetup var(--dur) var(--ease)}
+.sheet__grip{width:38px;height:4px;border-radius:2px;background:var(--line-strong);margin:0 auto 10px}
+.sheet h2{font-size:1.1rem}
+@keyframes sheetup{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}.tabbar__disc{transition:none}}
 </style>
 <div class="mk">
   <div class="mk__bar">
@@ -1450,6 +1466,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui)}
       <div class="dev__scroll" id="scroll"></div>
       <div id="slot"></div>
       <nav class="tabbar" id="tabs" aria-label="Hoofdmenu"></nav>
+      <div id="sheet" class="sheetwrap" hidden></div>
       <div class="toast" id="toast" role="status" hidden></div>
     </div>
   </div>
@@ -1460,12 +1477,12 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui)}
       <div class="navbox">
         <h3>Nu · 5 tabs en een plusknop</h3>
         <div class="tabsrow"><span class="tabpill">Vandaag</span><span class="tabpill">Agenda</span><span class="tabpill">Oppas</span><span class="tabpill">Contacten</span><span class="tabpill">Meer</span></div>
-        <ul><li>Meer → Eten (boodschappen + weekmenu)</li><li>Meer → Breng &amp; haal</li><li>Meer → Instellingen</li><li>Zwevende plusknop op elk scherm</li></ul>
+        <ul><li>Meer → Eten (boodschappen + weekmenu)</li><li>Meer → Breng &amp; haal</li><li>Meer → Instellingen</li><li>Zwevende plusknop over de inhoud, op elk scherm</li></ul>
       </div>
       <div class="navbox">
-        <h3>Straks · 4 tabs, geen plusknop</h3>
-        <div class="tabsrow"><span class="tabpill">Vandaag</span><span class="tabpill">Agenda</span><span class="tabpill">Boodschappen</span><span class="tabpill">Mensen</span></div>
-        <ul><li>Mensen = Contacten | Oppas</li><li>Boodschappen = Lijst | Weekmenu</li><li>Ronde Gezin-knop rechtsboven: Meldingen, Breng &amp; haal, Parro, Installeren, Uitloggen</li><li>Vastleggen: invoerbalk onderin de Agenda</li></ul>
+        <h3>Straks · 4 tabs en een middenknop</h3>
+        <div class="tabsrow"><span class="tabpill">Vandaag</span><span class="tabpill">Agenda</span><span class="tabpill" style="background:var(--primary);color:var(--primary-ink);border-color:var(--primary)">＋ Nieuw</span><span class="tabpill">Boodschappen</span><span class="tabpill">Mensen</span></div>
+        <ul><li>Mensen = Contacten | Oppas</li><li>Boodschappen = Lijst | Weekmenu</li><li>Ronde Gezin-knop rechtsboven: Meldingen, Breng &amp; haal, Parro, Installeren, Uitloggen</li><li>Middenknop: invoerblad voor een nieuw agenda-item, vanuit elk scherm</li></ul>
       </div>
     </div>
 
@@ -1475,11 +1492,10 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui)}
       <tbody>
         <tr><td>Boodschap toevoegen</td><td>2 (Meer → Eten)</td><td>1 (tab, invoer staat al klaar)</td><td class="better">sneller</td></tr>
         <tr><td>Meldingen of instellingen</td><td>2 (Meer → Instellingen)</td><td>1 (Gezin-knop)</td><td class="better">sneller</td></tr>
-        <tr><td>Iets vastleggen</td><td>2 (plus, daarna Opslaan)</td><td>1 en Enter (Agenda, typen)</td><td class="better">sneller</td></tr>
+        <tr><td>Iets vastleggen, waar je ook bent</td><td>2 (plus, daarna Opslaan)</td><td>2 (middenknop, daarna Zet in agenda)</td><td class="same">gelijk</td></tr>
         <tr><td>Contact zoeken</td><td>1</td><td>1</td><td class="same">gelijk</td></tr>
         <tr><td>Breng &amp; haal bekijken</td><td>2</td><td>2</td><td class="same">gelijk</td></tr>
         <tr><td>Oppas bekijken of afrekenen</td><td>1 (eigen tab)</td><td>2 (Mensen → Oppas)</td><td class="worse">langzamer</td></tr>
-        <tr><td>Iets vastleggen vanaf Vandaag</td><td>2</td><td>2 (naar Agenda, typen)</td><td class="same">gelijk</td></tr>
       </tbody>
     </table>
 
@@ -1487,7 +1503,8 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-ui)}
     <div class="decision"><div class="n">1</div><div><b>Het weekmenu had in plan v2 nog geen plek.</b><span>Voorstel: een segment naast de lijst in Boodschappen. Het menu bepaalt wat je koopt, en “zet ingrediënten op de lijst” zit dan één tik verderop.</span></div></div>
     <div class="decision"><div class="n">2</div><div><b>Oppas wordt één tik dieper.</b><span>Je gebruikt het maar een paar keer per maand, en de tab die vrijkomt gaat naar Boodschappen, dat je wekelijks meermaals opent. Wie Oppas vaker nodig heeft, houdt liever vijf tabs.</span></div></div>
     <div class="decision"><div class="n">3</div><div><b>De grenzen van de tijdstanden zijn een voorstel.</b><span>Tot 12:00 ochtend, tot 18:00 middag, daarna avond. De avond kan ook beginnen op het uur van je melding. Zeg het als dat anders moet; het is één getal.</span></div></div>
-    <div class="decision"><div class="n">4</div><div><b>Zonder plusknop is vastleggen alleen in de Agenda één tik.</b><span>In Boodschappen voeg je boodschappen toe, in Mensen contacten en oppasmomenten. Alleen vanuit Vandaag kost een nieuw item twee tikken. Dat is de ruil voor een scherm zonder zwevende knop.</span></div></div>
+    <div class="decision"><div class="n">4</div><div><b>De middenknop is geen bestemming, maar een actie.</b><span>Vijf plekken in de balk, vier schermen. De winst zit in plek en bereik, niet in het aantal tikken: de knop zit in je duimzone en dekt geen inhoud meer af. Hij voegt altijd een agenda-item toe, ook in Boodschappen en Mensen; die houden hun eigen invoer.</span></div></div>
+    <div class="decision"><div class="n">5</div><div><b>“Boodschappen” is het langste label.</b><span>Het past nog op een telefoon van 390 punten, maar niet met veel ruimte. Op een smalle iPhone SE kan het een kleinere letter of een korter woord worden.</span></div></div>
 
     <h2>Wat je hier niet ziet</h2>
     <p>Alleen de structuur: de schermen zijn gevuld met voorbeeldgegevens en er wordt niets opgeslagen. Snelheid (fase A), kinderkleuren en foto’s (fase C) en de Parro-tekst als meeneemvoorstel (fase F) zitten er niet in.</p>
@@ -1558,7 +1575,7 @@ const S={
     {id:2,date:'2026-09-25',who:'Marloes',h:4,start:'18:30',end:'22:30',paid:true},
     {id:3,date:'2026-09-17',who:'Tim',h:3.5,start:'09:00',end:'12:30',paid:true},
   ],
-  cap:'',
+  sheet:{text:'',person:null},
 };
 const RATE=12;
 const evOn=dt=>S.events.filter(e=>e.date===dt).sort((a,b)=>(a.allDay?'00:00':a.time||'99').localeCompare(b.allDay?'00:00':b.time||'99'));
@@ -1687,22 +1704,20 @@ function gezin(){
 }
 
 /* ----------------------------------------------------------------- render */
-function bottomKey(){return S.gezin?'none':S.tab==='agenda'?'cap':S.tab==='boodschappen'&&S.boodschap==='lijst'?'shop':'none'}
+function bottomKey(){return S.gezin?'none':S.tab==='boodschappen'&&S.boodschap==='lijst'?'shop':'none'}
 function renderBottom(){
   const k=bottomKey();if(k===S._bk)return;S._bk=k;
   const el=document.getElementById('slot');
-  if(k==='cap'){
-    el.innerHTML=`<div class="capture"><p class="capture__hint" id="caphint">Typ gewoon: “matthijs vrijdag gymtas mee”</p><div id="capprev" class="capture__preview"></div><form class="capture__row" id="capform"><input class="input" id="cap" placeholder="Wat moet er gebeuren?" autocomplete="off" enterkeyhint="send"><button class="capture__sendbtn" id="capbtn" disabled aria-label="Zet in agenda">${I('plus',22)}</button></form></div>`;
-  } else if(k==='shop'){
+  if(k==='shop'){
     el.innerHTML=`<div class="shopbar"><div class="vaak" id="vaak"></div><form class="capture__row" id="shopform"><input class="input" id="shopin" placeholder="Wat moet er mee?" autocomplete="off" enterkeyhint="send" style="border-radius:999px;padding-left:16px"><button class="capture__sendbtn" aria-label="Zet op de lijst">${I('plus',22)}</button></form></div>`;
     renderVaak();
   } else el.innerHTML='';
 }
 function renderVaak(){const v=document.getElementById('vaak');if(v)v.innerHTML=S.vaak.map(t=>`<button class="pick" type="button" data-act="vaak" data-t="${t}">${I('plus',14)} ${t}</button>`).join('')}
 function tabs(){
-  const n=S.shop.filter(i=>!i.done).length;
-  const T=[['vandaag','Vandaag','vandaag'],['agenda','Agenda','kalender'],['boodschappen','Boodschappen','mandje'],['mensen','Mensen','contacten']];
-  return T.map(([k,l,ic])=>`<button class="tabbar__item" data-act="tab" data-k="${k}" aria-current="${!S.gezin&&S.tab===k}"><span class="tabbar__icon">${I(ic,22)}</span>${l}</button>`).join('');
+  const T=[['vandaag','Vandaag','vandaag'],['agenda','Agenda','kalender'],null,['boodschappen','Boodschappen','mandje'],['mensen','Mensen','contacten']];
+  return T.map(t=>t?`<button class="tabbar__item" data-act="tab" data-k="${t[0]}" aria-current="${!S.gezin&&S.tab===t[0]}"><span class="tabbar__icon">${I(t[2],22)}</span>${t[1]}</button>`
+    :`<button class="tabbar__add" data-act="new" aria-label="Nieuw agenda-item" aria-haspopup="dialog"><span class="tabbar__disc">${I('plus',26)}</span></button>`).join('');
 }
 const TIMES={ochtend:'07:45',middag:'14:00',avond:'21:30'};
 function render(){
@@ -1723,15 +1738,27 @@ function setView(v){
   document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.view===v));
   document.getElementById('timebox').style.visibility=v==='proto'?'visible':'hidden';
 }
-function preview(){
-  const v=document.getElementById('cap').value;const el=document.getElementById('capprev'),btn=document.getElementById('capbtn');
-  btn.disabled=!v.trim();
-  document.getElementById('caphint').hidden=!!v.trim();
-  if(!v.trim()){el.innerHTML='';return null}
-  const r=window.QP(v,TODAY);
-  el.innerHTML=`<span class="chip">${I('kalender',13)} ${short(r.date)}${r.time?' · '+r.time:r.allDay?' · hele dag':''}</span><span class="chip chip--${r.person}">${PL[r.person]}</span><span class="chip">${CL[r.category]}</span>${r.bring.map(b=>`<span class="chip chip--warn">${I('rugzak',13)} ${esc(b)}</span>`).join('')}<strong style="flex-basis:100%;font-size:.86rem">${esc(r.title)}</strong>`;
+const EX=['matthijs vrijdag gymtas mee','tandarts lotte 14 oktober 10:30','oppas marloes zaterdag 19:00'];
+function parsed(){
+  const v=S.sheet.text;if(!v.trim())return null;
+  const r=window.QP(v,TODAY);if(S.sheet.person)r.person=S.sheet.person;return r;
+}
+function sheetPreview(){
+  const el=document.getElementById('sheetprev'),btn=document.getElementById('sheetgo');
+  const r=parsed();btn.disabled=!r;
+  if(!r){el.innerHTML=`<span class="muted tiny" style="flex-basis:100%">Probeer:</span>`+EX.map(t=>`<button type="button" class="pick" data-act="ex" data-t="${esc(t)}">${esc(t)}</button>`).join('');return null}
+  el.innerHTML=`<strong style="flex-basis:100%;font-size:1rem">${esc(r.title)}</strong><span class="chip">${I('kalender',13)} ${short(r.date)}${r.time?' · '+r.time:r.allDay?' · hele dag':''}</span><span class="chip chip--${r.person}">${PL[r.person]}</span><span class="chip">${CL[r.category]}</span>${r.bring.map(b=>`<span class="chip chip--warn">${I('rugzak',13)} ${esc(b)}</span>`).join('')}`;
   return r;
 }
+function openSheet(text,person){
+  S.sheet={text:text||'',person:person||null};
+  const sh=document.getElementById('sheet');
+  sh.innerHTML=`<div class="sheet__scrim" data-act="closesheet"></div><form class="sheet" id="sheetform" role="dialog" aria-label="Nieuw agenda-item"><div class="sheet__grip" aria-hidden="true"></div><div class="row row--between" style="margin-bottom:10px"><h2>Nieuw in de agenda</h2><button type="button" class="btn btn--ghost btn--sm" data-act="closesheet" aria-label="Sluit">${I('kruis',18)}</button></div><input class="input" id="sheetin" placeholder="Wat moet er gebeuren?" autocomplete="off" enterkeyhint="done" value="${esc(S.sheet.text)}" style="border-radius:999px;padding-left:16px"><div class="capture__preview" id="sheetprev" style="margin:12px 2px 6px;min-height:70px;align-content:flex-start;gap:6px"></div><div class="field__label" style="margin:6px 2px 6px;font-size:.78rem;font-weight:650;color:var(--muted)">Voor wie</div><div class="picks" id="sheetwho" role="group" style="margin-bottom:14px"></div><div class="row"><button type="button" class="btn" data-act="toast" data-m="Opent het volledige formulier">Alle opties</button><button class="btn btn--primary grow" id="sheetgo" disabled>Zet in agenda</button></div></form>`;
+  sh.hidden=false;renderWho();sheetPreview();
+  const i=document.getElementById('sheetin');try{i.focus()}catch(e){}
+}
+function renderWho(){document.getElementById('sheetwho').innerHTML=[['matthijs','Matthijs'],['amelie','Amélie'],['lotte','Lotte'],['gezin','Gezin']].map(([v,l])=>`<button type="button" class="pick pick--${v}" data-act="who" data-v="${v}" aria-pressed="${S.sheet.person===v}">${l}</button>`).join('')}
+function closeSheet(){document.getElementById('sheet').hidden=true}
 function addShop(t){t=t.trim();if(!t)return;S.shop.unshift({id:++uid,text:t.charAt(0).toUpperCase()+t.slice(1),done:false});S.vaak=S.vaak.filter(x=>x.toLowerCase()!==t.toLowerCase());render();renderVaak()}
 
 document.addEventListener('click',ev=>{
@@ -1751,6 +1778,10 @@ document.addEventListener('click',ev=>{
   else if(a==='clr'){S.shop=S.shop.filter(i=>!i.done);render()}
   else if(a==='notif'){S.notif=!S.notif;render()}
   else if(a==='vaak'){addShop(b.dataset.t)}
+  else if(a==='new'){openSheet()}
+  else if(a==='closesheet'){closeSheet()}
+  else if(a==='ex'){S.sheet.text=b.dataset.t;document.getElementById('sheetin').value=b.dataset.t;sheetPreview()}
+  else if(a==='who'){S.sheet.person=S.sheet.person===b.dataset.v?null:b.dataset.v;renderWho();sheetPreview()}
   else if(a==='toast'||a==='evt'){ev.preventDefault();toast(b.dataset.m||'Opent het item')}
 });
 document.addEventListener('change',ev=>{
@@ -1761,19 +1792,19 @@ document.addEventListener('change',ev=>{
 });
 document.addEventListener('input',ev=>{
   if(ev.target.id==='q'){S.q=ev.target.value;document.getElementById('clist').innerHTML=contactList()}
-  if(ev.target.id==='cap')preview();
+  if(ev.target.id==='sheetin'){S.sheet.text=ev.target.value;sheetPreview()}
 });
 document.addEventListener('submit',ev=>{
   ev.preventDefault();
-  if(ev.target.id==='capform'){
-    const r=preview();if(!r)return;
+  if(ev.target.id==='sheetform'){
+    const r=parsed();if(!r)return;
     S.events.push({id:++uid,date:r.date,time:r.time,allDay:r.allDay,title:r.title,person:r.person,cat:r.category,bring:r.bring.map(t=>({id:++uid,text:t,done:false}))});
-    S.sel=r.date;const wd=add(r.date,-wdi(r.date));S.week=wd;
-    document.getElementById('cap').value='';render();preview();toast('Gezet op '+short(r.date));
+    if(S.tab==='agenda'&&!S.gezin){S.sel=r.date;S.week=add(r.date,-wdi(r.date))}
+    closeSheet();render();toast('Gezet op '+short(r.date));
   } else if(ev.target.id==='shopform'){const i=document.getElementById('shopin');addShop(i.value);i.value=''}
 });
-window.__mock={zet(o){Object.assign(S,o);S._bk=null;render();setView(S.view)},setView,S,type(v){const i=document.getElementById('cap');i.value=v;preview()}};
-setView('proto');render();
+window.__mock={zet(o){Object.assign(S,o);S._bk=null;closeSheet();render();setView(S.view)},setView,S,openSheet,closeSheet};
+setView('proto');render();closeSheet();
 })();
 </script>
 </body></html>

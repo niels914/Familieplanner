@@ -236,18 +236,26 @@ Het kleurcontrast en de toegankelijkheidsmeting blijven meedraaien.
 ## 8. Bevindingen uit het prototype van fase B
 
 Het aantikbare prototype staat in `docs/mockups/fase-b.html` (open het in een browser) met
-beelden in dezelfde map. Het bouwt op de echte stijl en de echte invoerparser. Het maakte
-vier dingen zichtbaar die in het plan hierboven ontbraken:
+beelden in dezelfde map. Het bouwt op de echte stijl en de echte invoerparser.
+
+**Gekozen structuur:** vijf knoppen in de balk. Vier bestemmingen (Vandaag, Agenda,
+Boodschappen, Mensen) en in het midden een grotere Nieuw-knop die vanuit elk scherm een
+invoerblad opent voor een nieuw agenda-item. Dat vervangt de zwevende plusknop en de
+invoerbalk onderin de Agenda. Oppas zit in Mensen (Contacten | Oppas).
+
+Wat het prototype zichtbaar maakte:
 
 1. **Het weekmenu had geen plek.** Voorstel: een segment naast de lijst in *Boodschappen*
    (Lijst | Weekmenu), met "zet ingrediënten op de lijst" één tik verderop.
-2. **Oppas wordt één tik dieper**, achter *Mensen* (Contacten | Oppas). Dat is bewust: het
-   gebruik is maandelijks, het alternatief is vijf tabs.
-3. **De tijdstanden van Vandaag zijn een voorstel**: tot 12:00 ochtend ("Vandaag mee" bovenaan),
-   tot 18:00 middag (alleen wat nog moet, morgen als één regel), daarna avond (morgen voorop).
-   Het afkappunt voor de avond kan ook het uur van de avondmelding zijn.
-4. **Zonder zwevende plusknop is vastleggen alleen in de Agenda één tik** (invoerbalk onderin).
-   In Boodschappen en Mensen staat de eigen invoer; vanuit Vandaag kost een nieuw item twee tikken.
+2. **Oppas wordt één tik dieper**, achter *Mensen*. Bewust: het gebruik is maandelijks.
+3. **De tijdstanden van Vandaag zijn een voorstel**: tot 12:00 ochtend ("Vandaag mee"
+   bovenaan), tot 18:00 middag (alleen wat nog moet, morgen als één regel), daarna avond
+   (morgen voorop). Het afkappunt voor de avond kan ook het uur van de avondmelding zijn.
+4. **De middenknop is een actie, geen bestemming.** Hij is niet sneller in tikken (2, net
+   als nu: knop, dan Zet in agenda), wel beter bereikbaar en hij dekt geen inhoud meer af.
+   Hij voegt altijd een agenda-item toe; Boodschappen en Mensen houden hun eigen invoer.
+5. **"Boodschappen" is het langste label** en past op 390 punten, maar krap. Op een
+   iPhone SE (375) is dat te controleren.
 
 Aantal tikken, nu → straks: boodschap toevoegen 2 → 1, instellingen 2 → 1, iets vastleggen
-2 → 1 en Enter, Oppas 1 → 2, contact zoeken en breng & haal gelijk.
+2 → 2, Oppas 1 → 2, contact zoeken en breng & haal gelijk.

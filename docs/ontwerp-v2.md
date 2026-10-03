@@ -230,3 +230,24 @@ Het kleurcontrast en de toegankelijkheidsmeting blijven meedraaien.
    Standaard is kleur en initiaal.
 4. **Vandaag dat het tijdstip volgt.** Prettig, maar de volgorde verandert door de dag.
 5. **De visuele richting**, te kiezen uit de concepten van fase 0.
+
+---
+
+## 8. Bevindingen uit het prototype van fase B
+
+Het aantikbare prototype staat in `docs/mockups/fase-b.html` (open het in een browser) met
+beelden in dezelfde map. Het bouwt op de echte stijl en de echte invoerparser. Het maakte
+vier dingen zichtbaar die in het plan hierboven ontbraken:
+
+1. **Het weekmenu had geen plek.** Voorstel: een segment naast de lijst in *Boodschappen*
+   (Lijst | Weekmenu), met "zet ingrediënten op de lijst" één tik verderop.
+2. **Oppas wordt één tik dieper**, achter *Mensen* (Contacten | Oppas). Dat is bewust: het
+   gebruik is maandelijks, het alternatief is vijf tabs.
+3. **De tijdstanden van Vandaag zijn een voorstel**: tot 12:00 ochtend ("Vandaag mee" bovenaan),
+   tot 18:00 middag (alleen wat nog moet, morgen als één regel), daarna avond (morgen voorop).
+   Het afkappunt voor de avond kan ook het uur van de avondmelding zijn.
+4. **Zonder zwevende plusknop is vastleggen alleen in de Agenda één tik** (invoerbalk onderin).
+   In Boodschappen en Mensen staat de eigen invoer; vanuit Vandaag kost een nieuw item twee tikken.
+
+Aantal tikken, nu → straks: boodschap toevoegen 2 → 1, instellingen 2 → 1, iets vastleggen
+2 → 1 en Enter, Oppas 1 → 2, contact zoeken en breng & haal gelijk.

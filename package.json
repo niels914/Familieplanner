@@ -11,6 +11,7 @@
     "icons": "node scripts/make-icons.mjs",
     "vapid": "node scripts/generate-vapid.mjs",
     "test": "node tests/run.mjs && node scripts/contrast.mjs",
+    "test:e2e": "node tests/e2e.mjs",
     "contrast": "node scripts/contrast.mjs"
   },
   "dependencies": {

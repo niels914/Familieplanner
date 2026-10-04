@@ -12,12 +12,12 @@ import { spanLabel } from '../../shared/signals';
 import { DRAFT_ID, useAwayWarnings } from '../lib/useAwayWarnings';
 import { seriesCount } from '../../shared/series';
 import { Modal } from './Modal';
+import { LEGE_OPPAS, SitterFields } from './SitterFields';
 import { MoreOptions } from './MoreOptions';
 import { TimeField } from './TimeField';
 import { ChipPicker, type ChipOption } from './ChipPicker';
 import { CATEGORY_ICON } from './EventBody';
 import { useData, useStore } from '../lib/store';
-import { euro, sitterHours } from '../lib/events';
 import { Icon } from './Icon';
 
 const PERSON_OPTIONS: ChipOption<PersonId>[] = [
@@ -35,7 +35,6 @@ const CATEGORY_OPTIONS: ChipOption<Category>[] = (
 
 const STANDAARD_TIJDEN = ['08:30', '12:00', '15:00', '18:00'];
 
-const LEGE_OPPAS: SitterDetails = { name: '', start: '18:00', end: '22:00', rate: 0, paid: false };
 
 /** "dinsdag" uit een datum. */
 const weekdag = (datum: string) => formatLong(datum).split(' ')[0];
@@ -80,7 +79,6 @@ export function EventForm({
   const { contacts, events } = useData();
   const [draft, setDraft] = useState<Partial<CalendarEvent>>(initial ?? emptyEvent(date));
   const [bringText, setBringText] = useState('');
-  const [eigenNaam, setEigenNaam] = useState(!initial?.sitter?.contactId);
   const [busy, setBusy] = useState(false);
 
   // Reeksen: bij een nieuw item kiezen of het herhaalt, bij een bestaande keer
@@ -214,7 +212,6 @@ export function EventForm({
     }
   };
 
-  const uren = draft.sitter ? sitterHours(draft.sitter.start, draft.sitter.end) : 0;
 
   return (
     <Modal
@@ -473,100 +470,7 @@ export function EventForm({
             }
           />
 
-          {isSitter && (
-            <div className="card card--pad stack stack--sm">
-              <strong className="small">Oppasgegevens</strong>
-
-              {sitters.length > 0 && (
-                <div className="picks">
-                  {sitters.map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      className="pick"
-                      aria-pressed={draft.sitter?.contactId === s.id}
-                      onClick={() => {
-                        setEigenNaam(false);
-                        setSitter({ contactId: s.id, name: s.name, rate: s.sitterRate ?? 0 });
-                      }}
-                    >
-                      {s.name}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    className="pick"
-                    aria-pressed={eigenNaam}
-                    onClick={() => {
-                      setEigenNaam(true);
-                      setSitter({ contactId: undefined });
-                    }}
-                  >
-                    Anders…
-                  </button>
-                </div>
-              )}
-
-              {(eigenNaam || sitters.length === 0) && (
-                <input
-                  className="input"
-                  placeholder="Naam van de oppas"
-                  aria-label="Naam van de oppas"
-                  value={draft.sitter?.name ?? ''}
-                  onChange={(e) => setSitter({ name: e.target.value })}
-                />
-              )}
-
-              <div className="field-row">
-                <div className="field">
-                  <label htmlFor="ev-start">Van</label>
-                  <TimeField
-                    id="ev-start"
-                    label="Van"
-                    value={draft.sitter?.start ?? LEGE_OPPAS.start}
-                    onChange={(v) => setSitter({ start: v })}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="ev-end">Tot</label>
-                  <TimeField
-                    id="ev-end"
-                    label="Tot"
-                    value={draft.sitter?.end ?? LEGE_OPPAS.end}
-                    onChange={(v) => setSitter({ end: v })}
-                  />
-                </div>
-              </div>
-
-              <div className="row row--wrap">
-                <div className="field" style={{ width: 104 }}>
-                  <label htmlFor="ev-rate">€ per uur</label>
-                  <input
-                    id="ev-rate"
-                    className="input"
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={draft.sitter?.rate ?? 0}
-                    onChange={(e) => setSitter({ rate: Number(e.target.value) })}
-                  />
-                </div>
-                <span className="small muted grow" style={{ paddingTop: 18 }}>
-                  {uren.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} uur ·{' '}
-                  <strong>{euro(uren * (draft.sitter?.rate ?? 0))}</strong>
-                </span>
-                <button
-                  type="button"
-                  className="pick"
-                  style={{ marginTop: 16 }}
-                  aria-pressed={draft.sitter?.paid ?? false}
-                  onClick={() => setSitter({ paid: !draft.sitter?.paid })}
-                >
-                  <Icon name="vinkje" size={15} /> Betaald
-                </button>
-              </div>
-            </div>
-          )}
+          {isSitter && <SitterFields sitter={draft.sitter} sitters={sitters} onChange={setSitter} />}
 
           {!isEditing && !isParro && (
             <div className="field">

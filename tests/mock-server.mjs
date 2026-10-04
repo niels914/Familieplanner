@@ -2,7 +2,7 @@
  * Lokale testserver: serveert dist/ en draait de échte API-code uit
  * netlify/functions/api.ts, met alleen de opslag vervangen door geheugen.
  *
- *   npm run build && node tests/mock-server.mjs     →  http://localhost:4173
+ *   npm run build && node tests/mock-server.mjs     →  http://localhost:4173 (of PORT=… voor een andere poort)
  *   wachtwoord: test
  */
 
@@ -25,6 +25,7 @@ const TYPES = {
   '.json': 'application/json',
 };
 
+const PORT = Number(process.env.PORT ?? 4173);
 process.env.FAMILY_PASSWORD ??= 'test';
 process.env.SESSION_SECRET ??= 'alleen-lokaal';
 
@@ -69,7 +70,7 @@ await writeFile(bundelPad, bundel.outputFiles[0].text);
 const { default: api } = await import(pathToFileURL(bundelPad).href);
 
 createServer(async (req, res) => {
-  const url = new URL(req.url, 'http://localhost:4173');
+  const url = new URL(req.url, `http://localhost:${PORT}`);
 
   if (url.pathname.startsWith('/api/')) {
     const chunks = [];
@@ -101,4 +102,4 @@ createServer(async (req, res) => {
     res.writeHead(200, { 'content-type': 'text/html' });
     res.end(await readFile(join(DIST, 'index.html')));
   }
-}).listen(4173, () => console.log('Testserver op http://localhost:4173 — wachtwoord: test'));
+}).listen(PORT, () => console.log(`Testserver op http://localhost:${PORT} — wachtwoord: test`));

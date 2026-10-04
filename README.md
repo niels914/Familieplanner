@@ -134,6 +134,7 @@ Andere handige commando's:
 ```bash
 npm test           # parsers, reeksen, herinnering, opslag, het databaseschema en kleurcontrast
 npm run build      # typecheck + productiebuild
+npm run test:e2e   # browsertest op telefoonformaat (eerst bouwen; zie hieronder)
 npm run icons      # genereert de PWA-iconen opnieuw
 npm run vapid      # maakt nieuwe push-sleutels
 ```
@@ -147,6 +148,13 @@ npm run build && node tests/mock-server.mjs   # http://localhost:4173, wachtwoor
 Die server draait de échte API-code uit `netlify/functions/api.ts`, met alleen de
 opslag vervangen door geheugen (`tests/memory-store.ts`) en voorbeelddata uit
 `tests/fixtures.mjs`. Wat daar werkt, werkt dus ook op Netlify — op de opslag na.
+
+**De browsertest** (`tests/e2e.mjs`) opent de app op een telefoonformaat en controleert wat de
+gewone tests niet kunnen: dat geen scherm breder wordt dan de telefoon (320, 360 en 390 px,
+ook met een lange uitnodiging als beschrijving), verwijderen met ongedaan maken, vegen, de
+snelkeuze bij boodschappen, de tijdkeuze per vijf minuten en *Meer opties*. Hij start zelf een
+testserver op poort 4180. Je hebt Playwright nodig (`npm i -g playwright`); een mislukte
+controle zegt in gewone taal wat er niet klopt. Draai hem na elke wijziging aan het uiterlijk.
 
 ---
 

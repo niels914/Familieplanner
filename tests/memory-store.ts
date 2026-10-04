@@ -27,6 +27,7 @@ export type Collection =
   | 'settings'
   | 'tasks'
   | 'decisions'
+  | 'receipts'
   | 'pushSubs';
 
 export const DEFAULT_SETTINGS: Settings = { reminderHour: 19 };
@@ -41,6 +42,7 @@ const LEEG: Record<Collection, unknown> = {
   settings: DEFAULT_SETTINGS,
   tasks: [],
   decisions: {},
+  receipts: [],
   pushSubs: [],
 };
 

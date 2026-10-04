@@ -7,6 +7,7 @@ import type {
   PickupOverride,
   PickupRule,
   PushSubscriptionRecord,
+  Receipt,
   Decisions,
   Settings,
   ShoppingItem,
@@ -17,7 +18,7 @@ import type {
 } from '../../shared/types';
 import { SERIES_SHARED_FIELDS } from '../../shared/types';
 import { seriesDates } from '../../shared/series';
-import { addDays } from '../../shared/dates';
+import { addDays, todayInNl } from '../../shared/dates';
 import {
   error,
   json,
@@ -31,9 +32,12 @@ import {
 import { passwordMatches, hasValidSession } from '../lib/session';
 import { DEFAULT_SETTINGS, overwrite, read, readAll, update } from '../lib/store';
 import { publicKey, pushConfigured, sendToAll } from '../lib/push';
-import { restoreItems, saveEvent, saveTask } from '../../shared/rules';
+import { checkReceipt, restoreItems, saveEvent, saveReceipt, saveTask } from '../../shared/rules';
+import { alertsFor } from '../../shared/warranty';
 import { bumpOften, type Often } from '../../shared/shopping';
 import { configuredFeeds, runAgendaSync } from '../lib/agenda';
+import { getFile, putFile } from '../lib/files';
+import { MAX_FILE_BYTES, contentTypeFor, looksLikeFile, receiptFilePath } from '../lib/receipt-files';
 import { syncParro } from '../lib/parro';
 
 export const config = { path: '/api/*' };
@@ -41,7 +45,7 @@ export const config = { path: '/api/*' };
 export default async function handler(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const segments = url.pathname.replace(/^\/api\/?/, '').split('/').filter(Boolean);
-  const [resource, id, action] = segments;
+  const [resource, id, action, extra] = segments;
 
   try {
     // --- Openbare routes -------------------------------------------------
@@ -109,6 +113,9 @@ export default async function handler(req: Request): Promise<Response> {
       case 'restore':
         return await handleRestore(req);
 
+      case 'receipts':
+        return await handleReceipts(req, id, action, extra);
+
       case 'parro':
         if (req.method !== 'POST') return error('Alleen POST.', 405);
         return json(await runParroSync());
@@ -139,6 +146,8 @@ async function handleData(req: Request): Promise<Response> {
     ...(await readAll()),
     push: { configured: pushConfigured(), publicKey: publicKey() },
     parroConfigured: Boolean(process.env.PARRO_ICS_URL),
+    // Alleen wat aandacht vraagt; de bonnetjes zelf worden pas opgehaald op hun eigen scherm.
+    receiptAlerts: alertsFor(await read<Receipt[]>('receipts'), todayInNl()),
     agendaFeeds: configuredFeeds().map((f) => ({ id: f.id, label: f.label })),
   });
   const etag = `"${createHash('sha1').update(body).digest('base64url')}"`;
@@ -156,7 +165,7 @@ async function handleData(req: Request): Promise<Response> {
 // -------------------------------------------------------------- ongedaan maken
 
 /** Waar een verwijdering ongedaan gemaakt kan worden. */
-const RESTORABLE = ['events', 'tasks', 'contacts', 'shopping', 'pickupOverrides'] as const;
+const RESTORABLE = ['events', 'tasks', 'contacts', 'shopping', 'pickupOverrides', 'receipts'] as const;
 type Restorable = (typeof RESTORABLE)[number];
 
 /**
@@ -181,6 +190,72 @@ async function handleRestore(req: Request): Promise<Response> {
     restoreItems(list, items as Array<{ id: string }>),
   );
   return json({ [collection]: saved });
+}
+
+// -------------------------------------------------------------- bonnetjes
+
+const receiptReply = (receipts: Receipt[]) =>
+  json({ receipts, receiptAlerts: alertsFor(receipts, todayInNl()) });
+
+/**
+ * Bonnetjes: de gegevens, en de bestanden (foto's en pdf's) die erbij horen.
+ *   GET    /receipts                          alle bonnetjes
+ *   POST   /receipts                          een bonnetje bewaren of bijwerken
+ *   DELETE /receipts/:id                      het bonnetje verwijderen (de bestanden blijven 30 dagen staan)
+ *   POST   /receipts/:id/files/:naam          een bestand uploaden (de inhoud zelf als body)
+ *   GET    /receipts/:id/files/:naam          een bestand ophalen
+ * `:naam` is `<id>.jpg`, `<id>.t.jpg` (miniatuur) of `<id>.pdf`.
+ */
+async function handleReceipts(req: Request, id?: string, action?: string, name?: string): Promise<Response> {
+  if (id && action === 'files' && name) {
+    const path = receiptFilePath(id, name);
+    if (!path) return error('Onbekend bestand.', 400);
+
+    if (req.method === 'GET') {
+      const file = await getFile(path);
+      if (!file) return error('Bestand niet gevonden.', 404);
+      return new Response(file.bytes as unknown as BodyInit, {
+        headers: {
+          'content-type': contentTypeFor(name),
+          // Een bestand verandert nooit; de telefoon mag het lang bewaren.
+          'cache-control': 'private, max-age=31536000, immutable',
+          'x-content-type-options': 'nosniff',
+          'content-disposition': 'inline',
+        },
+      });
+    }
+
+    if (req.method === 'POST') {
+      const declared = Number(req.headers.get('content-length') ?? 0);
+      if (declared > MAX_FILE_BYTES) return error('Het bestand is te groot (hoogstens 5 MB).', 413);
+      const bytes = new Uint8Array(await req.arrayBuffer());
+      if (bytes.length === 0) return error('Het bestand is leeg.');
+      if (bytes.length > MAX_FILE_BYTES) return error('Het bestand is te groot (hoogstens 5 MB).', 413);
+      if (!looksLikeFile(bytes, name)) return error('Dit bestand is geen foto (jpg) of pdf.');
+      await putFile(path, bytes, contentTypeFor(name));
+      return json({ ok: true });
+    }
+    return error('Methode niet ondersteund.', 405);
+  }
+
+  if (!id && req.method === 'GET') {
+    return receiptReply(await read<Receipt[]>('receipts'));
+  }
+
+  if (!id && req.method === 'POST') {
+    const body = await readBody<Partial<Receipt>>(req);
+    const fout = checkReceipt(body);
+    if (fout) return error(fout);
+    const saved = await update<Receipt[]>('receipts', (list) => saveReceipt(list, body, { now: nowIso(), newId }));
+    return receiptReply(saved);
+  }
+
+  if (id && !action && req.method === 'DELETE') {
+    const saved = await update<Receipt[]>('receipts', (list) => list.filter((r) => r.id !== id));
+    return receiptReply(saved);
+  }
+
+  return error('Methode niet ondersteund.', 405);
 }
 
 // ---------------------------------------------------------------- events

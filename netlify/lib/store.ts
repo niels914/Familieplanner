@@ -6,7 +6,6 @@
  * het tabelontwerp in supabase/schema.sql.
  */
 
-import { createClient } from '@supabase/supabase-js';
 import type {
   AppData,
   CalendarEvent,
@@ -15,6 +14,7 @@ import type {
   PickupOverride,
   PickupRule,
   PushSubscriptionRecord,
+  Receipt,
   Decisions,
   Settings,
   ShoppingItem,
@@ -22,6 +22,7 @@ import type {
 } from '../../shared/types';
 import { createKv } from './kv';
 import { supabaseBackend, type SupabaseLike } from './supabase-backend';
+import { serviceClient } from './supabase-client';
 
 export type Collection =
   | 'events'
@@ -33,6 +34,7 @@ export type Collection =
   | 'settings'
   | 'tasks'
   | 'decisions'
+  | 'receipts'
   | 'pushSubs';
 
 export const DEFAULT_SETTINGS: Settings = { reminderHour: 19 };
@@ -47,23 +49,12 @@ const EMPTY: Record<Collection, unknown> = {
   settings: DEFAULT_SETTINGS,
   tasks: [] as Task[],
   decisions: {} as Decisions,
+  receipts: [] as Receipt[],
   pushSubs: [] as PushSubscriptionRecord[],
 };
 
 function maakClient(): SupabaseLike {
-  const url = process.env.SUPABASE_URL;
-  const sleutel = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !sleutel) {
-    throw new Error(
-      'SUPABASE_URL en SUPABASE_SERVICE_ROLE_KEY ontbreken in de omgevingsvariabelen van Netlify. Zie de README, stap "Opslag in Supabase".',
-    );
-  }
-
-  // Server-side: geen sessies of tokens bewaren, elke aanroep staat op zichzelf.
-  return createClient(url, sleutel, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  }) as unknown as SupabaseLike;
+  return serviceClient() as unknown as SupabaseLike;
 }
 
 let kv: ReturnType<typeof createKv<Collection>> | null = null;

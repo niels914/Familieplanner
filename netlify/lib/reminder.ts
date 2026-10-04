@@ -48,14 +48,27 @@ function beschrijf(e: CalendarEvent): string {
   return regel;
 }
 
-/** Geeft null als er morgen niets te melden is. */
-export function bouwHerinnering(events: CalendarEvent[], morgen: string): Herinnering | null {
+/**
+ * Geeft null als er niets te melden is. `garantieRegels` zijn de losse regels over garanties en
+ * retourtermijnen die bijna aflopen; die komen onder de agenda van morgen, of staan er alleen als
+ * morgen niets gepland is.
+ */
+export function bouwHerinnering(
+  events: CalendarEvent[],
+  morgen: string,
+  garantieRegels: string[] = [],
+): Herinnering | null {
   const relevant = events
     .filter((e) => e.reminder !== false)
     .filter((e) => coversDate(e, morgen))
     .sort(sortByTime);
 
-  if (relevant.length === 0) return null;
+  const garantie = garantieRegels.length > 0 ? `Garantie en retour:\n${garantieRegels.map((r) => `• ${r}`).join('\n')}` : '';
+
+  if (relevant.length === 0) {
+    if (!garantie) return null;
+    return { title: 'Garantie en retour', body: garantie, url: '/?view=bonnetjes', tag: `garantie-${morgen}` };
+  }
 
   const aantalMee = relevant.reduce((n, e) => n + e.bring.filter((b) => !b.done).length, 0);
 
@@ -63,7 +76,8 @@ export function bouwHerinnering(events: CalendarEvent[], morgen: string): Herinn
     title: `Morgen — ${formatLong(morgen)}`,
     body:
       relevant.map(beschrijf).join('\n') +
-      (aantalMee > 0 ? `\n\n${aantalMee} ding${aantalMee === 1 ? '' : 'en'} klaarzetten.` : ''),
+      (aantalMee > 0 ? `\n\n${aantalMee} ding${aantalMee === 1 ? '' : 'en'} klaarzetten.` : '') +
+      (garantie ? `\n\n${garantie}` : ''),
     url: `/?date=${morgen}`,
     tag: `dag-${morgen}`,
   };

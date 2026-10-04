@@ -1,6 +1,7 @@
 import type { Config } from '@netlify/functions';
-import type { CalendarEvent, Settings } from '../../shared/types';
+import type { CalendarEvent, Receipt, Settings } from '../../shared/types';
 import { addDays, hourInNl, todayInNl } from '../../shared/dates';
+import { alertLine, dueReminders } from '../../shared/warranty';
 import { bouwHerinnering } from '../lib/reminder';
 import { DEFAULT_SETTINGS, read, update } from '../lib/store';
 import { pushConfigured, sendToAll } from '../lib/push';
@@ -26,15 +27,31 @@ export default async function handler(): Promise<Response> {
 
   const tomorrow = addDays(today, 1);
   const events = await read<CalendarEvent[]>('events');
-  const payload = bouwHerinnering(events, tomorrow);
+  // Garanties en retourtermijnen die bijna aflopen, elk hoogstens één keer.
+  const receipts = await read<Receipt[]>('receipts');
+  const due = dueReminders(receipts, today);
+  const payload = bouwHerinnering(events, tomorrow, due.map(alertLine));
 
   if (!payload) {
     await markSent(today);
-    return result('Morgen staat er niets gepland; niets verstuurd.');
+    return result('Morgen staat er niets gepland en niets loopt af; niets verstuurd.');
   }
 
   const sent = await sendToAll(payload);
   await markSent(today);
+
+  // Onthouden wat er verstuurd is, zodat dezelfde garantie niet elke avond terugkomt.
+  if (due.length > 0) {
+    await update<Receipt[]>('receipts', (list) =>
+      list.map((r) => {
+        const mine = due.filter((a) => a.id === r.id);
+        if (mine.length === 0) return r;
+        const reminded = { ...r.reminded };
+        for (const a of mine) reminded[a.kind === 'warranty' ? 'warranty' : 'return'] = today;
+        return { ...r, reminded };
+      }),
+    );
+  }
 
   console.log('[herinnering]', payload.title, `naar ${sent.sent} toestel(len)`);
   return result(`Verstuurd naar ${sent.sent} toestel(len).`);

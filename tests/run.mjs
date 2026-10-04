@@ -16,6 +16,7 @@ const files = [
   'tests/tijd.test.ts',
   'tests/warranty.test.ts',
   'tests/bonnetjes.test.ts',
+  'tests/receipt-files.test.ts',
   'tests/verjaardagen.test.ts',
   'tests/quickparse.test.ts',
   'tests/series.test.ts',

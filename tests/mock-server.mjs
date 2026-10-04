@@ -60,6 +60,13 @@ const bundel = await build({
             ? { path: join(ROOT, 'tests/memory-store.ts') }
             : undefined;
         });
+        // Bestanden van bonnetjes: ook in het geheugen.
+        b.onResolve({ filter: /(^|\/)files$/ }, (args) => {
+          const doel = resolve(args.resolveDir, args.path);
+          return doel === join(ROOT, 'netlify/lib/files')
+            ? { path: join(ROOT, 'tests/memory-files.ts') }
+            : undefined;
+        });
       },
     },
   ],

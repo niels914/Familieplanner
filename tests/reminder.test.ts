@@ -57,4 +57,19 @@ check('telling klopt', h.body.endsWith('1 ding klaarzetten.'), true);
 check('de les van vorige week niet', (h.body.match(/Zwemles/g) ?? []).length, 1);
 check('niets gepland: geen melding', bouwHerinnering(events, '2026-10-14'), null);
 
+// ------------------------------------------------------- garantie en retour erbij
+const regels = ['De garantie op Wasmachine loopt op zondag 12 maart af.', 'Retourneren van Schoenen kan nog tot zaterdag 10 oktober.'];
+const mee = bouwHerinnering(events, morgen, regels)!;
+check('met agenda: de garantieregels staan onder de agenda', mee.body.includes('Garantie en retour:\n• De garantie op Wasmachine'), true);
+check('de agenda staat er nog steeds boven', mee.body.indexOf('16:15 Matthijs') < mee.body.indexOf('Garantie en retour'), true);
+check('de titel blijft die van morgen', mee.title, 'Morgen — dinsdag 13 oktober');
+check('ze gaan naar de dag, niet naar de bonnetjes', mee.url, `/?date=${morgen}`);
+
+const alleen = bouwHerinnering(events, '2026-10-14', regels)!;
+check('morgen leeg maar wel garantie: toch een melding', alleen.title, 'Garantie en retour');
+check('die opent het scherm met bonnetjes', alleen.url, '/?view=bonnetjes');
+check('met beide regels', alleen.body.split('\n').filter((r) => r.startsWith('•')).length, 2);
+check('niets te melden en geen garantie: nog steeds geen melding', bouwHerinnering(events, '2026-10-14', []), null);
+check('zonder derde argument werkt het als altijd', bouwHerinnering(events, morgen)!.body.includes('Garantie'), false);
+
 report('herinnering');

@@ -168,15 +168,27 @@ export function ContactForm({
         )}
 
         {draft.kind === 'overig' && (
-          <div className="field">
-            <label htmlFor="ct-phone2">Telefoon</label>
-            <input
-              id="ct-phone2"
-              className="input"
-              type="tel"
-              value={draft.phone ?? ''}
-              onChange={(e) => set('phone', e.target.value)}
-            />
+          <div className="field-row">
+            <div className="field">
+              <label htmlFor="ct-phone2">Telefoon</label>
+              <input
+                id="ct-phone2"
+                className="input"
+                type="tel"
+                value={draft.phone ?? ''}
+                onChange={(e) => set('phone', e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="ct-bday">Verjaardag</label>
+              <input
+                id="ct-bday"
+                className="input"
+                type="date"
+                value={draft.birthday ?? ''}
+                onChange={(e) => set('birthday', e.target.value)}
+              />
+            </div>
           </div>
         )}
 

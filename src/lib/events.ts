@@ -83,10 +83,11 @@ export function pickupForDate(
   return out;
 }
 
-/** Verjaardagen uit het contactenboek als agenda-items voor een datum. */
+/** Verjaardagen uit het contactenboek als agenda-items voor een datum.
+ *  Alleen bij overige contacten; bij klasgenootjes en oppassen houden we ze niet bij. */
 export function birthdaysOnDate(contacts: Contact[], date: string): Contact[] {
   const mmdd = date.slice(5);
-  return contacts.filter((c) => c.birthday && c.birthday.slice(-5) === mmdd);
+  return contacts.filter((c) => c.kind === 'overig' && c.birthday && c.birthday.slice(-5) === mmdd);
 }
 
 export function ageOn(birthday: string, date: string): number | null {

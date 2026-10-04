@@ -213,7 +213,7 @@ function ContactTile({ contact, onEdit }: { contact: Contact; onEdit: () => void
               <>Oppas{contact.sitterRate ? ` · ${euro(contact.sitterRate)} per uur` : ''}</>
             )}
             {contact.kind === 'overig' && 'Overig contact'}
-            {contact.birthday && ` · jarig ${contact.birthday.slice(8)}-${contact.birthday.slice(5, 7)}`}
+            {contact.kind === 'overig' && contact.birthday && ` · jarig ${contact.birthday.slice(8)}-${contact.birthday.slice(5, 7)}`}
           </div>
 
           {phones.length > 0 && (

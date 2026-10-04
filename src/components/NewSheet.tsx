@@ -14,6 +14,7 @@ import { dueInfo } from '../lib/regelen';
 import { useData, useStore } from '../lib/store';
 import type { NewMode } from '../lib/nav';
 import { useAwayWarnings } from '../lib/useAwayWarnings';
+import { Avatar } from './Avatar';
 import { ChipPicker, type ChipOption } from './ChipPicker';
 import { EventForm } from './EventForm';
 import { Icon } from './Icon';
@@ -31,17 +32,17 @@ const EXAMPLES_TASK = [
 ];
 
 const WHO_EVENT: ChipOption<PersonId>[] = [
-  { value: 'matthijs', label: 'Matthijs', modifier: 'matthijs' },
-  { value: 'amelie', label: 'Amélie', modifier: 'amelie' },
-  { value: 'lotte', label: 'Lotte', modifier: 'lotte' },
-  { value: 'gezin', label: 'Gezin' },
-  { value: 'niels', label: 'Niels', modifier: 'ouder' },
-  { value: 'irene', label: 'Irene', modifier: 'ouder' },
+  { value: 'matthijs', label: 'Matthijs', modifier: 'matthijs', avatar: 'matthijs' },
+  { value: 'amelie', label: 'Amélie', modifier: 'amelie', avatar: 'amelie' },
+  { value: 'lotte', label: 'Lotte', modifier: 'lotte', avatar: 'lotte' },
+  { value: 'gezin', label: 'Gezin', avatar: 'gezin' },
+  { value: 'niels', label: 'Niels', modifier: 'ouder', avatar: 'niels' },
+  { value: 'irene', label: 'Irene', modifier: 'ouder', avatar: 'irene' },
 ];
 
 const WHO_TASK: ChipOption<TaskOwner>[] = [
-  { value: 'niels', label: 'Niels', modifier: 'ouder' },
-  { value: 'irene', label: 'Irene', modifier: 'ouder' },
+  { value: 'niels', label: 'Niels', modifier: 'ouder', avatar: 'niels' },
+  { value: 'irene', label: 'Irene', modifier: 'ouder', avatar: 'irene' },
   { value: 'samen', label: 'Samen afstemmen' },
 ];
 
@@ -238,7 +239,9 @@ export function NewSheet({
             {parsed ? (
               <div className="card card--pad stack stack--sm">
                 <div className="row row--wrap">
-                  <span className={`chip chip--${person}`}>{PERSON_LABEL[person]}</span>
+                  <span className={`chip chip--${person}`}>
+                    <Avatar who={person} size={18} /> {PERSON_LABEL[person]}
+                  </span>
                   <span className="chip">{CATEGORY_LABEL[parsed.category]}</span>
                   {parsed.time && (
                     <span className="chip">
@@ -290,13 +293,20 @@ export function NewSheet({
                 <div className="row row--wrap">
                   {taskDraft.owner ? (
                     <span className={`chip chip--${taskDraft.owner === 'samen' ? 'gezin' : taskDraft.owner}`}>
+                      {taskDraft.owner === 'samen' ? (
+                        <Icon name="oppas" size={13} />
+                      ) : (
+                        <Avatar who={taskDraft.owner} size={18} />
+                      )}
                       {taskDraft.owner === 'samen' ? 'Afstemmen' : PERSON_LABEL[taskDraft.owner]}
                     </span>
                   ) : (
                     <span className="chip chip--warn">kies wie</span>
                   )}
                   {taskDraft.kid && (
-                    <span className={`chip chip--${taskDraft.kid}`}>{PERSON_LABEL[taskDraft.kid]}</span>
+                    <span className={`chip chip--${taskDraft.kid}`}>
+                      <Avatar who={taskDraft.kid} size={18} /> {PERSON_LABEL[taskDraft.kid]}
+                    </span>
                   )}
                   <span className={`chip ${due?.hot ? 'chip--warn' : ''}`}>
                     <Icon name="klok" size={13} /> {due ? due.label : 'geen deadline'}

@@ -6,6 +6,7 @@
 
 import { PERSON_LABEL } from '../../shared/types';
 import type { PickupForDay } from '../lib/events';
+import { Avatar } from './Avatar';
 import { Icon } from './Icon';
 
 export function DayFacts({ pickups, dish }: { pickups: PickupForDay[]; dish?: string }) {
@@ -15,7 +16,9 @@ export function DayFacts({ pickups, dish }: { pickups: PickupForDay[]; dish?: st
     <div className="facts">
       {pickups.map((p) => (
         <div key={p.child} className="fact">
-          <span className={`chip chip--${p.child}`}>{PERSON_LABEL[p.child]}</span>
+          <span className={`chip chip--${p.child}`}>
+            <Avatar who={p.child} size={18} /> {PERSON_LABEL[p.child]}
+          </span>
           <span className="fact__value">
             <em>brengen</em> {p.dropoff || '—'} <em>halen</em> {p.pickup || '—'}
             {p.isOverride && <span className="chip chip--warn">afwijking</span>}

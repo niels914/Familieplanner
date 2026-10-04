@@ -23,16 +23,17 @@ import { useData } from '../lib/store';
 import { useNav } from '../lib/nav';
 import { useStore } from '../lib/store';
 import { EmptyState } from '../components/EmptyState';
+import { Avatar } from '../components/Avatar';
 import { Icon } from '../components/Icon';
 import { PageHead } from '../components/PageHead';
 import { Shopping, WeekMenu } from '../components/FoodLists';
 
 type Segment = 'taken' | 'boodschappen' | 'menu';
 
-const FILTERS: Array<{ id: WhoFilter; label: string }> = [
+const FILTERS: Array<{ id: WhoFilter; label: string; avatar?: 'niels' | 'irene' }> = [
   { id: 'alle', label: 'Alle' },
-  { id: 'niels', label: 'Niels' },
-  { id: 'irene', label: 'Irene' },
+  { id: 'niels', label: 'Niels', avatar: 'niels' },
+  { id: 'irene', label: 'Irene', avatar: 'irene' },
   { id: 'samen', label: 'Afstemmen' },
 ];
 
@@ -92,6 +93,7 @@ export function RegelenView() {
           <div className="picks" role="group" aria-label="Voor wie" style={{ marginBottom: 6 }}>
             {FILTERS.map((f) => (
               <button key={f.id} className="pick" aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>
+                {f.avatar && <Avatar who={f.avatar} size={22} />}
                 {f.label}
               </button>
             ))}
@@ -158,10 +160,14 @@ function TaskRow({ task, today }: { task: Task; today: string }) {
         <span className="actrow__title">{task.title}</span>
         <span className="actrow__meta">
           <span className={`chip ${task.owner === 'samen' ? 'chip--gezin' : `chip--${task.owner}`}`}>
-            {task.owner === 'samen' && <Icon name="oppas" size={13} />}
+            {task.owner === 'samen' ? <Icon name="oppas" size={13} /> : <Avatar who={task.owner} size={18} />}
             {OWNER_LABEL[task.owner]}
           </span>
-          {task.kid && <span className={`chip chip--${task.kid}`}>{PERSON_LABEL[task.kid]}</span>}
+          {task.kid && (
+            <span className={`chip chip--${task.kid}`}>
+              <Avatar who={task.kid} size={18} /> {PERSON_LABEL[task.kid]}
+            </span>
+          )}
           {due && !task.done && (
             <span className={`chip ${due.hot ? 'chip--warn' : ''}`}>
               <Icon name="klok" size={13} /> {due.label}

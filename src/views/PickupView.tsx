@@ -4,6 +4,7 @@ import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { addDays, formatLong, isoWeekday, todayInNl } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
 import { pickupForDate } from '../lib/events';
+import { Avatar } from '../components/Avatar';
 import { Icon } from '../components/Icon';
 
 const WEEKDAYS: Weekday[] = [1, 2, 3, 4, 5];
@@ -130,7 +131,9 @@ export function PickupView() {
                   );
                   return (
                     <div key={child} className="weekgrid__row" style={{ gridTemplateColumns: '78px 1fr 1fr 32px' }}>
-                      <span className={`chip chip--${child}`}>{PERSON_LABEL[child]}</span>
+                      <span className={`chip chip--${child}`}>
+                        <Avatar who={child} size={18} /> {PERSON_LABEL[child]}
+                      </span>
                       <input
                         className="input"
                         list="wie-suggesties"

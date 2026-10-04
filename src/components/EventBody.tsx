@@ -6,6 +6,7 @@
 
 import type { CalendarEvent, Category } from '../../shared/types';
 import { AGENDA_FEED_LABEL, CATEGORY_LABEL, PERSON_LABEL } from '../../shared/types';
+import { Avatar } from './Avatar';
 import { Icon, type IconName } from './Icon';
 
 /** Welk icoon hoort bij welke soort item. */
@@ -40,7 +41,12 @@ export function EventBody({
       <button className="event__open" onClick={onClick}>
         <span className="event__title">{event.title}</span>
         <span className="event__meta">
-          {event.person !== 'gezin' && `${PERSON_LABEL[event.person]} · `}
+          {event.person !== 'gezin' && (
+            <>
+              <Avatar who={event.person} size={16} className="event__who" />
+              {PERSON_LABEL[event.person]} ·{' '}
+            </>
+          )}
           {CATEGORY_LABEL[event.category]}
           {event.endTime && !event.allDay && ` · tot ${event.endTime}`}
           {event.sitter && ` · ${event.sitter.name} ${event.sitter.start}–${event.sitter.end}`}

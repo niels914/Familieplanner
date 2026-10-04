@@ -613,6 +613,11 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
   background: var(--surface-2);
   color: var(--muted);
 }
+.avatar-ill { display: inline-block; flex-shrink: 0; border-radius: 50%; vertical-align: middle; }
+.avatar-ill--gezin { display: inline-grid; place-items: center; background: var(--gezin-soft); color: var(--gezin); }
+.chip .avatar-ill { margin-left: -5px; }
+.event__who { margin-right: 5px; vertical-align: -4px; }
+.pick .avatar-ill { margin-left: -6px; }
 .chip--matthijs { background: var(--matthijs-soft); color: var(--matthijs); }
 .chip--amelie { background: var(--amelie-soft); color: var(--amelie); }
 .chip--lotte { background: var(--lotte-soft); color: var(--lotte); }
@@ -668,12 +673,20 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
   transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
 }
 .who--alles { padding: 4px 12px; }
-.who:not(.who--alles) { width: 34px; padding: 0; display: grid; place-items: center; }
-
-.who--matthijs { color: var(--matthijs); }
-.who--amelie { color: var(--amelie); }
-.who--lotte { color: var(--lotte); }
-.who--gezin { color: var(--gezin); }
+/* De dieren zijn de knop: een ring om de gekozen persoon, de rest wat gedempt. */
+.who--avatar {
+  width: 38px;
+  min-height: 38px;
+  padding: 3px;
+  display: grid;
+  place-items: center;
+  border: 2px solid transparent;
+  background: transparent;
+}
+.who--avatar .avatar-ill { opacity: 0.55; transition: opacity var(--dur) var(--ease); }
+.who--avatar[aria-pressed='true'] { border-color: var(--primary); background: var(--primary-soft); }
+.who--avatar[aria-pressed='true'] .avatar-ill,
+.whofilter:not(:has([aria-pressed='true'].who--avatar)) .avatar-ill { opacity: 1; }
 
 .who[aria-pressed='true'] { border-width: 2px; }
 .who--alles[aria-pressed='true'] {
@@ -681,10 +694,6 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
   border-color: var(--primary);
   color: var(--primary-ink);
 }
-.who--matthijs[aria-pressed='true'] { background: var(--matthijs-soft); border-color: var(--matthijs); }
-.who--amelie[aria-pressed='true'] { background: var(--amelie-soft); border-color: var(--amelie); }
-.who--lotte[aria-pressed='true'] { background: var(--lotte-soft); border-color: var(--lotte); }
-.who--gezin[aria-pressed='true'] { background: var(--gezin-soft); border-color: var(--gezin); }
 
 /* Segmentknop: week of maand. */
 .segmented {

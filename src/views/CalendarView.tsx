@@ -16,6 +16,7 @@ import { birthdaysOnDate, coversDate, eventsOnDate } from '../lib/events';
 import { EventForm } from '../components/EventForm';
 import { Timeline } from '../components/Timeline';
 import { DayFacts } from '../components/DayFacts';
+import { Avatar } from '../components/Avatar';
 import { Icon } from '../components/Icon';
 import { EmptyState } from '../components/EmptyState';
 import { GezinButton } from '../components/PageHead';
@@ -23,7 +24,7 @@ import { SignalBanner } from '../components/SignalBanner';
 import { useRegel } from '../lib/useRegel';
 
 type Filter = 'alles' | PersonId;
-const FILTERS: Filter[] = ['alles', 'matthijs', 'amelie', 'lotte', 'gezin'];
+const FILTERS: Filter[] = ['alles', 'matthijs', 'amelie', 'lotte', 'niels', 'irene', 'gezin'];
 
 export function CalendarView({
   selected,
@@ -143,13 +144,13 @@ export function CalendarView({
             {FILTERS.map((f) => (
               <button
                 key={f}
-                className={`who who--${f}`}
+                className={`who ${f === 'alles' ? 'who--alles' : 'who--avatar'}`}
                 aria-pressed={filter === f}
                 aria-label={f === 'alles' ? 'Alles' : PERSON_LABEL[f]}
                 title={f === 'alles' ? 'Alles' : PERSON_LABEL[f]}
                 onClick={() => setFilter(f)}
               >
-                {f === 'alles' ? 'Alles' : PERSON_LABEL[f].charAt(0)}
+                {f === 'alles' ? 'Alles' : <Avatar who={f} size={28} />}
               </button>
             ))}
           </div>

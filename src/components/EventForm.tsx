@@ -19,12 +19,12 @@ import { euro, sitterHours } from '../lib/events';
 import { Icon } from './Icon';
 
 const PERSON_OPTIONS: ChipOption<PersonId>[] = [
-  { value: 'matthijs', label: 'Matthijs', modifier: 'matthijs' },
-  { value: 'amelie', label: 'Amélie', modifier: 'amelie' },
-  { value: 'lotte', label: 'Lotte', modifier: 'lotte' },
-  { value: 'gezin', label: 'Gezin' },
-  { value: 'niels', label: 'Niels', modifier: 'ouder' },
-  { value: 'irene', label: 'Irene', modifier: 'ouder' },
+  { value: 'matthijs', label: 'Matthijs', modifier: 'matthijs', avatar: 'matthijs' },
+  { value: 'amelie', label: 'Amélie', modifier: 'amelie', avatar: 'amelie' },
+  { value: 'lotte', label: 'Lotte', modifier: 'lotte', avatar: 'lotte' },
+  { value: 'gezin', label: 'Gezin', avatar: 'gezin' },
+  { value: 'niels', label: 'Niels', modifier: 'ouder', avatar: 'niels' },
+  { value: 'irene', label: 'Irene', modifier: 'ouder', avatar: 'irene' },
 ];
 
 const CATEGORY_OPTIONS: ChipOption<Category>[] = (

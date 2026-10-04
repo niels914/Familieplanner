@@ -16,17 +16,17 @@ import { Icon } from './Icon';
 import { Modal } from './Modal';
 
 const OWNERS: ChipOption<TaskOwner>[] = [
-  { value: 'niels', label: 'Niels', modifier: 'ouder' },
-  { value: 'irene', label: 'Irene', modifier: 'ouder' },
+  { value: 'niels', label: 'Niels', modifier: 'ouder', avatar: 'niels' },
+  { value: 'irene', label: 'Irene', modifier: 'ouder', avatar: 'irene' },
   { value: 'samen', label: 'Samen afstemmen' },
 ];
 
 type KidPick = ChildId | 'gezin';
 const KIDS: ChipOption<KidPick>[] = [
   { value: 'gezin', label: 'Geen kind' },
-  { value: 'matthijs', label: 'Matthijs', modifier: 'matthijs' },
-  { value: 'amelie', label: 'Amélie', modifier: 'amelie' },
-  { value: 'lotte', label: 'Lotte', modifier: 'lotte' },
+  { value: 'matthijs', label: 'Matthijs', modifier: 'matthijs', avatar: 'matthijs' },
+  { value: 'amelie', label: 'Amélie', modifier: 'amelie', avatar: 'amelie' },
+  { value: 'lotte', label: 'Lotte', modifier: 'lotte', avatar: 'lotte' },
 ];
 
 export function TaskForm({ task, onClose }: { task: Task; onClose: () => void }) {

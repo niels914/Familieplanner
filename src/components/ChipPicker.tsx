@@ -4,6 +4,8 @@
  * het verschil tussen twee handelingen en één.
  */
 
+import type { PersonId } from '../../shared/types';
+import { Avatar } from './Avatar';
 import { Icon, type IconName } from './Icon';
 
 export interface ChipOption<T extends string> {
@@ -12,6 +14,8 @@ export interface ChipOption<T extends string> {
   /** Extra klasse voor een eigen kleur, bijvoorbeeld per kind. */
   modifier?: string;
   icon?: IconName;
+  /** Toon het dier van deze persoon voor het label. */
+  avatar?: PersonId;
 }
 
 export function ChipPicker<T extends string>({
@@ -37,6 +41,7 @@ export function ChipPicker<T extends string>({
             aria-pressed={value === option.value}
             onClick={() => onChange(option.value)}
           >
+            {option.avatar && <Avatar who={option.avatar} size={22} />}
             {option.icon && <Icon name={option.icon} size={15} />}
             {option.label}
           </button>

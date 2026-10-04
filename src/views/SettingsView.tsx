@@ -77,7 +77,6 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
       <div className="page__head">
         <div>
           <h1>Instellingen</h1>
-          <div className="page__sub">Meldingen, schoolagenda en oppasinformatie.</div>
         </div>
       </div>
 
@@ -86,7 +85,7 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
         <div className="card card--pad stack stack--sm">
           <strong>Herinneringen</strong>
           <p className="small muted">
-            Elke avond één bericht met alles van morgen, inclusief wat er mee moet.
+            Elke avond een bericht met alles van morgen.
           </p>
 
           {!push.configured && (
@@ -159,9 +158,7 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
         <div className="card card--pad stack stack--sm">
           <strong>Normale thuiskomst</strong>
           <p className="small muted">
-            Wanneer jullie doordeweeks meestal thuis zijn. Zet je een "later thuis" in de agenda,
-            dan rekenen we vanaf dit tijdstip tot het uur dat je opgeeft. Daarmee ziet de app
-            wanneer jullie allebei weg zijn.
+            Wanneer jullie doordeweeks meestal thuis zijn. Daarmee zien we wanneer jullie allebei weg zijn.
           </p>
           <div className="field" style={{ maxWidth: 160 }}>
             <label htmlFor="home-time">Thuis om</label>
@@ -183,8 +180,7 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
           {parroConfigured ? (
             <>
               <p className="small muted">
-                De agenda wordt elke drie uur automatisch opgehaald. Items uit Parro herken je
-                aan het label; je meeneem-lijstjes blijven bij een synchronisatie staan.
+                Elke drie uur opgehaald. Je meeneem-lijstjes blijven staan.
               </p>
               <div className="small muted">
                 {settings.parroLastSync
@@ -225,9 +221,8 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
           {agendaFeeds.length > 0 ? (
             <>
               <p className="small muted">
-                Afspraken komen elk uur binnen, alleen lezen, met volledige titel en op naam van de
-                eigenaar. Wijzigen doe je in Google Agenda. Je meeneem-lijstjes en notities blijven
-                bij een synchronisatie staan.
+                Elk uur opgehaald, alleen lezen. Wijzigen doe je in Google Agenda. Je meeneem-lijstjes
+                en notities blijven staan.
               </p>
               {agendaFeeds.map((f) => {
                 const last = settings.agendaSync?.[f.id];
@@ -259,7 +254,7 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
         <div className="card card--pad stack stack--sm">
           <strong>Informatie voor de oppas</strong>
           <p className="small muted">
-            Bedtijden, allergieën, noodnummers — staat klaar als je het snel moet doorgeven.
+            Bedtijden, allergieën, noodnummers.
           </p>
           <textarea
             className="textarea"

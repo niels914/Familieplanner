@@ -90,9 +90,9 @@ export function PushPrompt() {
       <div className="grow">
         {staat === 'vragen' ? (
           <>
-            <strong>Herinneringen op deze telefoon</strong>
+            <strong>Avondherinnering</strong>
             <p className="pushprompt__tekst">
-              Elke avond om {uur}:00 wat er morgen is en wat er mee moet.
+              Om {uur}:00 wat er morgen is en wat er mee moet.
             </p>
             <button className="btn btn--primary btn--sm" onClick={aanzetten} disabled={busy}>
               {busy ? 'Bezig…' : 'Meldingen aanzetten'}

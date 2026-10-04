@@ -9,11 +9,11 @@ import { Icon, type IconName } from '../components/Icon';
 import { PageHead } from '../components/PageHead';
 
 const LINKS: Array<{ id: View; label: string; hint: string; icon: IconName }> = [
-  { id: 'brengen', label: 'Breng & haal', hint: 'Wie brengt en wie haalt, per weekdag', icon: 'auto' },
+  { id: 'brengen', label: 'Breng & haal', hint: 'Wie brengt en wie haalt', icon: 'auto' },
   {
     id: 'instellingen',
     label: 'Instellingen',
-    hint: 'Meldingen, Parro, normale thuiskomst, uitloggen',
+    hint: 'Meldingen, agenda’s, uitloggen',
     icon: 'instellingen',
   },
 ];
@@ -22,7 +22,7 @@ export function GezinView() {
   const { go } = useNav();
   return (
     <div className="page">
-      <PageHead title="Gezin" sub="Instellingen en overzichten" />
+      <PageHead title="Gezin" />
       <div className="card" style={{ overflow: 'hidden' }}>
         {LINKS.map((link) => (
           <button key={link.id} type="button" className="rowlink" onClick={() => go(link.id)}>

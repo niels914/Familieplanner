@@ -101,7 +101,7 @@ h1, h2, h3, h4 { margin: 0; font-weight: 650; line-height: 1.25; letter-spacing:
 /* Koppen in dezelfde letter als de tekst, maar zwaarder en iets strakker. */
 h1, .display {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.9rem;
   letter-spacing: -0.02em;
   line-height: 1.15;
@@ -282,10 +282,8 @@ input[type='checkbox'] {
   margin: 18px 0 8px;
   padding: 8px 0 7px;
   background: var(--bg);
-  font-size: 0.74rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--muted);
 }
 section:first-of-type > .grouphead { margin-top: 6px; }
@@ -303,10 +301,8 @@ section:first-of-type > .grouphead { margin-top: 6px; }
 }
 
 .section-title {
-  font-size: 0.74rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--muted);
   margin: 18px 0 8px;
 }
@@ -1008,14 +1004,54 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 .prep__row input[type='checkbox']:active { transform: scale(0.86); }
 
 .prep__text { display: block; color: var(--text); font-weight: 600; }
-.prep__for { display: block; font-size: 0.8rem; color: var(--warn); }
+.prep__for { display: block; font-size: 0.8rem; color: var(--muted); }
+
+.prep__count { font-size: 0.84rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.prep__bar {
+  height: 5px;
+  margin: 0 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  overflow: hidden;
+}
+.prep__bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--warn);
+  transition: width 0.35s var(--ease);
+}
+/* Per persoon: het dier en de naam, daaronder wat er mee moet. */
+.prep__group + .prep__group { margin-top: 6px; }
+.prep__who {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 0 5px;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+.prep__group .prep__row:first-child,
+.prep__list li:first-child .prep__row { border-top: 0; }
 
 .allklaar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin: 0 0 16px;
-  padding: 2px;
+  padding: 4px 2px;
   color: var(--primary);
-  font-size: 0.9rem;
-  font-weight: 550;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.allklaar__tik {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  animation: tik 0.5s var(--ease);
 }
 
 /* Korte feiten over de dag: brengen, halen, eten. Geen kaart — een strook. */
@@ -1032,10 +1068,8 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 .fact__icon { color: var(--muted); display: grid; place-items: center; }
 .fact__value em {
   font-style: normal;
-  font-size: 0.71rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+  font-size: 0.82rem;
+  font-weight: 600;
   color: var(--muted);
   margin: 0 4px 0 10px;
 }
@@ -1125,11 +1159,9 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 
 .foldout__label {
   flex-shrink: 0;
-  font-size: 0.74rem;
+  font-size: 0.95rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
+  color: var(--text);
 }
 .foldout__preview {
   min-width: 0;
@@ -1334,10 +1366,8 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 }
 .totals__cell { background: var(--surface); padding: 11px 14px; }
 .totals__label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
+  font-size: 0.8rem;
+  font-weight: 650;
   color: var(--muted);
   margin-bottom: 1px;
 }
@@ -1471,14 +1501,13 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
   gap: 10px;
   margin: 6px 0 14px;
 }
-.pagehead h1 { font-size: 1.7rem; }
+.pagehead h1 { font-size: 1.85rem; font-weight: 700; }
+/* De begroeting boven de datum: zacht, zodat de datum de kop blijft. */
 .kicker {
-  margin-bottom: 2px;
-  font-size: 0.72rem;
-  font-weight: 750;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--warn);
+  margin-bottom: 1px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 .gezinbtn {
   flex-shrink: 0;

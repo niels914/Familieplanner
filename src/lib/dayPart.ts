@@ -18,6 +18,13 @@ export function dayPart(hour: number): DayPart {
   return 'avond';
 }
 
+/** Een begroeting bij het moment van de dag. */
+export const GREETING: Record<DayPart, string> = {
+  ochtend: 'Goedemorgen',
+  middag: 'Goedemiddag',
+  avond: 'Goedenavond',
+};
+
 /** Datum en minuten sinds middernacht in Nederland, ongeacht waar de telefoon staat. */
 export function nowInNl(now: Date = new Date()): { date: string; minutes: number } {
   const parts = new Intl.DateTimeFormat('en-GB', {

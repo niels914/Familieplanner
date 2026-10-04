@@ -46,7 +46,7 @@ export function Shopping() {
           <EmptyState
             icon="mandje"
             title="De boodschappenlijst is leeg."
-            hint="Typ hierboven wat er op moet, of zet de ingrediënten uit het weekmenu erop."
+            hint="Typ hierboven wat er op moet."
           />
         ) : (
           open.map((item) => (

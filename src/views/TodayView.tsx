@@ -11,7 +11,8 @@ import { addDays, formatLong } from '../../shared/dates';
 import { toMin } from '../../shared/signals';
 import { useData, useStore } from '../lib/store';
 import { birthdaysOnDate, eventsOnDate, pickupForDate } from '../lib/events';
-import { dayPart, nowInNl, useNow } from '../lib/dayPart';
+import { GREETING, dayPart, nowInNl, useNow } from '../lib/dayPart';
+import { doneBring, openBring } from '../lib/prep';
 import { useNav } from '../lib/nav';
 import { useRegel } from '../lib/useRegel';
 import { Timeline } from '../components/Timeline';
@@ -20,7 +21,7 @@ import { Icon } from '../components/Icon';
 import { PushPrompt } from '../components/PushPrompt';
 import { EmptyState } from '../components/EmptyState';
 import { PageHead } from '../components/PageHead';
-import { PrepList, openBring } from '../components/PrepList';
+import { AllDone, PrepList } from '../components/PrepList';
 import { RegelRow } from '../components/RegelRow';
 import { SignalBanner } from '../components/SignalBanner';
 
@@ -56,8 +57,9 @@ export function TodayView() {
   const tomorrowEvents = useMemo(() => eventsOnDate(events, tomorrow), [events, tomorrow]);
 
   const mustBring = openBring(todayEvents);
+  const doneToday = doneBring(todayEvents);
   const prepTomorrow = openBring(tomorrowEvents);
-  const tomorrowHasBring = tomorrowEvents.some((e) => e.bring.length > 0);
+  const doneTomorrow = doneBring(tomorrowEvents);
 
   const toggleBring = (event: CalendarEvent, itemId: string) => {
     void saveEvent({
@@ -84,12 +86,6 @@ export function TodayView() {
       i.kind === 'signal' && i.signal.date === date ? [<SignalBanner key={i.signal.key} signal={i.signal} />] : [],
     );
 
-  const allDone = (
-    <p className="allklaar iconrow">
-      <Icon name="vinkje" size={18} /> Alles staat klaar voor morgen.
-    </p>
-  );
-
   const timeline = (evs: CalendarEvent[], opts: { compact?: boolean; dim?: boolean; empty?: boolean } = {}) =>
     evs.length === 0 ? (
       opts.empty ? <EmptyState icon="vandaag" title="Een lege dag." hint="Ook fijn." /> : null
@@ -110,18 +106,17 @@ export function TodayView() {
       <div className="page">
         <PushPrompt />
         <PageHead
+          kicker={GREETING.ochtend}
           title={formatLong(today)}
-          sub={
-            `${todayEvents.length === 0 ? 'niets in de agenda' : `${todayEvents.length} ding${todayEvents.length === 1 ? '' : 'en'} vandaag`}` +
-            (mustBring.length > 0 ? ` · ${mustBring.length} mee` : '')
-          }
+          sub={todayEvents.length === 0 ? 'Niets in de agenda' : `${todayEvents.length} ding${todayEvents.length === 1 ? '' : 'en'} vandaag`}
         />
-        <PrepList items={mustBring} title="Vandaag mee" onToggle={toggleBring} />
-        {mustBring.length === 0 && todayEvents.some((e) => e.bring.length > 0) && (
-          <p className="allklaar iconrow">
-            <Icon name="vinkje" size={18} /> Alles zit in de tas.
-          </p>
-        )}
+        <PrepList
+          items={mustBring}
+          done={doneToday}
+          title="Vandaag mee"
+          doneText="Alles zit in de tas."
+          onToggle={toggleBring}
+        />
         {signalsOn(today)}
         <RegelRow />
         <DayFacts {...facts} />
@@ -132,18 +127,18 @@ export function TodayView() {
           <summary>
             <span className="foldout__label">Morgen</span>
             <span className="foldout__preview grow">
-              {prepTomorrow.length > 0 && `${prepTomorrow.length} klaarzetten · `}
               {preview(tomorrowEvents)}
             </span>
             <Icon name="chevron-rechts" size={17} className="foldout__chevron" />
           </summary>
           <PrepList
             items={prepTomorrow}
+            done={doneTomorrow}
             title="Klaarzetten voor morgen"
+            doneText="Alles staat klaar voor morgen."
             onToggle={toggleBring}
             onHead={() => openDate(tomorrow)}
           />
-          {prepTomorrow.length === 0 && tomorrowHasBring && allDone}
           <DayFacts {...factsFor(tomorrow)} />
           {timeline(tomorrowEvents, { compact: true })}
         </details>
@@ -160,15 +155,18 @@ export function TodayView() {
       <div className="page">
         <PushPrompt />
         <PageHead
+          kicker={GREETING.middag}
           title={formatLong(today)}
-          sub={`${rest.length} ding${rest.length === 1 ? '' : 'en'} te gaan · morgen ${prepTomorrow.length} klaarzetten`}
+          sub={rest.length === 0 ? 'Voor vandaag zijn jullie klaar' : `Nog ${rest.length} te gaan`}
         />
         {prepTomorrow.length > 0 ? (
           <>
             <button className="compactprep" onClick={() => setPrepOpen((o) => !o)} aria-expanded={prepOpen}>
               <Icon name="rugzak" size={19} />
               <strong className="grow">Morgen klaarzetten</strong>
-              <span className="chip chip--warn">{prepTomorrow.length}</span>
+              <span className="prep__count">
+                {doneTomorrow > 0 ? `${doneTomorrow} van ${doneTomorrow + prepTomorrow.length}` : prepTomorrow.length}
+              </span>
               <Icon
                 name="chevron-rechts"
                 size={17}
@@ -176,11 +174,16 @@ export function TodayView() {
               />
             </button>
             {prepOpen && (
-              <PrepList items={prepTomorrow} title="Klaarzetten voor morgen" onToggle={toggleBring} />
+              <PrepList
+                items={prepTomorrow}
+                done={doneTomorrow}
+                title="Klaarzetten voor morgen"
+                onToggle={toggleBring}
+              />
             )}
           </>
         ) : (
-          tomorrowHasBring && allDone
+          doneTomorrow > 0 && <AllDone text="Alles staat klaar voor morgen." />
         )}
         {signalsOn(today)}
         <RegelRow />
@@ -207,12 +210,17 @@ export function TodayView() {
     <div className="page">
       <PushPrompt />
       <PageHead
-        kicker={`Morgen · ${prepTomorrow.length > 0 ? `${prepTomorrow.length} klaarzetten` : 'alles klaar'}`}
+        kicker={`${GREETING.avond} · morgen`}
         title={formatLong(tomorrow)}
-        sub={`${tomorrowEvents.length === 0 ? 'niets gepland' : `${tomorrowEvents.length} ding${tomorrowEvents.length === 1 ? '' : 'en'} morgen`}`}
+        sub={tomorrowEvents.length === 0 ? 'Niets gepland' : `${tomorrowEvents.length} ding${tomorrowEvents.length === 1 ? '' : 'en'}`}
       />
-      <PrepList items={prepTomorrow} title="Klaarzetten voor morgen" onToggle={toggleBring} />
-      {prepTomorrow.length === 0 && tomorrowHasBring && allDone}
+      <PrepList
+        items={prepTomorrow}
+        done={doneTomorrow}
+        title="Klaarzetten voor morgen"
+        doneText="Alles staat klaar voor morgen."
+        onToggle={toggleBring}
+      />
       {signalsOn(tomorrow)}
       <RegelRow />
       <DayFacts {...factsFor(tomorrow)} />

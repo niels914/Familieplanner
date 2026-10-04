@@ -108,8 +108,7 @@ export function SignalSheet({ signalKey, onClose }: { signalKey: string; onClose
 
         {signal.guessed && (
           <p className="small muted" style={{ margin: 0 }}>
-            Bij een van de twee staat geen eindtijd; we rekenen met 3 uur. Vul de eindtijd in voor een
-            nauwkeuriger signaal.
+            Zonder eindtijd rekenen we met 3 uur.
           </p>
         )}
 

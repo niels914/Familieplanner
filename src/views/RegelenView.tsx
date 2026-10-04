@@ -103,7 +103,7 @@ export function RegelenView() {
             <EmptyState
               icon="vinkje"
               title="Alles geregeld."
-              hint="Wat nog moet of afgestemd moet worden, zet je hier neer."
+              hint="Even niets te doen."
             />
           )}
 

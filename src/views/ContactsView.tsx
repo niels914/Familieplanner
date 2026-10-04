@@ -5,6 +5,7 @@ import { useData } from '../lib/store';
 import { euro, initials } from '../lib/events';
 import { whatsappLink } from '../../shared/phone';
 import { ContactForm } from '../components/ContactForm';
+import { Avatar } from '../components/Avatar';
 import { Icon } from '../components/Icon';
 import { EmptyState } from '../components/EmptyState';
 
@@ -205,7 +206,15 @@ function ContactTile({ contact, onEdit }: { contact: Contact; onEdit: () => void
           <div className="small muted">
             {contact.kind === 'klasgenoot' && (
               <>
-                Klasgenootje van {contact.childOf ? PERSON_LABEL[contact.childOf] : '—'}
+                Klasgenootje van{' '}
+                {contact.childOf ? (
+                  <>
+                    <Avatar who={contact.childOf} size={16} className="event__who" />
+                    {PERSON_LABEL[contact.childOf]}
+                  </>
+                ) : (
+                  '—'
+                )}
                 {contact.group && ` · ${contact.group}`}
               </>
             )}

@@ -341,3 +341,33 @@ Vandaag die de tijd volgt (tot 12:00, tot 18:00, daarna). Daarbij erbij gekomen:
 - Een melding vooraf over een naderend signaal of een deadline bestaat nog niet.
 - Het gezin als hoofdpersoon (fase C) en de bediening (fase D, zoals ongedaan maken in plaats van de
   browserdialoog bij verwijderen) zijn niet gebouwd.
+
+---
+
+## 10. Gebouwd: fase C
+
+Het gezin als hoofdpersoon, in de echte app.
+
+- **Een dier per gezinslid** (`src/components/Avatar.tsx`): Matthijs een olifant, Amélie
+  een aap, Lotte een lieveheersbeestje, Irene een schildpad en Niels een uil. Het is de
+  uitkomst van de keuze foto's of initialen (sectie 7, punt 3): tekeningen, geen foto's
+  van de kinderen in de database. Ze staan in het filter van de agenda, bij items en taken,
+  in het Nieuw-blad, bij breng en haal, in Contacten en in het klaarzetten-blok.
+- **Klaarzetten per persoon** (`src/lib/prep.ts`, `PrepList`): onder elk dier met naam wat
+  er mee moet, de kinderen eerst, dan de ouders, dan *voor iedereen*.
+- **Voortgang en een afgerond moment:** "1 van 4 klaar" met een balkje zodra er iets is
+  afgevinkt; staat alles klaar, dan komt er een vinkje dat even opveert met
+  *Alles zit in de tas* of *Alles staat klaar voor morgen*. Bij verminderde beweging staat
+  het stil.
+- **Begroeting naar tijdstip** (*Goedemorgen*, *Goedemiddag*, *Goedenavond · morgen*) boven
+  de datum.
+- **Dubbele tekst weg:** het aantal klaarzetten staat niet meer ook in de kop, het
+  voorbeeld van morgen en de ondertitel. Uitleg bij instellingen, lege schermen en de
+  signalering is ingekort.
+- **Minder hoofdletterlabels:** groepskoppen (*Te laat*, *Deze week*), *Morgen* en de
+  korte feiten zijn gewone zinnen. Alleen de weekdagen boven het maandraster blijven
+  hoofdletters, zoals in elke agenda. De datum is zwaarder (700) en de begroeting zachter,
+  zodat het niveauverschil groter is.
+
+Niet gedaan, bewust: foto's, en een eigen kleur per kind buiten wat er al was. De kleuren
+per persoon bestaan al en horen bij de achtergrond van het dier.

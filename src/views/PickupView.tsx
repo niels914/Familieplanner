@@ -48,7 +48,7 @@ export function PickupView() {
       <div className="page__head">
         <div>
           <h1>Breng & haal</h1>
-          <div className="page__sub">Wie brengt, wie haalt — en de afwijkingen daarop.</div>
+          <div className="page__sub">Wie brengt en wie haalt.</div>
         </div>
       </div>
 
@@ -108,8 +108,7 @@ export function PickupView() {
             </div>
           ))}
           <p className="small muted">
-            Wijzigingen worden opgeslagen zodra je uit een veld klikt. Laat een veld leeg als er
-            die dag niets geregeld hoeft te worden.
+            Leeg laten kan. Wijzigingen worden meteen bewaard.
           </p>
         </div>
       ) : (

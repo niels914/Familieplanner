@@ -15,10 +15,7 @@ export function MensenView() {
 
   return (
     <div className="page">
-      <PageHead
-        title="Mensen"
-        sub={segment === 'contacten' ? 'Klasgenootjes en hun ouders' : 'Oppas, uren en wat er openstaat'}
-      />
+      <PageHead title="Mensen" />
       <div className="segmented" role="group" aria-label="Onderdeel" style={{ marginBottom: 14 }}>
         <button aria-pressed={segment === 'contacten'} onClick={() => setSegment('contacten')}>
           Contacten

@@ -180,28 +180,6 @@ export function ContactForm({
           </div>
         )}
 
-        <div className="field-row">
-          <div className="field">
-            <label htmlFor="ct-bday">Verjaardag</label>
-            <input
-              id="ct-bday"
-              className="input"
-              type="date"
-              value={draft.birthday ?? ''}
-              onChange={(e) => set('birthday', e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="ct-gift">Cadeau-idee</label>
-            <input
-              id="ct-gift"
-              className="input"
-              value={draft.giftIdeas ?? ''}
-              onChange={(e) => set('giftIdeas', e.target.value)}
-            />
-          </div>
-        </div>
-
         {isClassmate && (
           <div className="field">
             <label htmlFor="ct-address">Adres</label>

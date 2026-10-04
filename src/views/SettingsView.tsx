@@ -2,6 +2,7 @@ import { DEFAULT_HOME_TIME } from '../../shared/signals';
 import { useEffect, useState } from 'react';
 import type { ChildId } from '../../shared/types';
 import { CHILDREN, PERSON_LABEL } from '../../shared/types';
+import { TimeField } from '../components/TimeField';
 import { useData, useStore } from '../lib/store';
 import { api } from '../lib/api';
 import {
@@ -160,15 +161,14 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
           <p className="small muted">
             Wanneer jullie doordeweeks meestal thuis zijn. Daarmee zien we wanneer jullie allebei weg zijn.
           </p>
-          <div className="field" style={{ maxWidth: 160 }}>
+          <div className="field">
             <label htmlFor="home-time">Thuis om</label>
-            <input
+            <TimeField
               id="home-time"
-              className="input"
-              type="time"
+              label="Thuis om"
               value={settings.homeTime ?? DEFAULT_HOME_TIME}
-              onChange={(e) => {
-                if (e.target.value) void saveSettings({ homeTime: e.target.value }).catch(() => {});
+              onChange={(v) => {
+                if (v) void saveSettings({ homeTime: v }).catch(() => {});
               }}
             />
           </div>

@@ -1136,6 +1136,13 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 }
 .event__open > span { display: block; }
 
+/* Een tijd als uur en minuut, de minuten per vijf. */
+.timefield { display: inline-flex; align-items: center; gap: 6px; font-weight: 650; }
+.timefield .select { width: auto; min-width: 76px; }
+/* In een rij met twee velden (van en tot) vullen ze de kolom. */
+.field-row .timefield { display: flex; }
+.field-row .timefield .select { flex: 1; min-width: 0; }
+
 /* Filters op één regel: keuzelijsten naast elkaar. */
 .filterbar { display: flex; gap: 8px; margin-bottom: 14px; }
 .filterbar .select { flex: 1; min-width: 0; }

@@ -405,3 +405,12 @@ per persoon bestaan al en horen bij de achtergrond van het dier.
 
 **Niet gedaan in fase D:** contacten *zoeken eerst* en een breder telefoonknop zijn al eerder
 gebouwd (naam en nummer gescheiden, nummer nooit afgebroken, een WhatsApp-knop ernaast).
+
+### Tijden per vijf minuten
+
+Het native tijdveld van de iPhone toont elke minuut en negeert de stapgrootte. De app heeft
+daarom een eigen tijdkeuze (`TimeField`, logica in `src/lib/time.ts`): een uur en een minuut
+als twee keuzelijsten, de minuten per vijf. Een eindtijd mag leeg blijven. Een minuut die er
+niet bij hoort, zoals 08:32 uit een Google-afspraak, blijft zichtbaar en verspringt niet tot
+je zelf iets kiest. Het geldt voor tijdstip, eindtijd, oppas van en tot, en *Thuis om*.
+

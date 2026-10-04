@@ -13,6 +13,7 @@ const files = [
   'tests/rules.test.ts',
   'tests/shopping.test.ts',
   'tests/oppas.test.ts',
+  'tests/tijd.test.ts',
   'tests/verjaardagen.test.ts',
   'tests/quickparse.test.ts',
   'tests/series.test.ts',

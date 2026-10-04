@@ -13,6 +13,7 @@ import { DRAFT_ID, useAwayWarnings } from '../lib/useAwayWarnings';
 import { seriesCount } from '../../shared/series';
 import { Modal } from './Modal';
 import { MoreOptions } from './MoreOptions';
+import { TimeField } from './TimeField';
 import { ChipPicker, type ChipOption } from './ChipPicker';
 import { CATEGORY_ICON } from './EventBody';
 import { useData, useStore } from '../lib/store';
@@ -326,14 +327,11 @@ export function EventForm({
 
           {heeftTijd && (
             <div className="row row--wrap" style={{ marginTop: 2 }}>
-              <input
-                className="input"
-                style={{ width: 152 }}
-                type="time"
-                aria-label="Tijdstip"
-                value={draft.time ?? ''}
+              <TimeField
+                label="Tijdstip"
+                value={draft.time}
                 disabled={isParro}
-                onChange={(e) => set('time', e.target.value || undefined)}
+                onChange={(v) => set('time', v || undefined)}
               />
               <div className="picks">
                 {veelgebruikteTijden.map((t) => (
@@ -357,14 +355,13 @@ export function EventForm({
               <label htmlFor="ev-eind" className="small muted">
                 Tot
               </label>
-              <input
+              <TimeField
                 id="ev-eind"
-                className="input"
-                style={{ width: 152 }}
-                type="time"
-                value={draft.endTime ?? ''}
+                label="Eindtijd"
+                allowEmpty
+                value={draft.endTime}
                 disabled={isParro}
-                onChange={(e) => set('endTime', e.target.value || undefined)}
+                onChange={(v) => set('endTime', v || undefined)}
               />
               {!draft.endTime && (
                 <span className="small muted">
@@ -523,22 +520,20 @@ export function EventForm({
               <div className="field-row">
                 <div className="field">
                   <label htmlFor="ev-start">Van</label>
-                  <input
+                  <TimeField
                     id="ev-start"
-                    className="input"
-                    type="time"
+                    label="Van"
                     value={draft.sitter?.start ?? LEGE_OPPAS.start}
-                    onChange={(e) => setSitter({ start: e.target.value })}
+                    onChange={(v) => setSitter({ start: v })}
                   />
                 </div>
                 <div className="field">
                   <label htmlFor="ev-end">Tot</label>
-                  <input
+                  <TimeField
                     id="ev-end"
-                    className="input"
-                    type="time"
+                    label="Tot"
                     value={draft.sitter?.end ?? LEGE_OPPAS.end}
-                    onChange={(e) => setSitter({ end: e.target.value })}
+                    onChange={(v) => setSitter({ end: v })}
                   />
                 </div>
               </div>

@@ -16,7 +16,7 @@ gedraagt zich als een gewone app.
 | Onderdeel | Wat het doet |
 |---|---|
 | **Vandaag** | Volgt de tijd: 's ochtends wat er vandaag mee moet, 's middags wat er nog komt, 's avonds morgen met wat er klaar moet staan. Daaronder één regel als er iets te regelen valt. |
-| **Agenda** | Week of maand, filterbaar per persoon. Elk item kan een meeneem-lijstje en een eindtijd hebben. |
+| **Agenda** | Week of maand, filterbaar per persoon, met weeknummers (ISO, zoals in Nederland). Elk item kan een meeneem-lijstje en een eindtijd hebben. |
 | **Nieuw** (middenknop) | Eén blad met de keuze *Agenda-item* of *Taak*. Typ *"Matthijs vrijdag gymtas mee"* of *"Niels niet thuis 18:00-22:00"* en de app maakt er het juiste item van. |
 | **Regelen** | Openstaande taken om te regelen of af te stemmen, gegroepeerd op urgentie. Daarnaast Boodschappen en Weekmenu. Zie ook *Signaleren* hieronder. |
 | **Signaleren** | Zetten Niels en Irene in de agenda wanneer ze *niet thuis* of *later thuis* zijn, dan ziet de app zelf wanneer jullie allebei weg zijn zonder oppas. Dat komt bij Regelen, met keuzes: iemand blijft thuis, een oppas regelen (wordt een taak) of geen probleem. |

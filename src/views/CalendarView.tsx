@@ -1,9 +1,10 @@
-import { useMemo, useRef, useState } from 'react';
+import { Fragment, useMemo, useRef, useState } from 'react';
 import type { CalendarEvent, PersonId } from '../../shared/types';
 import { PERSON_LABEL } from '../../shared/types';
 import {
   addDays,
   formatLong,
+  isoWeek,
   isoWeekday,
   monthName,
   parseYmd,
@@ -145,7 +146,10 @@ export function CalendarView({
           >
             <Icon name="chevron-links" size={18} />
           </button>
-          <h1 className="cal__title display grow">{titleFor(view, anchor, weekStart)}</h1>
+          <h1 className="cal__title display grow">
+            {titleFor(view, anchor, weekStart)}
+            {view === 'week' && <span className="cal__wk"> · week {isoWeek(weekStart)}</span>}
+          </h1>
           <button
             className="btn btn--sm btn--ghost"
             onClick={() => shift(1)}
@@ -227,13 +231,14 @@ export function CalendarView({
         {/* --------------------------------------------------- maandoverzicht */}
         <div className="cal__month">
           <div className="cal__weekdays">
+            <div className="cal__wkhead" title="Weeknummer">wk</div>
             {[0, 1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i}>{weekdayShort(i)}</div>
             ))}
           </div>
 
           <div className="cal__grid">
-            {monthDays.map((date) => {
+            {monthDays.map((date, index) => {
               const inMonth = date.slice(0, 7) === anchor.slice(0, 7);
               const items = visible.filter((e) => coversDate(e, date));
               const weekday = parseYmd(date).getDay();
@@ -248,8 +253,13 @@ export function CalendarView({
                 .join(' ');
 
               return (
+                <Fragment key={date}>
+                {index % 7 === 0 && (
+                  <div className="cal__wknum" aria-label={`Week ${isoWeek(date)}`}>
+                    {isoWeek(date)}
+                  </div>
+                )}
                 <button
-                  key={date}
                   className={classes}
                   onClick={() => onSelect(date)}
                   onKeyDown={(e) => onDayKeyDown(e, date)}
@@ -274,6 +284,7 @@ export function CalendarView({
                     <span className="tiny muted day__more">+{items.length - 2} meer</span>
                   )}
                 </button>
+                </Fragment>
               );
             })}
           </div>

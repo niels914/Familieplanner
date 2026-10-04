@@ -37,6 +37,16 @@ export function startOfWeek(s: string): string {
   return addDays(s, -(isoWeekday(s) - 1));
 }
 
+/** Weeknummer volgens ISO 8601, zoals in Nederland gebruikt: de week begint op
+ *  maandag en week 1 is de week met de eerste donderdag van het jaar. */
+export function isoWeek(s: string): number {
+  const d = parseYmd(s);
+  // Naar de donderdag van deze week; die bepaalt in welk jaar de week valt.
+  d.setDate(d.getDate() + 4 - isoWeekday(s));
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil(((d.getTime() - jan1.getTime()) / 86400000 + 1) / 7);
+}
+
 /** Vandaag in Europe/Amsterdam, ongeacht de tijdzone van de server. */
 export function todayInNl(now: Date = new Date()): string {
   const parts = new Intl.DateTimeFormat('en-CA', {

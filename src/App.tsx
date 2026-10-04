@@ -8,10 +8,23 @@ import { SittersView } from './views/SittersView';
 import { ContactsView } from './views/ContactsView';
 import { FoodView } from './views/FoodView';
 import { PickupView } from './views/PickupView';
+import { PackingView } from './views/PackingView';
 import { SettingsView } from './views/SettingsView';
 import { QuickAdd } from './components/QuickAdd';
 
-type View = 'vandaag' | 'agenda' | 'oppas' | 'contacten' | 'meer' | 'eten' | 'brengen' | 'instellingen';
+type View =
+  | 'vandaag'
+  | 'agenda'
+  | 'oppas'
+  | 'contacten'
+  | 'meer'
+  | 'eten'
+  | 'brengen'
+  | 'paklijst'
+  | 'instellingen';
+
+/** Schermen die onder het tabblad 'Meer' vallen. */
+const MORE_VIEWS: View[] = ['eten', 'brengen', 'paklijst', 'instellingen'];
 
 const TABS: Array<{ id: View; label: string; icon: string }> = [
   { id: 'vandaag', label: 'Vandaag', icon: '☀️' },
@@ -25,6 +38,7 @@ const ALL_LINKS: Array<{ id: View; label: string; icon: string }> = [
   ...TABS.slice(0, 4),
   { id: 'eten', label: 'Eten', icon: '🍽' },
   { id: 'brengen', label: 'Breng & haal', icon: '🚗' },
+  { id: 'paklijst', label: 'Paklijst', icon: '🧳' },
   { id: 'instellingen', label: 'Instellingen', icon: '⚙️' },
 ];
 
@@ -117,6 +131,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
             {view === 'contacten' && <ContactsView />}
             {view === 'eten' && <FoodView />}
             {view === 'brengen' && <PickupView />}
+            {view === 'paklijst' && <PackingView />}
             {view === 'instellingen' && <SettingsView onLogout={onLogout} />}
             {view === 'meer' && <MoreView onNavigate={setView} />}
           </>
@@ -134,7 +149,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
             className="tabbar__item"
             aria-current={
               view === tab.id ||
-              (tab.id === 'meer' && ['eten', 'brengen', 'instellingen'].includes(view))
+              (tab.id === 'meer' && MORE_VIEWS.includes(view))
             }
             onClick={() => setView(tab.id)}
           >
@@ -153,7 +168,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
 }
 
 function MoreView({ onNavigate }: { onNavigate: (view: View) => void }) {
-  const items = ALL_LINKS.filter((l) => ['eten', 'brengen', 'instellingen'].includes(l.id));
+  const items = ALL_LINKS.filter((l) => MORE_VIEWS.includes(l.id));
   return (
     <div className="page">
       <div className="page__head">

@@ -22,6 +22,7 @@ gedraagt zich als een gewone app.
 | **Contacten** | Klasgenootjes met de naam en het telefoonnummer van vader en moeder, tikbaar om direct te bellen. Ook oppassen en overige contacten. |
 | **Breng & haal** | Vast weekschema per kind, met afwijkingen per dag voor de komende twee weken. |
 | **Eten** | Gedeelde boodschappenlijst en weekmenu; ingrediënten gaan met één knop naar de boodschappenlijst. |
+| **Paklijst** | Een masterlijst met alles wat mee kan op vakantie. Per reis (kamperen, huisje of logeren) maakt de app daaruit een paklijst, met aantallen die meeschalen met het aantal nachten. Afvinken kan per persoon (*Verzamelen*) of per krat en plek in de auto (*Inladen*), met z'n tweeën tegelijk. |
 | **Parro** | De schoolagenda wordt elke drie uur opgehaald. Jouw notities en meeneem-lijstjes bij een Parro-item blijven bij een synchronisatie staan. |
 | **Herinnering** | Elke avond om 19:00 (instelbaar) één pushmelding met alles van morgen. |
 
@@ -95,7 +96,7 @@ npm run dev:vite
 Andere handige commando's:
 
 ```bash
-npm test           # tests voor de iCalendar-parser en de snelinvoer
+npm test           # tests voor de iCalendar-parser, de snelinvoer en de paklijst
 npm run build      # typecheck + productiebuild
 npm run icons      # genereert de PWA-iconen opnieuw
 npm run vapid      # maakt nieuwe push-sleutels

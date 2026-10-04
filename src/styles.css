@@ -688,3 +688,37 @@ button, input, select, textarea { font: inherit; color: inherit; }
   font-weight: 550;
 }
 .banner--info { background: var(--primary-soft); color: var(--primary); }
+
+/* ------------------------------------------------------------- paklijst */
+.progress {
+  height: 7px;
+  margin-top: 7px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.progress__bar {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary);
+  transition: width 0.25s ease;
+}
+
+.packhead { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.packhead__add { margin-left: auto; font-size: 1.1rem; min-width: 36px; }
+
+/* Een regel blijft op één lijn zolang het past; plek en labels lopen mee. */
+.packrow { padding: 4px 6px 4px 12px; }
+.packitem {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  cursor: pointer;
+  min-height: 40px;
+}
+.packitem input[type='checkbox'] { width: 22px; height: 22px; accent-color: var(--primary); flex-shrink: 0; }
+.packitem--button { border: 0; background: none; padding: 0; text-align: left; }
+.packitem__line { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
+.packitem__qty { color: var(--primary); font-weight: 700; }
+.packitem__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; }
+.packitem__meta:empty { display: none; }

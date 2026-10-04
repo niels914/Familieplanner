@@ -4,11 +4,13 @@ import type {
   CalendarEvent,
   Contact,
   Meal,
+  PackItem,
   PickupOverride,
   PickupRule,
   PushSubscriptionRecord,
   Settings,
   ShoppingItem,
+  Trip,
 } from '../../shared/types';
 
 const STORE_NAME = 'familieplanner';
@@ -23,6 +25,8 @@ export type Collection =
   | 'pickupOverrides'
   | 'shopping'
   | 'meals'
+  | 'packItems'
+  | 'trips'
   | 'settings'
   | 'pushSubs';
 
@@ -35,6 +39,8 @@ const EMPTY: Record<Collection, unknown> = {
   pickupOverrides: [] as PickupOverride[],
   shopping: [] as ShoppingItem[],
   meals: [] as Meal[],
+  packItems: [] as PackItem[],
+  trips: [] as Trip[],
   settings: DEFAULT_SETTINGS,
   pushSubs: [] as PushSubscriptionRecord[],
 };
@@ -89,7 +95,7 @@ export async function overwrite<T>(collection: Collection, value: T): Promise<vo
 
 /** Alles in één keer, voor het openen van de app. */
 export async function readAll(): Promise<AppData> {
-  const [events, contacts, pickupRules, pickupOverrides, shopping, meals, settings] =
+  const [events, contacts, pickupRules, pickupOverrides, shopping, meals, packItems, trips, settings] =
     await Promise.all([
       read<CalendarEvent[]>('events'),
       read<Contact[]>('contacts'),
@@ -97,6 +103,8 @@ export async function readAll(): Promise<AppData> {
       read<PickupOverride[]>('pickupOverrides'),
       read<ShoppingItem[]>('shopping'),
       read<Meal[]>('meals'),
+      read<PackItem[]>('packItems'),
+      read<Trip[]>('trips'),
       read<Settings>('settings'),
     ]);
   return {
@@ -106,6 +114,8 @@ export async function readAll(): Promise<AppData> {
     pickupOverrides,
     shopping,
     meals,
+    packItems,
+    trips,
     settings: { ...DEFAULT_SETTINGS, ...settings },
   };
 }

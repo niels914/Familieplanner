@@ -12,10 +12,13 @@ import type {
   CalendarEvent,
   Contact,
   Meal,
+  PackItem,
   PickupOverride,
   PickupRule,
   Settings,
   ShoppingItem,
+  Trip,
+  TripItem,
 } from '../../shared/types';
 import { api, setUnauthorizedHandler } from './api';
 
@@ -44,6 +47,22 @@ interface StoreValue {
   deleteShopping: (id: string) => Promise<void>;
   clearDoneShopping: () => Promise<void>;
   saveMeal: (meal: Meal) => Promise<void>;
+  savePackItem: (item: Partial<PackItem>) => Promise<void>;
+  deletePackItem: (id: string) => Promise<void>;
+  markPackItemBought: (id: string) => Promise<void>;
+  /** Zet de startlijst uit de Excel in de masterlijst; geeft het aantal nieuwe items. */
+  seedPackItems: () => Promise<number>;
+  /** Maakt een reis met een automatisch gevulde paklijst; geeft het id van de nieuwe reis. */
+  createTrip: (trip: Partial<Trip>) => Promise<string>;
+  updateTrip: (trip: Partial<Trip>) => Promise<void>;
+  deleteTrip: (id: string) => Promise<void>;
+  toggleTripItem: (tripId: string, itemId: string) => Promise<void>;
+  saveTripItem: (
+    tripId: string,
+    item: Partial<TripItem>,
+    saveToMaster?: boolean,
+  ) => Promise<void>;
+  deleteTripItem: (tripId: string, itemId: string) => Promise<void>;
   saveSettings: (settings: Partial<Settings>) => Promise<void>;
   syncParro: () => Promise<string>;
 }
@@ -198,6 +217,95 @@ export function StoreProvider({
           (r) => patch({ meals: r.meals }),
         ),
 
+      savePackItem: (item) =>
+        run(
+          () => api.post<{ packItems: PackItem[] }>('pack-items', item),
+          (r) => patch({ packItems: r.packItems }),
+        ),
+
+      deletePackItem: (id) =>
+        run(
+          () => api.del<{ packItems: PackItem[] }>(`pack-items/${id}`),
+          (r) => patch({ packItems: r.packItems }),
+        ),
+
+      markPackItemBought: (id) =>
+        run(
+          () => api.post<{ packItems: PackItem[] }>(`pack-items/${id}/bought`),
+          (r) => patch({ packItems: r.packItems }),
+        ),
+
+      seedPackItems: async () => {
+        const r = await api.post<{ packItems: PackItem[]; added: number }>('pack-items/seed');
+        patch({ packItems: r.packItems });
+        return r.added;
+      },
+
+      createTrip: async (trip) => {
+        try {
+          const r = await api.post<{ trips: Trip[]; created: string }>('trips', trip);
+          patch({ trips: r.trips });
+          setError(null);
+          return r.created;
+        } catch (err) {
+          setError((err as Error).message);
+          throw err;
+        }
+      },
+
+      updateTrip: (trip) =>
+        run(
+          () => api.post<{ trips: Trip[] }>('trips', trip),
+          (r) => patch({ trips: r.trips }),
+        ),
+
+      deleteTrip: (id) =>
+        run(
+          () => api.del<{ trips: Trip[] }>(`trips/${id}`),
+          (r) => patch({ trips: r.trips }),
+        ),
+
+      // Afvinken moet direct voelen, ook met slecht bereik op de camping:
+      // eerst lokaal omzetten, daarna de server de waarheid laten bevestigen.
+      toggleTripItem: async (tripId, itemId) => {
+        setData((current) =>
+          current
+            ? {
+                ...current,
+                trips: current.trips.map((t) =>
+                  t.id !== tripId
+                    ? t
+                    : {
+                        ...t,
+                        items: t.items.map((i) =>
+                          i.id === itemId ? { ...i, packed: !i.packed } : i,
+                        ),
+                      },
+                ),
+              }
+            : current,
+        );
+        try {
+          const r = await api.post<{ trips: Trip[] }>(`trips/${tripId}/items/${itemId}/toggle`);
+          patch({ trips: r.trips });
+        } catch (err) {
+          setError((err as Error).message);
+          await reload();
+        }
+      },
+
+      saveTripItem: (tripId, item, saveToMaster) =>
+        run(
+          () => api.post<{ trips: Trip[] }>(`trips/${tripId}/items`, { ...item, saveToMaster }),
+          (r) => patch({ trips: r.trips }),
+        ),
+
+      deleteTripItem: (tripId, itemId) =>
+        run(
+          () => api.del<{ trips: Trip[] }>(`trips/${tripId}/items/${itemId}`),
+          (r) => patch({ trips: r.trips }),
+        ),
+
       saveSettings: (settings) =>
         run(
           () => api.post<{ settings: Settings }>('settings', settings),
@@ -234,6 +342,8 @@ export function useData(): AppData & { push: DataResponse['push']; parroConfigur
       pickupOverrides: [],
       shopping: [],
       meals: [],
+      packItems: [],
+      trips: [],
       settings: { reminderHour: 19 },
       push: { configured: false, publicKey: '' },
       parroConfigured: false,

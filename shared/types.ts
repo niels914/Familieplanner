@@ -156,6 +156,151 @@ export interface Settings {
   sitterBriefing?: string;
 }
 
+// ------------------------------------------------------------------ paklijst
+
+/** Soorten reizen. Bepaalt welke spullen uit de masterlijst op de paklijst komen. */
+export type TripKind = 'kamperen' | 'huisje' | 'logeren';
+export const TRIP_KINDS: TripKind[] = ['kamperen', 'huisje', 'logeren'];
+export const TRIP_KIND_LABEL: Record<TripKind, string> = {
+  kamperen: 'Kamperen',
+  huisje: 'Huisje',
+  logeren: 'Logeren',
+};
+
+/** Wie er mee kan op reis. */
+export type PackPerson = 'matthijs' | 'amelie' | 'lotte' | 'irene' | 'niels';
+export const PACK_PEOPLE: PackPerson[] = ['matthijs', 'amelie', 'lotte', 'irene', 'niels'];
+
+/** De kolommen van de oorspronkelijke Excel: eerst de gezamenlijke spullen,
+ *  dan een lijst per persoon. */
+export type PackGroup =
+  | 'tent'
+  | 'servies'
+  | 'matthijs'
+  | 'amelie'
+  | 'lotte'
+  | 'irene'
+  | 'niels'
+  | 'handdoeken'
+  | 'overig';
+
+export const PACK_GROUPS: PackGroup[] = [
+  'tent',
+  'servies',
+  'matthijs',
+  'amelie',
+  'lotte',
+  'irene',
+  'niels',
+  'handdoeken',
+  'overig',
+];
+
+export const PACK_GROUP_LABEL: Record<PackGroup, string> = {
+  tent: 'Tent en toebehoren',
+  servies: 'Servies en keuken',
+  matthijs: 'Matthijs',
+  amelie: 'Amélie',
+  lotte: 'Lotte',
+  irene: 'Irene',
+  niels: 'Niels',
+  handdoeken: 'Handdoeken en doeken',
+  overig: 'Overig',
+};
+
+/** Korte naam voor in een regel, waar het volledige label te lang is. */
+export const PACK_GROUP_SHORT: Record<PackGroup, string> = {
+  tent: 'Tent',
+  servies: 'Keuken',
+  matthijs: 'Matthijs',
+  amelie: 'Amélie',
+  lotte: 'Lotte',
+  irene: 'Irene',
+  niels: 'Niels',
+  handdoeken: 'Doeken',
+  overig: 'Overig',
+};
+
+/** Groepen die bij één persoon horen; ze verdwijnen als die persoon niet mee is. */
+export const PACK_GROUP_PERSON: Partial<Record<PackGroup, PackPerson>> = {
+  matthijs: 'matthijs',
+  amelie: 'amelie',
+  lotte: 'lotte',
+  irene: 'irene',
+  niels: 'niels',
+};
+
+/** Een zomervakantie van 2 tot 2,5 week; de aantallen in de masterlijst gelden hiervoor. */
+export const PACK_BASE_NIGHTS = 14;
+
+/** Plekken waar spullen in of op de auto en het karretje terechtkomen, in
+ *  de volgorde waarin je inlaadt. */
+export const DEFAULT_PACK_LOCATIONS = [
+  'Karretje (los)',
+  'Krat zeilen',
+  'Krat servies & koken',
+  'Krat speelgoed',
+  'Krat kookstel',
+  'Krat tentspullen',
+  'Krat snoeren & overig',
+  'Fietsen op karretje',
+  'Dakkoffer',
+  'Auto',
+  'Tas Niels',
+  'Tas Irene',
+  'Tas Amélie',
+  'Tas Matthijs',
+];
+
+/** Eén ding in de masterlijst: het startpunt voor elke nieuwe reis. */
+export interface PackItem {
+  id: string;
+  name: string;
+  group: PackGroup;
+  /** Aantal voor een reis van PACK_BASE_NIGHTS nachten. */
+  qty: number;
+  /** Schaalt het aantal mee met het aantal nachten (kleding, doeken)? */
+  scales: boolean;
+  /** Bij welke soorten reizen dit mee moet. Leeg = op geen enkele lijst (bijv. een wens). */
+  kinds: TripKind[];
+  /** Alleen mee als de reis naar het buitenland gaat (paspoort, ANWB-pas). */
+  abroadOnly?: boolean;
+  /** Vaste plek bij het inladen, bijv. 'Krat zeilen' of 'Dakkoffer'. */
+  location?: string;
+  /** Hebben we nog niet of willen we vervangen. */
+  toBuy?: boolean;
+  link?: string;
+  note?: string;
+}
+
+/** Een regel op de paklijst van één reis: een kopie van het masteritem, zodat
+ *  aanpassingen voor deze reis de masterlijst niet vervuilen. */
+export interface TripItem {
+  id: string;
+  masterId?: string;
+  name: string;
+  group: PackGroup;
+  qty: number;
+  location?: string;
+  packed: boolean;
+  toBuy?: boolean;
+  note?: string;
+}
+
+export interface Trip {
+  id: string;
+  name: string;
+  kind: TripKind;
+  /** 'YYYY-MM-DD' */
+  startDate: string;
+  nights: number;
+  abroad: boolean;
+  who: PackPerson[];
+  items: TripItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AppData {
   events: CalendarEvent[];
   contacts: Contact[];
@@ -163,6 +308,8 @@ export interface AppData {
   pickupOverrides: PickupOverride[];
   shopping: ShoppingItem[];
   meals: Meal[];
+  packItems: PackItem[];
+  trips: Trip[];
   settings: Settings;
 }
 

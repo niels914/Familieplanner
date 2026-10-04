@@ -1,13 +1,22 @@
-import type {
-  CalendarEvent,
-  Contact,
-  Meal,
-  PickupOverride,
-  PickupRule,
-  PushSubscriptionRecord,
-  Settings,
-  ShoppingItem,
+import {
+  PACK_GROUPS,
+  PACK_PEOPLE,
+  TRIP_KINDS,
+  type CalendarEvent,
+  type Contact,
+  type Meal,
+  type PackGroup,
+  type PackItem,
+  type PickupOverride,
+  type PickupRule,
+  type PushSubscriptionRecord,
+  type Settings,
+  type ShoppingItem,
+  type Trip,
+  type TripItem,
 } from '../../shared/types';
+import { buildTripItems } from '../../shared/packing';
+import { PACKLIST_SEED } from '../../shared/packlist-seed';
 import {
   error,
   json,
@@ -82,6 +91,12 @@ export default async function handler(req: Request): Promise<Response> {
 
       case 'meals':
         return await handleMeals(req, id);
+
+      case 'pack-items':
+        return await handlePackItems(req, id, action);
+
+      case 'trips':
+        return await handleTrips(req, segments.slice(1));
 
       case 'settings':
         return await handleSettings(req);
@@ -351,6 +366,213 @@ async function handleMeals(req: Request, id?: string): Promise<Response> {
   if (req.method === 'DELETE' && id) {
     const saved = await update<Meal[]>('meals', (m) => m.filter((x) => x.date !== id));
     return json({ meals: saved });
+  }
+
+  return error('Methode niet ondersteund.', 405);
+}
+
+// ------------------------------------------------------------- paklijst
+
+const clean = (value: unknown): string | undefined => {
+  const text = typeof value === 'string' ? value.trim() : '';
+  return text || undefined;
+};
+
+const wholeNumber = (value: unknown, fallback: number): number => {
+  const n = Math.round(Number(value));
+  return Number.isFinite(n) && n >= 1 ? n : fallback;
+};
+
+/** Normaliseert een masteritem uit het verzoek; geeft undefined bij een ongeldige groep of naam. */
+function packItemFrom(body: Partial<PackItem>, base?: PackItem): PackItem | undefined {
+  const name = clean(body.name ?? base?.name);
+  const group = (body.group ?? base?.group) as PackGroup | undefined;
+  if (!name || !group || !PACK_GROUPS.includes(group)) return undefined;
+  const kinds = body.kinds ?? base?.kinds ?? [];
+  return {
+    id: base?.id ?? body.id ?? newId(),
+    name,
+    group,
+    qty: wholeNumber(body.qty ?? base?.qty, 1),
+    scales: Boolean(body.scales ?? base?.scales),
+    kinds: TRIP_KINDS.filter((k) => kinds.includes(k)),
+    abroadOnly: (body.abroadOnly ?? base?.abroadOnly) || undefined,
+    location: 'location' in body ? clean(body.location) : base?.location,
+    toBuy: (body.toBuy ?? base?.toBuy) || undefined,
+    link: 'link' in body ? clean(body.link) : base?.link,
+    note: 'note' in body ? clean(body.note) : base?.note,
+  };
+}
+
+async function handlePackItems(req: Request, id?: string, action?: string): Promise<Response> {
+  if (req.method === 'POST' && id === 'seed') {
+    // Voegt de startlijst uit de Excel toe; wat er al staat blijft ongemoeid.
+    let added = 0;
+    const saved = await update<PackItem[]>('packItems', (list) => {
+      added = 0;
+      const known = new Set(list.map((i) => `${i.group}:${i.name.toLowerCase()}`));
+      const next = [...list];
+      for (const seed of PACKLIST_SEED) {
+        if (known.has(`${seed.group}:${seed.name.toLowerCase()}`)) continue;
+        next.push({ ...seed, id: newId() });
+        added++;
+      }
+      return next;
+    });
+    return json({ packItems: saved, added });
+  }
+
+  if (req.method === 'POST' && id && action === 'bought') {
+    const saved = await update<PackItem[]>('packItems', (list) =>
+      list.map((i) =>
+        i.id === id
+          ? { ...i, toBuy: undefined, kinds: i.kinds.length > 0 ? i.kinds : ['kamperen'] }
+          : i,
+      ),
+    );
+    return json({ packItems: saved });
+  }
+
+  if (req.method === 'POST') {
+    const body = await readBody<Partial<PackItem>>(req);
+    const saved = await update<PackItem[]>('packItems', (list) => {
+      const index = body.id ? list.findIndex((i) => i.id === body.id) : -1;
+      const item = packItemFrom(body, index >= 0 ? list[index] : undefined);
+      if (!item) throw new Error('Geef het item een naam en een geldige groep.');
+      if (index >= 0) list[index] = item;
+      else list.push(item);
+      return list;
+    });
+    return json({ packItems: saved });
+  }
+
+  if (req.method === 'DELETE' && id) {
+    const saved = await update<PackItem[]>('packItems', (l) => l.filter((i) => i.id !== id));
+    return json({ packItems: saved });
+  }
+
+  return error('Methode niet ondersteund.', 405);
+}
+
+/** Routes: /trips, /trips/:id, /trips/:id/items, /trips/:id/items/:itemId[/toggle] */
+async function handleTrips(req: Request, path: string[]): Promise<Response> {
+  const [tripId, sub, itemId, action] = path;
+
+  // Nieuwe reis, of de naam en datum van een bestaande aanpassen.
+  if (req.method === 'POST' && !tripId) {
+    const body = await readBody<Partial<Trip>>(req);
+    if (!body.name?.trim()) return error('Geef de reis een naam.');
+    if (!body.startDate || !/^\d{4}-\d{2}-\d{2}$/.test(body.startDate)) {
+      return error('Geef een vertrekdatum op.');
+    }
+
+    if (body.id) {
+      const saved = await update<Trip[]>('trips', (trips) =>
+        trips.map((t) =>
+          t.id === body.id
+            ? {
+                ...t,
+                name: body.name!.trim(),
+                startDate: body.startDate!,
+                abroad: body.abroad ?? t.abroad,
+                updatedAt: nowIso(),
+              }
+            : t,
+        ),
+      );
+      return json({ trips: saved });
+    }
+
+    if (!body.kind || !TRIP_KINDS.includes(body.kind)) return error('Kies een soort reis.');
+    const setup = {
+      kind: body.kind,
+      nights: wholeNumber(body.nights, 14),
+      abroad: Boolean(body.abroad),
+      who: (body.who ?? PACK_PEOPLE).filter((p) => PACK_PEOPLE.includes(p)),
+    };
+    const trip: Trip = {
+      id: newId(),
+      name: body.name.trim(),
+      startDate: body.startDate,
+      ...setup,
+      items: buildTripItems(await read<PackItem[]>('packItems'), setup, newId),
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+    };
+    const saved = await update<Trip[]>('trips', (trips) =>
+      trips.some((t) => t.id === trip.id) ? trips : [...trips, trip],
+    );
+    return json({ trips: saved, created: trip.id });
+  }
+
+  if (!tripId) return error('Methode niet ondersteund.', 405);
+
+  if (req.method === 'DELETE' && !sub) {
+    const saved = await update<Trip[]>('trips', (t) => t.filter((x) => x.id !== tripId));
+    return json({ trips: saved });
+  }
+
+  // Wijzigingen aan één regel van een paklijst: als operatie op de reis, zodat
+  // twee mensen tegelijk afvinken elkaar niet overschrijven.
+  const editTrip = async (change: (trip: Trip) => void): Promise<Response> => {
+    const saved = await update<Trip[]>('trips', (trips) =>
+      trips.map((t) => {
+        if (t.id !== tripId) return t;
+        const copy = { ...t, items: t.items.map((i) => ({ ...i })), updatedAt: nowIso() };
+        change(copy);
+        return copy;
+      }),
+    );
+    return json({ trips: saved });
+  };
+
+  if (sub === 'items' && req.method === 'POST' && itemId && action === 'toggle') {
+    return editTrip((t) => {
+      const item = t.items.find((i) => i.id === itemId);
+      if (item) item.packed = !item.packed;
+    });
+  }
+
+  if (sub === 'items' && req.method === 'DELETE' && itemId) {
+    return editTrip((t) => {
+      t.items = t.items.filter((i) => i.id !== itemId);
+    });
+  }
+
+  if (sub === 'items' && req.method === 'POST' && !itemId) {
+    const body = await readBody<Partial<TripItem> & { saveToMaster?: boolean }>(req);
+    const name = clean(body.name);
+    if (!name) return error('Geef het item een naam.');
+    if (!body.group || !PACK_GROUPS.includes(body.group)) return error('Kies een groep.');
+    const fields = {
+      name,
+      group: body.group,
+      qty: wholeNumber(body.qty, 1),
+      location: clean(body.location),
+      note: clean(body.note),
+      toBuy: body.toBuy || undefined,
+    };
+
+    // Optioneel ook in de masterlijst, zodat het de volgende reis meekomt.
+    let masterId: string | undefined;
+    if (body.saveToMaster && !body.id) {
+      const trip = (await read<Trip[]>('trips')).find((t) => t.id === tripId);
+      const master: PackItem = {
+        id: newId(),
+        ...fields,
+        scales: false,
+        kinds: trip ? [trip.kind] : ['kamperen'],
+      };
+      await update<PackItem[]>('packItems', (list) => [...list, master]);
+      masterId = master.id;
+    }
+
+    const newItemId = newId();
+    return editTrip((t) => {
+      const existing = body.id ? t.items.find((i) => i.id === body.id) : undefined;
+      if (existing) Object.assign(existing, fields);
+      else t.items.push({ id: newItemId, masterId, ...fields, packed: false });
+    });
   }
 
   return error('Methode niet ondersteund.', 405);

@@ -151,5 +151,12 @@ check('zonder link: niets te doen', (await runAgendaSync()).ok, false);
 check('HTML wordt tekst', cleanDescription('Hallo<br>wereld &amp; <a href="https://x.nl">klik</a>'), 'Hallo\nwereld & klik (https://x.nl)');
 check('lange omschrijving wordt ingekort', cleanDescription('a'.repeat(2000))?.length, 1000);
 check('leeg blijft leeg', cleanDescription('<br>'), undefined);
+check(
+  'scheidingslijnen van een Teams-uitnodiging verdwijnen',
+  cleanDescription('Microsoft Teams-vergadering\n________________________________________________________________________________\nDeelnemen: https://teams.microsoft.com/meet/123\n_______________________\nHeeft u hulp nodig?'),
+  'Microsoft Teams-vergadering\n\nDeelnemen: https://teams.microsoft.com/meet/123\n\nHeeft u hulp nodig?',
+);
+check('een streepje in gewone tekst blijft', cleanDescription('Niels - Irene\n--\nOk'), 'Niels - Irene\n--\nOk');
+check('alleen een lijn is niets', cleanDescription('__________'), undefined);
 
 report('agenda');

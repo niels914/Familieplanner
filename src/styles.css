@@ -653,7 +653,7 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 
 /* Persoonsfilter als gekleurde initialen. Compact, en het leert meteen welke
    kleur bij wie hoort — handig bij de stippen in het maandraster. */
-.whofilter { display: flex; align-items: center; gap: 5px; }
+.whofilter { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
 
 .who {
   min-height: 34px;
@@ -907,6 +907,15 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 .event:hover { background: var(--surface-2); }
 .event__title { font-weight: 600; }
 .event__meta { font-size: 0.85rem; color: var(--muted); }
+/* Lange teksten (een uitnodiging met een link) breken af en nemen nooit meer ruimte dan er is. */
+.event__open { min-width: 0; overflow-wrap: anywhere; }
+.event__open > .event__notes {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
 
 .bring {
   margin-top: 8px;

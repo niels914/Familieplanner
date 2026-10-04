@@ -73,6 +73,8 @@ export function cleanDescription(text: string | undefined): string | undefined {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, '&')
+    // Scheidingslijnen van een uitnodiging (Teams, Zoom): lange rijen _____ of ----- zonder spaties.
+    .replace(/^[\s_\-=*~.]{5,}$/gm, '')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();

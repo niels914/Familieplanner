@@ -59,7 +59,7 @@ export function EventBody({
             </>
           )}
         </span>
-        {event.notes && <span className="event__meta">{event.notes}</span>}
+        {event.notes && <span className="event__meta event__notes">{event.notes}</span>}
       </button>
 
       {/* Wat nog klaar moet staat groot; wat af is krimpt tot één regel. */}

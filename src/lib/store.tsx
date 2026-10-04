@@ -17,13 +17,18 @@ import type {
   Meal,
   PickupOverride,
   PickupRule,
+  Receipt,
+  ReceiptAlert,
+  ReceiptInput,
   Settings,
   ShoppingItem,
   NewSignalDecision,
   SignalDecision,
   Task,
 } from '../../shared/types';
-import { restoreItems, saveEvent, saveTask } from '../../shared/rules';
+import { restoreItems, saveEvent, saveReceipt as saveReceiptRule, saveTask } from '../../shared/rules';
+import { todayInNl } from '../../shared/dates';
+import { alertsFor } from '../../shared/warranty';
 import { bumpOften, type Often } from '../../shared/shopping';
 import { api, isOffline, setUnauthorizedHandler } from './api';
 import { clearCache, readCache, writeCache } from './cache';
@@ -33,6 +38,10 @@ export interface DataResponse extends AppData {
   parroConfigured: boolean;
   /** Gekoppelde persoonlijke agenda's (Gmail), voor de instellingen. */
   agendaFeeds: { id: AgendaFeedId; label: string }[];
+  /** Garanties en retourtermijnen die bijna aflopen. Komt mee met het openen van de app. */
+  receiptAlerts: ReceiptAlert[];
+  /** De bonnetjes zelf: pas gevuld als het scherm Bonnetjes is geopend. */
+  receipts?: Receipt[];
 }
 
 /** Terugkomen in de app ververst pas na zoveel milliseconden, niet bij elke blik. */
@@ -86,13 +95,20 @@ interface StoreValue {
   clearDecision: (key: string) => Promise<void>;
   syncParro: () => Promise<string>;
   syncAgenda: () => Promise<string>;
+  /** Haalt de bonnetjes op (alleen nodig op het scherm Bonnetjes). */
+  loadReceipts: () => Promise<void>;
+  saveReceipt: (receipt: ReceiptInput) => Promise<void>;
+  deleteReceipt: (id: string) => Promise<void>;
+  /** Garantie of retour als afgehandeld markeren; de melding verdwijnt dan. */
+  markReceiptHandled: (id: string, kind: 'warranty' | 'return') => Promise<void>;
+  uploadReceiptFile: (receiptId: string, name: string, blob: Blob) => Promise<void>;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
 
 /** Oudere opgeslagen standen en servers kennen nog geen taken of besluiten. */
 function normalize(d: DataResponse): DataResponse {
-  return { ...d, tasks: d.tasks ?? [], decisions: d.decisions ?? {} };
+  return { ...d, tasks: d.tasks ?? [], decisions: d.decisions ?? {}, receiptAlerts: d.receiptAlerts ?? [] };
 }
 
 const uuid = () => crypto.randomUUID();
@@ -152,7 +168,8 @@ export function StoreProvider({
       // Staat er nog een wijziging onderweg, dan zou dit je net gedane tik
       // even terugdraaien. Die wijziging ververst zelf als hij klaar is.
       if (!busy()) {
-        setData(fresh);
+        // De bonnetjes komen niet mee met /api/data; die laten we staan.
+        setData((cur) => ({ ...fresh, receipts: cur?.receipts }));
         setSyncedAt(Date.now());
       }
     } catch (err) {
@@ -198,7 +215,7 @@ export function StoreProvider({
    */
   const mutate = useCallback(
     async <T,>(opts: {
-      keys: Array<keyof AppData>;
+      keys: Array<keyof DataResponse>;
       optimistic?: (d: DataResponse) => Partial<DataResponse>;
       request: () => Promise<T>;
       apply: (result: T) => Partial<DataResponse>;
@@ -259,23 +276,31 @@ export function StoreProvider({
 
   /** Verwijderde items terugzetten, ongewijzigd, en dat meteen laten zien. */
   const restore = useCallback(
-    <K extends 'events' | 'tasks' | 'contacts' | 'shopping' | 'pickupOverrides'>(
+    <K extends 'events' | 'tasks' | 'contacts' | 'shopping' | 'pickupOverrides' | 'receipts'>(
       collection: K,
       items: DataResponse[K],
-    ) =>
-      mutate({
-        keys: [collection],
-        optimistic: (d) =>
-          ({ [collection]: restoreItems(d[collection] as Array<{ id: string }>, items as Array<{ id: string }>) }) as Partial<DataResponse>,
+    ) => {
+      // Bij bonnetjes verandert ook de aandachtslijst mee.
+      const metAandacht = (lijst: unknown): Partial<DataResponse> =>
+        collection === 'receipts'
+          ? { receiptAlerts: alertsFor(lijst as Receipt[], todayInNl()) }
+          : {};
+      return mutate({
+        keys: collection === 'receipts' ? ['receipts', 'receiptAlerts'] : [collection],
+        optimistic: (d) => {
+          const lijst = restoreItems((d[collection] ?? []) as Array<{ id: string }>, items as Array<{ id: string }>);
+          return { [collection]: lijst, ...metAandacht(lijst) } as Partial<DataResponse>;
+        },
         request: () => api.post<Record<string, unknown>>('restore', { collection, items }),
-        apply: (r) => ({ [collection]: r[collection] }) as Partial<DataResponse>,
-      }),
+        apply: (r) => ({ [collection]: r[collection], ...metAandacht(r[collection]) }) as Partial<DataResponse>,
+      });
+    },
     [mutate],
   );
 
   /** Meld dat er iets is verwijderd, met een knop om het terug te zetten. */
   const offerUndo = useCallback(
-    <K extends 'events' | 'tasks' | 'contacts' | 'shopping' | 'pickupOverrides'>(
+    <K extends 'events' | 'tasks' | 'contacts' | 'shopping' | 'pickupOverrides' | 'receipts'>(
       text: string,
       collection: K,
       items: DataResponse[K],
@@ -614,6 +639,69 @@ export function StoreProvider({
         return r.message;
       },
 
+      loadReceipts: async () => {
+        try {
+          const r = await api.get<{ receipts: Receipt[]; receiptAlerts: ReceiptAlert[] }>('receipts');
+          patch({ receipts: r.receipts, receiptAlerts: r.receiptAlerts });
+        } catch (err) {
+          if (isOffline(err)) setOffline(true);
+          setError((err as Error).message);
+          throw err;
+        }
+      },
+
+      saveReceipt: (receipt) => {
+        const body = { ...receipt, id: receipt.id ?? uuid() };
+        return mutate({
+          keys: ['receipts', 'receiptAlerts'],
+          optimistic: (d) => {
+            const lijst = saveReceiptRule(d.receipts ?? [], body, ctx());
+            return { receipts: lijst, receiptAlerts: alertsFor(lijst, todayInNl()) };
+          },
+          request: () => api.post<{ receipts: Receipt[]; receiptAlerts: ReceiptAlert[] }>('receipts', body),
+          apply: (r) => ({ receipts: r.receipts, receiptAlerts: r.receiptAlerts }),
+        });
+      },
+
+      deleteReceipt: async (id) => {
+        const weg = dataRef.current?.receipts?.filter((r) => r.id === id) ?? [];
+        await mutate({
+          keys: ['receipts', 'receiptAlerts'],
+          optimistic: (d) => {
+            const lijst = (d.receipts ?? []).filter((r) => r.id !== id);
+            return { receipts: lijst, receiptAlerts: alertsFor(lijst, todayInNl()) };
+          },
+          request: () => api.del<{ receipts: Receipt[]; receiptAlerts: ReceiptAlert[] }>(`receipts/${id}`),
+          apply: (r) => ({ receipts: r.receipts, receiptAlerts: r.receiptAlerts }),
+        });
+        const titel = weg[0]?.title.trim() || 'Bonnetje';
+        offerUndo(`‘${titel}’ verwijderd`, 'receipts', weg);
+      },
+
+      markReceiptHandled: (id, kind) =>
+        mutate({
+          keys: ['receipts', 'receiptAlerts'],
+          optimistic: (d) => {
+            const lijst = (d.receipts ?? []).map((r) =>
+              r.id === id ? { ...r, handled: { ...r.handled, [kind]: todayInNl() } } : r,
+            );
+            // Is de lijst met bonnetjes niet geladen, dan halen we alleen de melding weg.
+            const alerts = d.receipts
+              ? alertsFor(lijst, todayInNl())
+              : d.receiptAlerts.filter((a) => !(a.id === id && a.kind === kind));
+            return { ...(d.receipts ? { receipts: lijst } : {}), receiptAlerts: alerts };
+          },
+          request: () =>
+            api.post<{ receipts: Receipt[]; receiptAlerts: ReceiptAlert[] }>(`receipts/${id}/handled`, { kind }),
+          // De server geeft alle bonnetjes terug; de lijst vullen we alleen als die al geladen was.
+          apply: (r) => ({
+            ...(dataRef.current?.receipts ? { receipts: r.receipts } : {}),
+            receiptAlerts: r.receiptAlerts,
+          }),
+        }),
+
+      uploadReceiptFile: (receiptId, name, blob) => api.upload(`receipts/${receiptId}/files/${name}`, blob),
+
       syncAgenda: async () => {
         const r = await api.post<{ message: string; events: CalendarEvent[] }>('agenda');
         patch({ events: r.events });
@@ -634,11 +722,7 @@ export function useStore(): StoreValue {
 }
 
 /** Handige, altijd-gevulde weergave van de data. */
-export function useData(): AppData & {
-  push: DataResponse['push'];
-  parroConfigured: boolean;
-  agendaFeeds: DataResponse['agendaFeeds'];
-} {
+export function useData(): AppData & Pick<DataResponse, 'push' | 'parroConfigured' | 'agendaFeeds' | 'receiptAlerts' | 'receipts'> {
   const { data } = useStore();
   return (
     data ?? {
@@ -654,6 +738,7 @@ export function useData(): AppData & {
       push: { configured: false, publicKey: '' },
       parroConfigured: false,
       agendaFeeds: [],
+      receiptAlerts: [],
     }
   );
 }

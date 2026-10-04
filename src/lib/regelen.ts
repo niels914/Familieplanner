@@ -7,7 +7,7 @@
  * blijft de teller op de tab altijd gelijk aan wat je op het scherm ziet.
  */
 
-import type { CalendarEvent, Decisions, Task } from '../../shared/types';
+import type { CalendarEvent, Decisions, ReceiptAlert, Task } from '../../shared/types';
 import { addDays, diffDays, formatShort, isoWeekday, weekdayShort } from '../../shared/dates';
 import {
   computeSignals,
@@ -66,7 +66,16 @@ function autoClosedNote(s: Signal | undefined): string {
 
 export type RegelItem =
   | { kind: 'task'; task: Task; due: string | undefined }
-  | { kind: 'signal'; signal: Signal; due: string };
+  | { kind: 'signal'; signal: Signal; due: string }
+  | { kind: 'receipt'; alert: ReceiptAlert; due: string };
+
+/** "Garantie Wasmachine" of "Retour Wasmachine", als titel in de lijst. */
+export function receiptAlertTitle(a: ReceiptAlert): string {
+  return `${a.kind === 'warranty' ? 'Garantie' : 'Retour'} ${a.title}`;
+}
+
+/** De knop waarmee je het afdoet. */
+export const receiptDoneLabel = (a: ReceiptAlert) => (a.kind === 'warranty' ? 'Geen klachten' : 'Niet retourneren');
 
 export interface RegelState {
   signals: Signal[];
@@ -87,6 +96,7 @@ export function regelState(
   tasks: Task[],
   decisions: Decisions,
   today: string,
+  receiptAlerts: ReceiptAlert[] = [],
 ): RegelState {
   const signals = computeSignals(events, today);
 
@@ -114,6 +124,7 @@ export function regelState(
   const open: RegelItem[] = [
     ...openTasks.map((task): RegelItem => ({ kind: 'task', task, due: task.due })),
     ...openSignals.map((signal): RegelItem => ({ kind: 'signal', signal, due: signal.date })),
+    ...receiptAlerts.map((alert): RegelItem => ({ kind: 'receipt', alert, due: alert.date })),
   ];
 
   const urgent = open.filter((i) => dueInfo(i.due, today)?.hot).length;
@@ -146,9 +157,9 @@ export function groupOf(item: RegelItem, today: string): 0 | 1 | 2 | 3 {
 
 export type WhoFilter = 'alle' | 'niels' | 'irene' | 'samen';
 
-/** Een signaal is van niemand in het bijzonder, dus het hoort bij elk filter. */
+/** Een signaal of een garantie is van niemand in het bijzonder, dus het hoort bij elk filter. */
 export function matchesFilter(item: RegelItem, filter: WhoFilter): boolean {
-  if (filter === 'alle' || item.kind === 'signal') return true;
+  if (filter === 'alle' || item.kind !== 'task') return true;
   if (filter === 'samen') return item.task.owner === 'samen';
   return item.task.owner === filter || item.task.owner === 'samen';
 }

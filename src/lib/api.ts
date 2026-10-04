@@ -50,7 +50,32 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   return data as T;
 }
 
+/** Een bestand (foto of pdf) uploaden: de inhoud zelf als body, geen json. */
+async function upload(path: string, blob: Blob): Promise<void> {
+  let res: Response;
+  try {
+    res = await fetch(`/api/${path}`, { method: 'POST', credentials: 'same-origin', body: blob });
+  } catch {
+    throw new ApiError('Geen verbinding. De foto is niet geüpload.', 0);
+  }
+  if (res.status === 401) {
+    onUnauthorized?.();
+    throw new ApiError('Je sessie is verlopen. Log opnieuw in.', 401);
+  }
+  if (!res.ok) {
+    let message = `Uploaden is mislukt (${res.status}).`;
+    try {
+      const data = (await res.json()) as { error?: string };
+      if (data.error) message = data.error;
+    } catch {
+      /* geen json terug; de standaardmelding blijft */
+    }
+    throw new ApiError(message, res.status);
+  }
+}
+
 export const api = {
+  upload,
   get: <T>(path: string) => request<T>(path),
   post: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) }),

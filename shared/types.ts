@@ -265,6 +265,9 @@ export interface Receipt {
   updatedAt: string;
 }
 
+/** Wat de app stuurt bij opslaan. `null` wist een veld; een ontbrekend veld laat het zoals het was. */
+export type ReceiptInput = { [K in keyof Receipt]?: Receipt[K] | null };
+
 /** Een garantie of retourtermijn die bijna afloopt. Dit gaat mee met het openen van de app. */
 export interface ReceiptAlert {
   id: string;

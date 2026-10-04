@@ -12,6 +12,7 @@ import { RegelenView } from './views/RegelenView';
 import { MensenView } from './views/MensenView';
 import { GezinView } from './views/GezinView';
 import { PickupView } from './views/PickupView';
+import { BonnetjesView } from './views/BonnetjesView';
 import { SettingsView } from './views/SettingsView';
 import { NewSheet } from './components/NewSheet';
 import { EventForm } from './components/EventForm';
@@ -40,6 +41,7 @@ const SIDEBAR: Array<{ id: View; label: string; icon: IconName }> = [
 ];
 const SIDEBAR_MORE: Array<{ id: View; label: string; icon: IconName }> = [
   { id: 'brengen', label: 'Breng & haal', icon: 'auto' },
+  { id: 'bonnetjes', label: 'Bonnetjes', icon: 'bon' },
   { id: 'instellingen', label: 'Instellingen', icon: 'instellingen' },
 ];
 
@@ -76,13 +78,19 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [signalKey, setSignalKey] = useState<string | null>(null);
   const [taskId, setTaskId] = useState<string | null>(null);
   const [editing, setEditing] = useState<CalendarEvent | null>(null);
+  const [receiptId, setReceiptId] = useState<string | null>(null);
 
   // Een melding kan een datum meegeven: /?date=2026-09-03
   useEffect(() => {
-    const param = new URLSearchParams(window.location.search).get('date');
+    const params = new URLSearchParams(window.location.search);
+    const param = params.get('date');
     if (param && /^\d{4}-\d{2}-\d{2}$/.test(param)) {
       setSelected(param);
       setView('agenda');
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (params.get('view') === 'bonnetjes') {
+      // De melding over een garantie opent het scherm met bonnetjes.
+      setView('bonnetjes');
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
@@ -113,12 +121,19 @@ function Shell({ onLogout }: { onLogout: () => void }) {
       openSignal: setSignalKey,
       openTask: setTaskId,
       openEvent: setEditing,
+      openReceipt: (id) => {
+        setReceiptId(id);
+        setView('bonnetjes');
+        window.scrollTo({ top: 0 });
+      },
+      receiptId,
+      clearReceipt: () => setReceiptId(null),
     }),
-    [view, selected],
+    [view, selected, receiptId],
   );
 
   const openTask = taskId ? tasks.find((t) => t.id === taskId) : undefined;
-  const inGezin = view === 'gezin' || view === 'brengen' || view === 'instellingen';
+  const inGezin = view === 'gezin' || view === 'brengen' || view === 'bonnetjes' || view === 'instellingen';
 
   return (
     <NavContext.Provider value={nav}>
@@ -207,6 +222,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
               {view === 'mensen' && <MensenView />}
               {view === 'gezin' && <GezinView />}
               {view === 'brengen' && <PickupView />}
+              {view === 'bonnetjes' && <BonnetjesView />}
               {view === 'instellingen' && <SettingsView onLogout={onLogout} />}
             </div>
           )}

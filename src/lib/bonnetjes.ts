@@ -5,6 +5,7 @@
 
 import type { Receipt } from '../../shared/types';
 import { PERSON_LABEL } from '../../shared/types';
+import { formatShort } from '../../shared/dates';
 import { displayTitle, warrantyEnd, warrantyStatus } from '../../shared/warranty';
 
 export type ReceiptFilter = 'alles' | 'loopt' | 'bijna' | 'verlopen' | 'aanvullen';
@@ -119,3 +120,6 @@ export function filterCounts(receipts: Receipt[], today: string): Record<Receipt
     aanvullen: telling.aanvullen,
   };
 }
+
+/** "12 mrt 2028": een datum met jaar, want een garantie loopt vaak over jaren. */
+export const datumMetJaar = (datum: string) => `${formatShort(datum)} ${datum.slice(0, 4)}`;

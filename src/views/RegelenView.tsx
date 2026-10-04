@@ -13,6 +13,8 @@ import {
   dueInfo,
   groupOf,
   matchesFilter,
+  receiptAlertTitle,
+  receiptDoneLabel,
   regelState,
   shortDate,
   signalTitle,
@@ -41,13 +43,13 @@ const FILTERS: Array<{ id: WhoFilter; label: string; avatar?: 'niels' | 'irene' 
 const OWNER_LABEL = { niels: 'Niels', irene: 'Irene', samen: 'Afstemmen' } as const;
 
 export function RegelenView() {
-  const { events, tasks, decisions, shopping } = useData();
+  const { events, tasks, decisions, shopping, receiptAlerts } = useData();
   const { openNew } = useNav();
   const [segment, setSegment] = useState<Segment>('taken');
   const [filter, setFilter] = useState<WhoFilter>('alle');
 
   const today = todayInNl();
-  const state = useMemo(() => regelState(events, tasks, decisions, today), [events, tasks, decisions, today]);
+  const state = useMemo(() => regelState(events, tasks, decisions, today, receiptAlerts), [events, tasks, decisions, today, receiptAlerts]);
 
   const items = state.open.filter((i) => matchesFilter(i, filter));
   const toBuy = shopping.filter((i) => !i.done).length;
@@ -121,7 +123,7 @@ export function RegelenView() {
                 </h2>
                 <div className="list">
                   {inGroup.map((item) => (
-                    <Row key={item.kind === 'task' ? item.task.id : item.signal.key} item={item} today={today} />
+                    <Row key={item.kind === 'task' ? item.task.id : item.kind === 'signal' ? item.signal.key : `${item.alert.id}-${item.alert.kind}`} item={item} today={today} />
                   ))}
                 </div>
               </section>
@@ -137,6 +139,7 @@ export function RegelenView() {
 
 function Row({ item, today }: { item: RegelItem; today: string }) {
   if (item.kind === 'signal') return <SignalRow item={item} today={today} />;
+  if (item.kind === 'receipt') return <ReceiptRow item={item} today={today} />;
   return <TaskRow task={item.task} today={today} />;
 }
 
@@ -237,6 +240,40 @@ function SignalRow({ item, today }: { item: Extract<RegelItem, { kind: 'signal' 
           Niels: {signal.niels.title} · Irene: {signal.irene.title}
         </span>
       </button>
+    </div>
+  );
+}
+
+function ReceiptRow({ item, today }: { item: Extract<RegelItem, { kind: 'receipt' }>; today: string }) {
+  const { openReceipt } = useNav();
+  const { markReceiptHandled } = useStore();
+  const { alert } = item;
+  const due = dueInfo(alert.date, today);
+  return (
+    <div className="actrow actrow--signal">
+      <span className="actrow__icon" aria-hidden="true">
+        <Icon name="bon" size={20} />
+      </span>
+      <div className="actrow__main">
+        <button className="actrow__open" onClick={() => openReceipt(alert.id)} aria-label={`${receiptAlertTitle(alert)} openen`}>
+          <span className="actrow__title">{receiptAlertTitle(alert)}</span>
+          <span className="actrow__meta">
+            <span className="chip chip--sig">{alert.kind === 'warranty' ? 'Garantie loopt af' : 'Retourtermijn'}</span>
+            {due && (
+              <span className={`chip ${due.hot ? 'chip--warn' : ''}`}>
+                <Icon name="klok" size={13} /> {alert.kind === 'warranty' ? 'tot ' : ''}
+                {shortDate(alert.date)}
+              </span>
+            )}
+          </span>
+        </button>
+        <button
+          className="btn btn--sm bon__done"
+          onClick={() => void markReceiptHandled(alert.id, alert.kind).catch(() => {})}
+        >
+          <Icon name="vinkje" size={15} /> {receiptDoneLabel(alert)}
+        </button>
+      </div>
     </div>
   );
 }

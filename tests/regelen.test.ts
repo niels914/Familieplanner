@@ -4,6 +4,8 @@ import {
   dueInfo,
   groupOf,
   matchesFilter,
+  receiptAlertTitle,
+  receiptDoneLabel,
   regelState,
   signalTitle,
   sitterTaskDue,
@@ -87,5 +89,21 @@ check('filter Niels toont ook "afstemmen"', matchesFilter(van('samen'), 'niels')
 check('filter Niels verbergt taken van Irene', matchesFilter(van('irene'), 'niels'), false);
 check('filter afstemmen toont alleen afstemmen', matchesFilter(van('niels'), 'samen'), false);
 check('een signaal hoort bij elk filter', matchesFilter(s1.open[0], 'irene'), true);
+
+// --- garantie en retour op de lijst
+const alerts = [
+  { id: 'r1', title: 'Wasmachine', kind: 'warranty' as const, date: '2026-10-26', daysLeft: 20 },
+  { id: 'r2', title: 'Jas', kind: 'return' as const, date: '2026-10-07', daysLeft: 1 },
+];
+const s6 = regelState([], [], {}, today, alerts);
+check('garantie en retour staan op de lijst', s6.open.length, 2);
+check('een retour morgen is dringend', s6.urgent, 1);
+check('een garantie over drie weken nog niet "deze week"', s6.soon, 1);
+check('titel garantie', receiptAlertTitle(alerts[0]), 'Garantie Wasmachine');
+check('titel retour', receiptAlertTitle(alerts[1]), 'Retour Jas');
+check('knop bij garantie', receiptDoneLabel(alerts[0]), 'Geen klachten');
+check('knop bij retour', receiptDoneLabel(alerts[1]), 'Niet retourneren');
+check('een bon hoort bij elk filter', matchesFilter(s6.open[0], 'niels'), true);
+check('zonder meldingen verandert er niets', regelState([], [], {}, today).open.length, 0);
 
 report('regelen');

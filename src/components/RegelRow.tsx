@@ -1,5 +1,5 @@
 import { nowInNl, useNow } from '../lib/dayPart';
-import { dueInfo, signalTitle } from '../lib/regelen';
+import { dueInfo, receiptAlertTitle, signalTitle } from '../lib/regelen';
 import { useNav } from '../lib/nav';
 import { useRegel } from '../lib/useRegel';
 import { Icon } from './Icon';
@@ -24,7 +24,7 @@ export function RegelRow() {
 
   const titles = soon
     .slice(0, 2)
-    .map((i) => (i.kind === 'task' ? i.task.title : signalTitle(i.signal)))
+    .map((i) => (i.kind === 'task' ? i.task.title : i.kind === 'signal' ? signalTitle(i.signal) : receiptAlertTitle(i.alert)))
     .join(', ');
 
   return (

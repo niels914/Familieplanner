@@ -7,7 +7,7 @@
  * bewaart. Wijzig een regel hier en het geldt voor allebei.
  */
 
-import type { CalendarEvent, Receipt, Task } from './types';
+import type { CalendarEvent, Receipt, ReceiptInput, Task } from './types';
 import { warrantyEnd } from './warranty';
 
 export interface SaveContext {
@@ -131,23 +131,23 @@ const DATUM = /^\d{4}-\d{2}-\d{2}$/;
 const isDatum = (d: string) => DATUM.test(d) && !Number.isNaN(Date.parse(d));
 
 /** Klopt wat er binnenkomt? Geeft een melding om te tonen, of null als alles in orde is. */
-export function checkReceipt(body: Partial<Receipt>): string | null {
+export function checkReceipt(body: ReceiptInput): string | null {
   if (!body.purchaseDate || !isDatum(body.purchaseDate)) return 'Geef een geldige aankoopdatum op.';
   if (
-    body.amountCents !== undefined &&
+    body.amountCents != null &&
     (!Number.isInteger(body.amountCents) || body.amountCents < 0 || body.amountCents > 100_000_000)
   ) {
     return 'Het bedrag klopt niet.';
   }
   if (
-    body.warrantyMonths !== undefined &&
+    body.warrantyMonths != null &&
     (!Number.isInteger(body.warrantyMonths) || body.warrantyMonths < 1 || body.warrantyMonths > 600)
   ) {
     return 'De garantietermijn klopt niet.';
   }
   for (const veld of ['warrantyUntil', 'returnUntil'] as const) {
     const waarde = body[veld];
-    if (waarde !== undefined && !isDatum(waarde)) return 'Een einddatum klopt niet.';
+    if (waarde != null && !isDatum(waarde)) return 'Een einddatum klopt niet.';
   }
   if (body.files !== undefined) {
     const ok =
@@ -159,7 +159,7 @@ export function checkReceipt(body: Partial<Receipt>): string | null {
   return null;
 }
 
-const leegIsNiets = (tekst: string | undefined) => tekst?.trim() || undefined;
+const leegIsNiets = (tekst: string | null | undefined) => tekst?.trim() || undefined;
 
 /**
  * Nieuw bonnetje toevoegen, of een bestaand bijwerken (op id). Wat de server bijhoudt (welke
@@ -167,7 +167,7 @@ const leegIsNiets = (tekst: string | undefined) => tekst?.trim() || undefined;
  * einddatum van de garantie of de retourtermijn, dan begint die weer helemaal opnieuw: een
  * eerdere herinnering of "geen klachten" hoort bij de oude datum.
  */
-export function saveReceipt(receipts: Receipt[], body: Partial<Receipt>, ctx: SaveContext): Receipt[] {
+export function saveReceipt(receipts: Receipt[], body: ReceiptInput, ctx: SaveContext): Receipt[] {
   const index = body.id ? receipts.findIndex((r) => r.id === body.id) : -1;
   const current = index >= 0 ? receipts[index] : undefined;
 
@@ -176,16 +176,16 @@ export function saveReceipt(receipts: Receipt[], body: Partial<Receipt>, ctx: Sa
     title: (body.title ?? current?.title ?? '').trim(),
     store: 'store' in body ? leegIsNiets(body.store) : current?.store,
     purchaseDate: body.purchaseDate ?? current?.purchaseDate ?? '',
-    amountCents: 'amountCents' in body ? body.amountCents : current?.amountCents,
+    amountCents: 'amountCents' in body ? (body.amountCents ?? undefined) : current?.amountCents,
     person: body.person ?? current?.person ?? 'gezin',
-    warrantyMonths: 'warrantyMonths' in body ? body.warrantyMonths : current?.warrantyMonths,
-    warrantyUntil: 'warrantyUntil' in body ? body.warrantyUntil : current?.warrantyUntil,
-    returnUntil: 'returnUntil' in body ? body.returnUntil : current?.returnUntil,
+    warrantyMonths: 'warrantyMonths' in body ? (body.warrantyMonths ?? undefined) : current?.warrantyMonths,
+    warrantyUntil: 'warrantyUntil' in body ? (body.warrantyUntil ?? undefined) : current?.warrantyUntil,
+    returnUntil: 'returnUntil' in body ? (body.returnUntil ?? undefined) : current?.returnUntil,
     serial: 'serial' in body ? leegIsNiets(body.serial) : current?.serial,
     notes: 'notes' in body ? leegIsNiets(body.notes) : current?.notes,
     files: body.files ?? current?.files ?? [],
-    remind: 'remind' in body ? body.remind : current?.remind,
-    handled: 'handled' in body ? body.handled : current?.handled,
+    remind: 'remind' in body ? (body.remind ?? undefined) : current?.remind,
+    handled: 'handled' in body ? (body.handled ?? undefined) : current?.handled,
     reminded: current?.reminded,
     createdAt: current?.createdAt ?? ctx.now,
     updatedAt: ctx.now,

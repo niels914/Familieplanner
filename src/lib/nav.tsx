@@ -14,6 +14,7 @@ export type View =
   | 'mensen'
   | 'gezin'
   | 'brengen'
+  | 'bonnetjes'
   | 'instellingen';
 
 export type NewMode = 'agenda' | 'taak';
@@ -34,6 +35,11 @@ export interface Nav {
   openTask: (id: string) => void;
   /** Opent een agenda-item om te bekijken of aan te passen. */
   openEvent: (event: CalendarEvent) => void;
+  /** Gaat naar Bonnetjes en opent dat bonnetje. */
+  openReceipt: (id: string) => void;
+  /** Welk bonnetje er geopend moet worden zodra het scherm Bonnetjes er is. */
+  receiptId: string | null;
+  clearReceipt: () => void;
 }
 
 export const NavContext = createContext<Nav | null>(null);

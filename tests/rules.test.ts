@@ -145,4 +145,15 @@ na = saveReceipt([bon({ store: 'Bol' })], { id: 'r1', purchaseDate: '2026-03-12'
 check('een veld dat leeg meekomt, wordt gewist', na[0].store, undefined);
 check('de oorspronkelijke lijst is niet aangeraakt', [bon()].length, 1);
 
+// null wist een veld, een ontbrekend veld laat het staan (zo komt het over json bij de server aan)
+const metBedrag = [bon({ amountCents: 4500, store: 'Coolblue', warrantyMonths: 24, returnUntil: '2026-04-12' })];
+check('null is een geldig "leeg" voor bedrag en datums', checkReceipt({ purchaseDate: '2026-03-12', amountCents: null, warrantyMonths: null, returnUntil: null, warrantyUntil: null }), null);
+const gewist = saveReceipt(metBedrag, { id: 'r1', purchaseDate: '2026-03-12', amountCents: null, store: null, warrantyMonths: null, returnUntil: null }, later);
+check('null wist het bedrag', gewist[0].amountCents, undefined);
+check('null wist de winkel', gewist[0].store, undefined);
+check('null wist de garantie', gewist[0].warrantyMonths, undefined);
+check('null wist de retourdatum', gewist[0].returnUntil, undefined);
+const blijft = saveReceipt(metBedrag, { id: 'r1', purchaseDate: '2026-03-12' }, later);
+check('zonder veld blijft het bedrag staan', blijft[0].amountCents, 4500);
+
 report('opslagregels');

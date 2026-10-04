@@ -202,6 +202,7 @@ const receiptReply = (receipts: Receipt[]) =>
  *   GET    /receipts                          alle bonnetjes
  *   POST   /receipts                          een bonnetje bewaren of bijwerken
  *   DELETE /receipts/:id                      het bonnetje verwijderen (de bestanden blijven 30 dagen staan)
+ *   POST   /receipts/:id/handled              garantie of retour als afgehandeld markeren ({ kind })
  *   POST   /receipts/:id/files/:naam          een bestand uploaden (de inhoud zelf als body)
  *   GET    /receipts/:id/files/:naam          een bestand ophalen
  * `:naam` is `<id>.jpg`, `<id>.t.jpg` (miniatuur) of `<id>.pdf`.
@@ -252,6 +253,18 @@ async function handleReceipts(req: Request, id?: string, action?: string, name?:
 
   if (id && !action && req.method === 'DELETE') {
     const saved = await update<Receipt[]>('receipts', (list) => list.filter((r) => r.id !== id));
+    return receiptReply(saved);
+  }
+
+  // "Geen klachten": hiervoor hoeft de app het hele bonnetje niet te kennen.
+  if (id && action === 'handled' && req.method === 'POST') {
+    const body = await readBody<{ kind?: string }>(req);
+    if (body.kind !== 'warranty' && body.kind !== 'return') return error('Onbekende soort.');
+    const kind = body.kind;
+    const today = todayInNl();
+    const saved = await update<Receipt[]>('receipts', (list) =>
+      list.map((r) => (r.id === id ? { ...r, handled: { ...r.handled, [kind]: today }, updatedAt: nowIso() } : r)),
+    );
     return receiptReply(saved);
   }
 

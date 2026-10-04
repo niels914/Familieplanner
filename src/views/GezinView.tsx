@@ -10,6 +10,7 @@ import { PageHead } from '../components/PageHead';
 
 const LINKS: Array<{ id: View; label: string; hint: string; icon: IconName }> = [
   { id: 'brengen', label: 'Breng & haal', hint: 'Wie brengt en wie haalt', icon: 'auto' },
+  { id: 'bonnetjes', label: 'Bonnetjes', hint: 'Foto’s, garantie en herinneringen', icon: 'bon' },
   {
     id: 'instellingen',
     label: 'Instellingen',

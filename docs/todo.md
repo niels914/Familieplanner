@@ -2,7 +2,18 @@
 
 ## Bonnetjes en garantie
 
-Uitgewerkt plan: [bonnetjes-plan.md](bonnetjes-plan.md). Wacht op de keuzes in sectie 9 van dat plan.
+Fase 1 en 2 zijn gebouwd; zie [bonnetjes-plan.md](bonnetjes-plan.md) (de keuzes staan onderaan).
+
+**Wensenlijst voor later** (bewust niet in deze versie):
+
+- *Gegevens uit de foto laten lezen door AI* (winkel, datum, bedrag, product). De foto gaat dan
+  naar een externe dienst, dus alleen na een tik per bonnetje en na een keuze welke dienst.
+- *Bonnetjes uit e-mail*: een eigen adres waarnaar je Coolblue- of Bol-mails doorstuurt. Vraagt om
+  een extra dienst. Voor nu is een schermafbeelding prima.
+- *Alles downloaden als back-up* (een zip met foto's en een lijst).
+- *Jaaroverzicht* van wat je kocht en wat nog onder garantie valt.
+- *Snelknop bij Nieuw*, pas als vastleggen via Gezin te veel moeite blijkt.
+- *Offline vastleggen*, zoals de rest van de app dat later krijgt.
 
 ## Agenda's van Irene en Niels koppelen
 

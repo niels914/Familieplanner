@@ -1,6 +1,6 @@
 # Bonnetjes en garantie: plan
 
-Status: plan, nog niets gebouwd. Eerst jullie keuzes in sectie 9, dan fase 1.
+Status: fase 1 en 2 gebouwd. De genomen keuzes staan onderaan, bij sectie 9.
 
 ## 1. Waar het om gaat
 
@@ -169,3 +169,17 @@ de reden dat het bestaat. Fase 3 pas als jullie merken waar het wringt.
    schermafbeelding. Een eigen e-mailadres waarnaar je kunt doorsturen is mogelijk, maar vraagt om
    een extra dienst; liever pas kijken na gebruik.
 6. **De naam in het menu:** *Bonnetjes* of *Bonnetjes & garantie*?
+
+### Besluiten
+
+Genomen op basis van bovenstaande voorstellen; fase 1 en 2 zijn gebouwd.
+
+1. **Waar:** alleen via Gezin (het huisje) → Bonnetjes. Geen snelknop bij Nieuw.
+2. **Alleen foto:** toegestaan, met de groep *Nog aanvullen*.
+3. **Herinneringen:** alleen bij een bedrag vanaf € 50 (per bonnetje aan of uit te zetten), één
+   herinnering 30 dagen voor het einde van de garantie. Een retourtermijn krijgt er een, 3 dagen
+   vooraf, maar alleen als je die zelf invult.
+4. **AI-uitlezen:** niet nu; staat op de wensenlijst in `docs/todo.md`.
+5. **E-mail doorsturen:** niet nu; een schermafbeelding is genoeg. Op de wensenlijst.
+6. **Naam:** *Bonnetjes*.
+

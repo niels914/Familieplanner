@@ -26,7 +26,8 @@ gedraagt zich als een gewone app.
 | **Mensen** | Contacten (klasgenootjes met adres en de telefoonnummers van de ouders, tikbaar om te bellen of te appen via WhatsApp) en Oppas (alle momenten met uren, tarief en wat er nog openstaat). |
 | **Klaarzetten** | Wat er mee moet staat per persoon bij elkaar, met een dier en naam erboven. Zodra er iets is afgevinkt zie je "1 van 4 klaar"; is alles klaar, dan volgt een rustig vinkje. |
 | **Avatars** | Elk gezinslid heeft een dier: Matthijs een olifant, Amélie een aap, Lotte een lieveheersbeestje, Irene een schildpad en Niels een uil. Ze staan bij items, taken, in het filter en bij het kiezen van een persoon (`src/components/Avatar.tsx`). |
-| **Gezin** (knop rechtsboven) | Breng & haal (vast weekschema met afwijkingen) en Instellingen. |
+| **Bonnetjes** | Via Gezin → Bonnetjes. Foto maken of een pdf kiezen; een foto alleen is genoeg, de rest vul je later aan (*Nog aanvullen*). Per bonnetje: winkel, datum, bedrag, van wie, garantie van de fabrikant (1, 2, 3, 5 jaar, een eigen aantal maanden of einddatum), retour t/m, serienummer en notitie. Zoeken, filteren op *Loopt*, *Bijna afgelopen*, *Verlopen*, delen via het deelmenu van de telefoon. Herinneringen gaan mee met de avondmelding en staan bij Regelen met *Geen klachten*: één keer 30 dagen voor het einde van de garantie bij een bedrag vanaf € 50 (aan of uit te zetten per bonnetje), en 3 dagen voor het einde van een retourtermijn die je zelf invult. De foto's staan in een privé-map in Supabase Storage (`bonnetjes`, wordt bij de eerste upload zelf aangemaakt) en zijn alleen te zien met de inlog. |
+| **Gezin** (knop rechtsboven) | Breng & haal (vast weekschema met afwijkingen), Bonnetjes en Instellingen. |
 | **Gmail-agenda** | De agenda van Niels komt elk uur binnen, alleen lezen, met volledige titels (ook privé) en op zijn naam. Het zijn gewone items: meeneem-lijstje, notitie en soort (bijvoorbeeld *Niet thuis*) blijven van jullie en blijven bij een synchronisatie staan. |
 | **Parro** | De schoolagenda wordt elke drie uur opgehaald. Jouw notities en meeneem-lijstjes bij een Parro-item blijven bij een synchronisatie staan. |
 | **Snel en offline** | De laatste stand staat op het toestel en verschijnt meteen bij openen. Wijzigingen staan er direct, nog voor de server antwoordt; mislukt het, dan draait de app het terug en zegt waarom. Zonder verbinding kun je lezen. Schrijven niet. |
@@ -152,7 +153,8 @@ opslag vervangen door geheugen (`tests/memory-store.ts`) en voorbeelddata uit
 **De browsertest** (`tests/e2e.mjs`) opent de app op een telefoonformaat en controleert wat de
 gewone tests niet kunnen: dat geen scherm breder wordt dan de telefoon (320, 360 en 390 px,
 ook met een lange uitnodiging als beschrijving), verwijderen met ongedaan maken, vegen, de
-snelkeuze bij boodschappen, de tijdkeuze per vijf minuten en *Meer opties*. Hij start zelf een
+snelkeuze bij boodschappen, de tijdkeuze per vijf minuten, *Meer opties* en bonnetjes (foto kiezen,
+aanvullen, zoeken, verwijderen en de garantie bij Regelen). Hij start zelf een
 testserver op poort 4180. Je hebt Playwright nodig (`npm i -g playwright`); een mislukte
 controle zegt in gewone taal wat er niet klopt. Draai hem na elke wijziging aan het uiterlijk.
 

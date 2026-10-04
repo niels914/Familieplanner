@@ -16,6 +16,7 @@
 import { spawn } from 'node:child_process';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { deflateSync } from 'node:zlib';
 
 const PORT = Number(process.env.E2E_PORT ?? 4180);
 const B = `http://localhost:${PORT}`;
@@ -90,6 +91,44 @@ async function sectie(naam, werk) {
 }
 const rust = (p, ms = 350) => p.waitForTimeout(ms);
 
+/** Een echte png (verloop van kleur) om als foto te kiezen, zonder bestand in de repo. */
+function pngBuffer(breedte = 640, hoogte = 480) {
+  const tabel = Array.from({ length: 256 }, (_, n) => {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    return c >>> 0;
+  });
+  const crc = (buf) => {
+    let c = 0xffffffff;
+    for (const b of buf) c = tabel[(c ^ b) & 0xff] ^ (c >>> 8);
+    return (c ^ 0xffffffff) >>> 0;
+  };
+  const stuk = (soort, inhoud) => {
+    const kop = Buffer.alloc(4);
+    kop.writeUInt32BE(inhoud.length);
+    const delen = Buffer.concat([Buffer.from(soort), inhoud]);
+    const eind = Buffer.alloc(4);
+    eind.writeUInt32BE(crc(delen));
+    return Buffer.concat([kop, delen, eind]);
+  };
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(breedte, 0);
+  ihdr.writeUInt32BE(hoogte, 4);
+  ihdr[8] = 8; // bits per kleur
+  ihdr[9] = 2; // rgb
+  const rij = 1 + breedte * 3;
+  const ruw = Buffer.alloc(rij * hoogte);
+  for (let y = 0; y < hoogte; y++) {
+    for (let x = 0; x < breedte; x++) {
+      const i = y * rij + 1 + x * 3;
+      ruw[i] = (x * 255) / breedte;
+      ruw[i + 1] = (y * 255) / hoogte;
+      ruw[i + 2] = 180;
+    }
+  }
+  return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), stuk('IHDR', ihdr), stuk('IDAT', deflateSync(ruw)), stuk('IEND', Buffer.alloc(0))]);
+}
+
 const consoleFouten = [];
 async function toestel(breedte = 390, scheme = 'light') {
   const context = await browser.newContext({
@@ -149,6 +188,23 @@ const wachtOpMelding = (p) => p.locator('.toast').waitFor({ state: 'hidden', tim
 
 // ============================================================================
 await sectie('Past op een telefoon: geen scherm wordt breder dan het toestel', async () => {
+{
+  // Een bonnetje met een erg lange naam en winkel, ook zonder spaties: dat mag het scherm niet oprekken.
+  const { context, page: p } = await toestel(390);
+  await p.request.post(`${B}/api/receipts`, {
+    data: {
+      id: 'lang',
+      title: 'Wasmachine-Bosch-Serie-6-met-een-heel-erg-lange-naam-zonder-spaties-WGG244A0NL',
+      store: 'Een winkel met een bijzonder lange naam B.V. Nederland',
+      purchaseDate: morgen.slice(0, 4) + '-01-15',
+      amountCents: 54900,
+      warrantyMonths: 24,
+      serial: 'SN-0123456789-ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+      notes: 'Een notitie met een heel lang woord: ' + 'x'.repeat(80),
+    },
+  });
+  await context.close();
+}
 for (const breedte of [320, 360, 390]) {
   const { context, page: p } = await toestel(breedte);
   const bad = [];
@@ -176,6 +232,18 @@ for (const breedte of [320, 360, 390]) {
     await p.locator('.gezinbtn').first().tap();
     await rust(p);
     await meet('Gezin');
+    await p.locator('.rowlink', { hasText: 'Bonnetjes' }).tap();
+    await p.waitForSelector('.bonrow');
+    await rust(p);
+    await meet('Bonnetjes');
+    await p.locator('.bonrow').first().tap();
+    await p.waitForSelector('#bon-titel');
+    await rust(p);
+    await meet('Bonnetje bewerken');
+    await p.keyboard.press('Escape');
+    await rust(p);
+    await p.locator('.gezinbtn').first().tap();
+    await rust(p);
     await p.locator('.rowlink', { hasText: 'Instellingen' }).tap();
     await rust(p);
     await meet('Instellingen');
@@ -416,6 +484,128 @@ await sectie('Een oppasmoment vastleggen', async () => {
     d.events.some((e) => e.category === 'oppas' && e.sitter?.start === '19:05' && e.sitter?.end === '23:00' && e.sitter?.rate === 7 && e.sitter?.paid === true && e.sitter?.name === 'Joris Peters' && e.sitter?.contactId),
   );
   ok('opgeslagen met contact, tijden, tarief en betaald', ok1);
+  await context.close();
+});
+
+// ============================================================================
+await sectie('Bonnetjes: foto, aanvullen, zoeken, verwijderen', async () => {
+  const { context, page: p } = await toestel();
+  await p.request.delete(`${B}/api/receipts/lang`);
+  await open(p);
+  await p.locator('.gezinbtn').first().tap();
+  await rust(p);
+  await p.locator('.rowlink', { hasText: 'Bonnetjes' }).tap();
+  await p.waitForSelector('.bon__camera');
+  await rust(p);
+  ok('nog niets bewaard: een rustige lege staat', (await p.locator('.emptystate__title').innerText()).includes('Nog geen bonnetjes'));
+
+  // Alleen een foto: genoeg om te bewaren.
+  await p.locator('input[type=file]').first().setInputFiles({ name: 'bon.png', mimeType: 'image/png', buffer: pngBuffer(1000, 1400) });
+  await p.waitForSelector('.modal .filetile img');
+  await p.getByRole('button', { name: 'Opslaan', exact: true }).tap();
+  const bewaard = await (async () => {
+    const einde = Date.now() + 6000;
+    while (Date.now() < einde) {
+      const r = await (await p.request.get(`${B}/api/receipts`)).json();
+      if (r.receipts.length === 1) return r.receipts[0];
+      await p.waitForTimeout(150);
+    }
+    return null;
+  })();
+  ok('een foto alleen wordt bewaard', Boolean(bewaard) && bewaard.title === '' && bewaard.files.length === 1 && bewaard.files[0].thumb === true);
+  if (bewaard) {
+    const foto = await p.request.get(`${B}/api/receipts/${bewaard.id}/files/${bewaard.files[0].id}.jpg`);
+    const mini = await p.request.get(`${B}/api/receipts/${bewaard.id}/files/${bewaard.files[0].id}.t.jpg`);
+    ok('de foto is een jpeg en kleiner dan het origineel', foto.status() === 200 && foto.headers()['content-type'] === 'image/jpeg' && (await foto.body()).length < 400_000);
+    ok('er is ook een miniatuur', mini.status() === 200 && (await mini.body()).length < (await foto.body()).length);
+  }
+  await rust(p);
+  ok('in de lijst: nog aanvullen', (await p.locator('.grouphead', { hasText: 'Nog aanvullen' }).count()) === 1);
+  ok('met een naam voor het bonnetje met datum', (await p.locator('.bonrow__title').first().innerText()).startsWith('Bonnetje '));
+  ok('de miniatuur laadt', await p.locator('.bonrow__thumb img').first().evaluate((i) => i.complete && i.naturalWidth > 0));
+
+  // Aanvullen.
+  await p.locator('.bonrow').first().tap();
+  await p.waitForSelector('#bon-titel');
+  await p.locator('#bon-titel').fill('Wasmachine Bosch');
+  await p.locator('#bon-winkel').fill('Coolblue');
+  await p.locator('#bon-bedrag').fill('549,00');
+  await p.locator('.modal button.pick', { hasText: '2 jaar' }).tap();
+  await rust(p, 250);
+  ok('bij de garantie staat tot wanneer en hoe lang nog', /Loopt tot .* \d{4}/.test(await p.locator('.modal').innerText()));
+  await p.locator('.modal button.pick', { hasText: 'Niels' }).tap();
+  await p.getByRole('button', { name: 'Opslaan', exact: true }).tap();
+  const aangevuld = await (async () => {
+    const einde = Date.now() + 6000;
+    while (Date.now() < einde) {
+      const r = (await (await p.request.get(`${B}/api/receipts`)).json()).receipts[0];
+      if (r.title === 'Wasmachine Bosch') return r;
+      await p.waitForTimeout(150);
+    }
+    return null;
+  })();
+  ok('titel, winkel, bedrag, garantie en persoon zijn bewaard', Boolean(aangevuld) && aangevuld.store === 'Coolblue' && aangevuld.amountCents === 54900 && aangevuld.warrantyMonths === 24 && aangevuld.person === 'niels');
+  ok('en de foto is er nog bij', Boolean(aangevuld) && aangevuld.files.length === 1);
+  await rust(p);
+  ok('in de lijst staat de garantie', (await p.locator('.bonrow').first().innerText()).includes('Garantie nog'));
+
+  // Een veld weer leegmaken.
+  await p.locator('.bonrow').first().tap();
+  await p.waitForSelector('#bon-titel');
+  await p.locator('.modal button.pick', { hasText: 'Geen' }).first().tap();
+  await p.locator('#bon-winkel').fill('');
+  await p.getByRole('button', { name: 'Opslaan', exact: true }).tap();
+  ok('garantie en winkel leegmaken werkt ook op de server', await (async () => {
+    const einde = Date.now() + 6000;
+    while (Date.now() < einde) {
+      const r = (await (await p.request.get(`${B}/api/receipts`)).json()).receipts[0];
+      if (r.warrantyMonths === undefined && r.store === undefined) return true;
+      await p.waitForTimeout(150);
+    }
+    return false;
+  })());
+  await rust(p);
+
+  // Zoeken.
+  await p.locator('input[type=search]').fill('bosch');
+  await rust(p, 200);
+  ok('zoeken op een deel van de naam vindt het', (await p.locator('.bonrow').count()) === 1);
+  await p.locator('input[type=search]').fill('strijkplank');
+  await rust(p, 200);
+  ok('zoeken zonder resultaat zegt dat', (await p.locator('.emptystate__title').innerText()).includes('Niets gevonden'));
+  await p.getByRole('button', { name: 'Alles tonen' }).tap();
+  await rust(p, 200);
+
+  // Verwijderen met ongedaan maken.
+  await p.locator('.bonrow').first().tap();
+  await p.waitForSelector('#bon-titel');
+  await p.getByRole('button', { name: 'Verwijderen' }).tap();
+  await rust(p, 250);
+  ok('verwijderd, zonder bevestigingsvenster', (await p.locator('.bonrow').count()) === 0);
+  await p.locator('.toast button', { hasText: 'Ongedaan maken' }).tap();
+  await rust(p, 600);
+  ok('ongedaan maken zet het terug', (await p.locator('.bonrow').count()) === 1);
+  ok('en ook op de server, met de foto', await (async () => {
+    const r = (await (await p.request.get(`${B}/api/receipts`)).json()).receipts;
+    return r.length === 1 && r[0].files.length === 1;
+  })());
+  await context.close();
+});
+
+// ============================================================================
+await sectie('Bonnetjes: garantie bij Regelen', async () => {
+  const { context, page: p } = await toestel();
+  const dag = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+  await p.request.post(`${B}/api/receipts`, { data: { id: 'bijna', title: 'Airfryer', purchaseDate: dag(-700), warrantyUntil: dag(12), amountCents: 12900 } });
+  await p.request.post(`${B}/api/receipts`, { data: { id: 'goedkoop', title: 'Stekkerdoos', purchaseDate: dag(-700), warrantyUntil: dag(12), amountCents: 1500 } });
+  await open(p);
+  await tab(p, 'Regelen');
+  ok('de garantie die bijna afloopt staat bij Regelen', (await p.locator('.actrow', { hasText: 'Garantie Airfryer' }).count()) === 1);
+  ok('een goedkoop ding zonder herinnering staat er niet', (await p.locator('.actrow', { hasText: 'Stekkerdoos' }).count()) === 0);
+  await p.locator('.actrow', { hasText: 'Garantie Airfryer' }).getByRole('button', { name: 'Geen klachten' }).tap();
+  await rust(p, 400);
+  ok('Geen klachten haalt het van de lijst', (await p.locator('.actrow', { hasText: 'Garantie Airfryer' }).count()) === 0);
+  ok('en onthoudt dat op de server', await tot(p, (d) => !d.receiptAlerts.some((a) => a.id === 'bijna')));
   await context.close();
 });
 

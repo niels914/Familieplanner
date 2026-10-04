@@ -44,8 +44,8 @@ const HERINNERING: ChipOption<Herinnering>[] = [
   { value: 'uit', label: 'Uit' },
 ];
 
-const garantieKeuze = (months?: number): Garantie => {
-  if (!months) return 'geen';
+const garantieKeuze = (months?: number, until?: string): Garantie => {
+  if (!months) return until ? 'anders' : 'geen';
   const tekst = String(months);
   return tekst === '12' || tekst === '24' || tekst === '36' || tekst === '60' ? tekst : 'anders';
 };
@@ -72,14 +72,14 @@ export function ReceiptSheet({
   const [purchaseDate, setPurchaseDate] = useState(receipt?.purchaseDate ?? today);
   const [amount, setAmount] = useState(receipt?.amountCents !== undefined ? bedrag(receipt.amountCents) : '');
   const [person, setPerson] = useState<PersonId>(receipt?.person ?? 'gezin');
-  const [garantie, setGarantie] = useState<Garantie>(garantieKeuze(receipt?.warrantyMonths));
+  const [garantie, setGarantie] = useState<Garantie>(garantieKeuze(receipt?.warrantyMonths, receipt?.warrantyUntil));
   const [maanden, setMaanden] = useState(receipt?.warrantyMonths ? String(receipt.warrantyMonths) : '');
   const [warrantyUntil, setWarrantyUntil] = useState(receipt?.warrantyUntil ?? '');
   const [returnUntil, setReturnUntil] = useState(receipt?.returnUntil ?? '');
   const [serial, setSerial] = useState(receipt?.serial ?? '');
   const [notes, setNotes] = useState(receipt?.notes ?? '');
   const [herinnering, setHerinnering] = useState<Herinnering>(herinneringKeuze(receipt?.remind));
-  const [meerOpen, setMeerOpen] = useState(Boolean(receipt?.serial || receipt?.returnUntil || receipt?.warrantyUntil || receipt?.notes || receipt?.remind !== undefined));
+  const [meerOpen, setMeerOpen] = useState(Boolean(receipt?.serial || receipt?.returnUntil || receipt?.notes || receipt?.remind !== undefined));
 
   const [files, setFiles] = useState<ReceiptFile[]>(receipt?.files ?? []);
   const [pending, setPending] = useState<PreparedFile[]>(initial ? [initial] : []);
@@ -177,7 +177,7 @@ export function ReceiptSheet({
   };
 
   const meerVoorbeeld =
-    [serial.trim() && 'serienummer', returnUntil && 'retour', warrantyUntil && 'eigen garantiedatum', notes.trim() && 'notitie']
+    [serial.trim() && 'serienummer', returnUntil && 'retour', notes.trim() && 'notitie']
       .filter(Boolean)
       .join(' · ') || 'Serienummer, retour, notitie, herinnering';
 
@@ -297,18 +297,32 @@ export function ReceiptSheet({
             />
           </div>
 
-          <ChipPicker label="Garantie van de fabrikant of winkel" value={garantie} options={GARANTIE} onChange={setGarantie} />
+          <ChipPicker
+            label="Garantie van de fabrikant of winkel"
+            value={garantie}
+            options={GARANTIE}
+            onChange={(g) => {
+              setGarantie(g);
+              // Een eigen einddatum hoort alleen bij "Anders".
+              if (g !== 'anders') setWarrantyUntil('');
+            }}
+          />
           {garantie === 'anders' && (
-            <div className="field">
-              <label htmlFor="bon-maanden">Aantal maanden</label>
-              <input
-                id="bon-maanden"
-                className="input"
-                style={{ width: 120 }}
-                inputMode="numeric"
-                value={maanden}
-                onChange={(e) => setMaanden(e.target.value.replace(/\D/g, ''))}
-              />
+            <div className="field-row">
+              <div className="field">
+                <label htmlFor="bon-maanden">Aantal maanden</label>
+                <input
+                  id="bon-maanden"
+                  className="input"
+                  inputMode="numeric"
+                  value={maanden}
+                  onChange={(e) => setMaanden(e.target.value.replace(/\D/g, ''))}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="bon-eind">Of tot en met</label>
+                <input id="bon-eind" className="input" type="date" value={warrantyUntil} onChange={(e) => setWarrantyUntil(e.target.value)} />
+              </div>
             </div>
           )}
           {status.end && (
@@ -342,18 +356,6 @@ export function ReceiptSheet({
                 value={returnUntil}
                 onChange={(e) => setReturnUntil(e.target.value)}
               />
-            </div>
-            <div className="field">
-              <label htmlFor="bon-eind">Eigen einddatum garantie</label>
-              <input
-                id="bon-eind"
-                className="input"
-                style={{ width: 170 }}
-                type="date"
-                value={warrantyUntil}
-                onChange={(e) => setWarrantyUntil(e.target.value)}
-              />
-              <span className="small muted">Alleen invullen als de fabrikant een andere datum noemt.</span>
             </div>
             <ChipPicker label="Herinnering" value={herinnering} options={HERINNERING} onChange={setHerinnering} />
             <span className="small muted">

@@ -65,7 +65,7 @@ export default function App() {
 }
 
 function Shell({ onLogout }: { onLogout: () => void }) {
-  const { loading, error, notice, setNotice, seriesOpen, setSeriesOpen, offline, syncedAt, reload } =
+  const { loading, error, notice, noticeUndo, setNotice, seriesOpen, setSeriesOpen, offline, syncedAt, reload } =
     useStore();
   const { tasks } = useData();
   const regel = useRegel();
@@ -89,9 +89,10 @@ function Shell({ onLogout }: { onLogout: () => void }) {
 
   useEffect(() => {
     if (!notice) return;
-    const t = setTimeout(() => setNotice(null), 3800);
+    // Met een knop om terug te zetten blijft de melding langer staan.
+    const t = setTimeout(() => setNotice(null), noticeUndo ? 8000 : 3800);
     return () => clearTimeout(t);
-  }, [notice, setNotice]);
+  }, [notice, noticeUndo, setNotice]);
 
   const nav = useMemo<Nav>(
     () => ({
@@ -266,7 +267,12 @@ function Shell({ onLogout }: { onLogout: () => void }) {
             role={error && !notice ? 'alert' : 'status'}
             aria-live={error && !notice ? 'assertive' : 'polite'}
           >
-            {notice ?? error}
+            <span>{notice ?? error}</span>
+            {notice && noticeUndo && (
+              <button type="button" className="toast__undo" onClick={noticeUndo}>
+                Ongedaan maken
+              </button>
+            )}
           </div>
         )}
       </div>

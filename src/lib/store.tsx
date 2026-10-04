@@ -23,7 +23,7 @@ import type {
   SignalDecision,
   Task,
 } from '../../shared/types';
-import { saveEvent, saveTask } from '../../shared/rules';
+import { restoreItems, saveEvent, saveTask } from '../../shared/rules';
 import { api, isOffline, setUnauthorizedHandler } from './api';
 import { clearCache, readCache, writeCache } from './cache';
 
@@ -43,7 +43,10 @@ interface StoreValue {
   loading: boolean;
   error: string | null;
   notice: string | null;
-  setNotice: (msg: string | null) => void;
+  /** Een melding, eventueel met een manier om te herstellen wat er zojuist gebeurde. */
+  setNotice: (msg: string | null, undo?: () => void) => void;
+  /** Is er bij de melding iets ongedaan te maken? */
+  noticeUndo: (() => void) | null;
   /** Geen verbinding: je ziet de laatste stand van dit toestel. */
   offline: boolean;
   /** Wanneer de getoonde stand voor het laatst van de server kwam. */
@@ -76,7 +79,8 @@ interface StoreValue {
   saveMeal: (meal: Meal) => Promise<void>;
   saveSettings: (settings: Partial<Settings>) => Promise<void>;
   saveTask: (task: Partial<Task>) => Promise<void>;
-  deleteTask: (id: string) => Promise<void>;
+  /** Met `quiet` verschijnt er geen melding om het terug te zetten (voor een opruimactie van de app zelf). */
+  deleteTask: (id: string, options?: { quiet?: boolean }) => Promise<void>;
   setDecision: (key: string, decision: NewSignalDecision) => Promise<void>;
   clearDecision: (key: string) => Promise<void>;
   syncParro: () => Promise<string>;
@@ -109,7 +113,8 @@ export function StoreProvider({
   const [data, setData] = useState<DataResponse | null>(cached ? normalize(cached.data) : null);
   const [syncedAt, setSyncedAt] = useState<number | null>(cached?.at ?? null);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNoticeText] = useState<string | null>(null);
+  const [noticeUndo, setNoticeUndo] = useState<(() => void) | null>(null);
   const [offline, setOffline] = useState(false);
   const [seriesOpen, setSeriesOpen] = useState<string | null>(null);
 
@@ -245,6 +250,44 @@ export function StoreProvider({
     [],
   );
 
+  const setNotice = useCallback((msg: string | null, undo?: () => void) => {
+    setNoticeText(msg);
+    // Een functie in state moet je als functie van een functie zetten.
+    setNoticeUndo(msg && undo ? () => undo : null);
+  }, []);
+
+  /** Verwijderde items terugzetten, ongewijzigd, en dat meteen laten zien. */
+  const restore = useCallback(
+    <K extends 'events' | 'tasks' | 'contacts' | 'shopping' | 'pickupOverrides'>(
+      collection: K,
+      items: DataResponse[K],
+    ) =>
+      mutate({
+        keys: [collection],
+        optimistic: (d) =>
+          ({ [collection]: restoreItems(d[collection] as Array<{ id: string }>, items as Array<{ id: string }>) }) as Partial<DataResponse>,
+        request: () => api.post<Record<string, unknown>>('restore', { collection, items }),
+        apply: (r) => ({ [collection]: r[collection] }) as Partial<DataResponse>,
+      }),
+    [mutate],
+  );
+
+  /** Meld dat er iets is verwijderd, met een knop om het terug te zetten. */
+  const offerUndo = useCallback(
+    <K extends 'events' | 'tasks' | 'contacts' | 'shopping' | 'pickupOverrides'>(
+      text: string,
+      collection: K,
+      items: DataResponse[K],
+    ) => {
+      if ((items as unknown[]).length === 0) return;
+      setNotice(text, () => {
+        setNotice(null);
+        void restore(collection, items).catch(() => {});
+      });
+    },
+    [restore, setNotice],
+  );
+
   const value = useMemo<StoreValue>(
     () => ({
       data,
@@ -252,6 +295,7 @@ export function StoreProvider({
       error,
       notice,
       setNotice,
+      noticeUndo,
       offline,
       syncedAt,
       reload,
@@ -268,13 +312,16 @@ export function StoreProvider({
         });
       },
 
-      deleteEvent: (id) =>
-        mutate({
+      deleteEvent: async (id) => {
+        const weg = dataRef.current?.events.filter((e) => e.id === id) ?? [];
+        await mutate({
           keys: ['events'],
           optimistic: (d) => ({ events: d.events.filter((e) => e.id !== id) }),
           request: () => api.del<{ events: CalendarEvent[] }>(`events/${id}`),
           apply: (r) => ({ events: r.events }),
-        }),
+        });
+        offerUndo(`‘${weg[0]?.title ?? 'Item'}’ verwijderd`, 'events', weg);
+      },
 
       // Een reeks krijgt zijn data van de server, dus die wacht op het antwoord.
       createSeries: async (event, interval, until) => {
@@ -303,18 +350,24 @@ export function StoreProvider({
           apply: (r) => ({ events: r.events }),
         }),
 
-      deleteSeries: (seriesId, from) =>
-        mutate({
+      deleteSeries: async (seriesId, from) => {
+        const inReeks = (e: CalendarEvent) => e.series?.id === seriesId && (!from || e.date >= from);
+        const weg = dataRef.current?.events.filter(inReeks) ?? [];
+        await mutate({
           keys: ['events'],
-          optimistic: (d) => ({
-            events: d.events.filter((e) => !(e.series?.id === seriesId && (!from || e.date >= from))),
-          }),
+          optimistic: (d) => ({ events: d.events.filter((e) => !inReeks(e)) }),
           request: () =>
             api.del<{ events: CalendarEvent[] }>(
               `events/series/${seriesId}${from ? `?from=${encodeURIComponent(from)}` : ''}`,
             ),
           apply: (r) => ({ events: r.events }),
-        }),
+        });
+        offerUndo(
+          weg.length === 1 ? `‘${weg[0].title}’ verwijderd` : `${weg.length} keer ‘${weg[0]?.title ?? 'reeks'}’ verwijderd`,
+          'events',
+          weg,
+        );
+      },
 
       addBringBulk: (ids, text) =>
         mutate({
@@ -363,13 +416,16 @@ export function StoreProvider({
         });
       },
 
-      deleteContact: (id) =>
-        mutate({
+      deleteContact: async (id) => {
+        const weg = dataRef.current?.contacts.filter((c) => c.id === id) ?? [];
+        await mutate({
           keys: ['contacts'],
           optimistic: (d) => ({ contacts: d.contacts.filter((c) => c.id !== id) }),
           request: () => api.del<{ contacts: Contact[] }>(`contacts/${id}`),
           apply: (r) => ({ contacts: r.contacts }),
-        }),
+        });
+        offerUndo(`${weg[0]?.name ?? 'Contact'} verwijderd`, 'contacts', weg);
+      },
 
       savePickupRules: (rules) =>
         mutate({
@@ -403,13 +459,16 @@ export function StoreProvider({
           apply: (r) => ({ pickupOverrides: r.pickupOverrides }),
         }),
 
-      deletePickupOverride: (id) =>
-        mutate({
+      deletePickupOverride: async (id) => {
+        const weg = dataRef.current?.pickupOverrides.filter((o) => o.id === id) ?? [];
+        await mutate({
           keys: ['pickupOverrides'],
           optimistic: (d) => ({ pickupOverrides: d.pickupOverrides.filter((o) => o.id !== id) }),
           request: () => api.del<{ pickupOverrides: PickupOverride[] }>(`pickup-overrides/${id}`),
           apply: (r) => ({ pickupOverrides: r.pickupOverrides }),
-        }),
+        });
+        offerUndo('Afwijking verwijderd', 'pickupOverrides', weg);
+      },
 
       addShopping: (text, source) => {
         const id = uuid();
@@ -450,21 +509,27 @@ export function StoreProvider({
           apply: (r) => ({ shopping: r.shopping }),
         }),
 
-      deleteShopping: (id) =>
-        mutate({
+      deleteShopping: async (id) => {
+        const weg = dataRef.current?.shopping.filter((i) => i.id === id) ?? [];
+        await mutate({
           keys: ['shopping'],
           optimistic: (d) => ({ shopping: d.shopping.filter((i) => i.id !== id) }),
           request: () => api.del<{ shopping: ShoppingItem[] }>(`shopping/${id}`),
           apply: (r) => ({ shopping: r.shopping }),
-        }),
+        });
+        offerUndo(`${weg[0]?.text ?? 'Item'} van de lijst`, 'shopping', weg);
+      },
 
-      clearDoneShopping: () =>
-        mutate({
+      clearDoneShopping: async () => {
+        const weg = dataRef.current?.shopping.filter((i) => i.done) ?? [];
+        await mutate({
           keys: ['shopping'],
           optimistic: (d) => ({ shopping: d.shopping.filter((i) => !i.done) }),
           request: () => api.post<{ shopping: ShoppingItem[] }>('shopping/clear-done'),
           apply: (r) => ({ shopping: r.shopping }),
-        }),
+        });
+        offerUndo(`${weg.length} afgevinkt${weg.length === 1 ? '' : 'e'} van de lijst`, 'shopping', weg);
+      },
 
       saveMeal: (meal) =>
         mutate({
@@ -496,13 +561,16 @@ export function StoreProvider({
         });
       },
 
-      deleteTask: (id) =>
-        mutate({
+      deleteTask: async (id, options) => {
+        const weg = dataRef.current?.tasks.filter((t) => t.id === id) ?? [];
+        await mutate({
           keys: ['tasks'],
           optimistic: (d) => ({ tasks: d.tasks.filter((t) => t.id !== id) }),
           request: () => api.del<{ tasks: Task[] }>(`tasks/${id}`),
           apply: (r) => ({ tasks: r.tasks }),
-        }),
+        });
+        if (!options?.quiet) offerUndo(`‘${weg[0]?.title ?? 'Taak'}’ verwijderd`, 'tasks', weg);
+      },
 
       setDecision: (key, decision) =>
         mutate({
@@ -539,7 +607,7 @@ export function StoreProvider({
         return r.message;
       },
     }),
-    [data, error, notice, offline, syncedAt, seriesOpen, reload, mutate, patch],
+    [data, error, notice, noticeUndo, setNotice, offerUndo, offline, syncedAt, seriesOpen, reload, mutate, patch],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

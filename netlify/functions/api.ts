@@ -31,7 +31,7 @@ import {
 import { passwordMatches, hasValidSession } from '../lib/session';
 import { DEFAULT_SETTINGS, overwrite, read, readAll, update } from '../lib/store';
 import { publicKey, pushConfigured, sendToAll } from '../lib/push';
-import { saveEvent, saveTask } from '../../shared/rules';
+import { restoreItems, saveEvent, saveTask } from '../../shared/rules';
 import { configuredFeeds, runAgendaSync } from '../lib/agenda';
 import { syncParro } from '../lib/parro';
 
@@ -105,6 +105,9 @@ export default async function handler(req: Request): Promise<Response> {
       case 'push':
         return await handlePush(req, id);
 
+      case 'restore':
+        return await handleRestore(req);
+
       case 'parro':
         if (req.method !== 'POST') return error('Alleen POST.', 405);
         return json(await runParroSync());
@@ -147,6 +150,36 @@ async function handleData(req: Request): Promise<Response> {
   return new Response(body, {
     headers: { ...headers, 'content-type': 'application/json; charset=utf-8' },
   });
+}
+
+// -------------------------------------------------------------- ongedaan maken
+
+/** Waar een verwijdering ongedaan gemaakt kan worden. */
+const RESTORABLE = ['events', 'tasks', 'contacts', 'shopping', 'pickupOverrides'] as const;
+type Restorable = (typeof RESTORABLE)[number];
+
+/**
+ * Zet verwijderde items terug, ongewijzigd. Wat al weer bestaat (zelfde id) blijft zoals het is,
+ * dus twee keer op "ongedaan maken" tikken doet niets extra's.
+ */
+async function handleRestore(req: Request): Promise<Response> {
+  if (req.method !== 'POST') return error('Alleen POST.', 405);
+  const body = await readBody<{ collection?: string; items?: Array<{ id?: unknown }> }>(req);
+
+  const collection = RESTORABLE.find((c) => c === body.collection) as Restorable | undefined;
+  if (!collection) return error('Onbekend onderdeel.');
+  const items = body.items;
+  if (!Array.isArray(items) || items.length === 0 || items.length > 500) {
+    return error('Niets om terug te zetten.');
+  }
+  if (!items.every((i) => i && typeof i.id === 'string' && i.id.length > 0)) {
+    return error('Een item mist zijn id.');
+  }
+
+  const saved = await update<Array<{ id: string }>>(collection, (list) =>
+    restoreItems(list, items as Array<{ id: string }>),
+  );
+  return json({ [collection]: saved });
 }
 
 // ---------------------------------------------------------------- events

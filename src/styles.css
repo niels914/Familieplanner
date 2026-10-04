@@ -1236,6 +1236,7 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
   transform: translateX(-50%);
   bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 76px);
   z-index: 80;
+  width: max-content;
   max-width: min(92vw, 480px);
   padding: 11px 16px;
   border-radius: 999px;
@@ -1246,6 +1247,27 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
   box-shadow: var(--shadow-lg);
 }
 .toast--error { background: var(--danger); color: #fff; }
+/* Melding met een knop: tekst links, de knop in een rustige tegenkleur. */
+.toast:has(.toast__undo) {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 6px 4px 18px;
+}
+.toast__undo {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 18%, transparent);
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
 
 /* --------------------------------------------------------------- lijst */
 .list { display: flex; flex-direction: column; gap: 8px; }

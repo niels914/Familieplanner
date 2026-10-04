@@ -180,13 +180,12 @@ export function EventForm({
 
   const remove = async (welke: 'deze' | 'volgende' = 'deze') => {
     if (!initial?.id) return;
-    // Een losse keer uit een reeks: eerst vragen welke. Bij een los item de
-    // gewone bevestiging.
+    // Een losse keer uit een reeks: eerst vragen welke. Een los item verdwijnt meteen;
+    // met "Ongedaan maken" in de melding komt het terug.
     if (reeks && !verwijderKeuze) {
       setVerwijderKeuze(true);
       return;
     }
-    if (!reeks && !confirm(`"${initial.title}" verwijderen?`)) return;
     setBusy(true);
     try {
       if (reeks && welke === 'volgende') await deleteSeries(reeks.id, initial.date);

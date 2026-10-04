@@ -169,7 +169,7 @@ export function PickupView() {
                         <button
                           className="btn btn--ghost btn--sm"
                           title="Terug naar het vaste schema"
-                          onClick={() => void deletePickupOverride(override.id)}
+                          onClick={() => void deletePickupOverride(override.id).catch(() => {})}
                         >
                           <Icon name="terugdraaien" size={16} />
                         </button>

@@ -114,3 +114,12 @@ export function saveTask(tasks: Task[], body: Partial<Task>, ctx: SaveContext): 
     },
   ];
 }
+
+/**
+ * Teruggeven wat verwijderd was, precies zoals het was (dus met bron, reeks en
+ * tijdstempels). Wat er inmiddels al weer staat, op id, blijft ongemoeid.
+ */
+export function restoreItems<T extends { id: string }>(list: T[], items: T[]): T[] {
+  const aanwezig = new Set(list.map((i) => i.id));
+  return [...list, ...items.filter((i) => !aanwezig.has(i.id))];
+}

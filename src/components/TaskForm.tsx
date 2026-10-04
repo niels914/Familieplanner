@@ -49,7 +49,6 @@ export function TaskForm({ task, onClose }: { task: Task; onClose: () => void })
   };
 
   const remove = () => {
-    if (!confirm(`"${task.title}" verwijderen?`)) return;
     void deleteTask(task.id).catch(() => {});
     onClose();
   };

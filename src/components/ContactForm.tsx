@@ -72,7 +72,6 @@ export function ContactForm({
 
   const remove = async () => {
     if (!initial) return;
-    if (!confirm(`${initial.name} verwijderen?`)) return;
     setBusy(true);
     try {
       await deleteContact(initial.id);

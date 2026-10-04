@@ -74,7 +74,7 @@ export function SignalSheet({ signalKey, onClose }: { signalKey: string; onClose
   };
 
   const undo = () => {
-    if (decision?.type === 'oppas') void deleteTask(decision.taskId).catch(() => {});
+    if (decision?.type === 'oppas') void deleteTask(decision.taskId, { quiet: true }).catch(() => {});
     void clearDecision(signalKey).catch(() => {});
     onClose();
   };

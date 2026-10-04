@@ -65,7 +65,7 @@ export function Shopping() {
               <button
                 className="btn btn--ghost btn--sm"
                 aria-label={`${item.text} verwijderen`}
-                onClick={() => void deleteShopping(item.id)}
+                onClick={() => void deleteShopping(item.id).catch(() => {})}
               >
                 <Icon name="kruis" size={16} />
               </button>
@@ -80,7 +80,7 @@ export function Shopping() {
             <div className="section-title" style={{ margin: 0 }}>
               Afgevinkt ({done.length})
             </div>
-            <button className="btn btn--sm btn--ghost" onClick={() => void clearDoneShopping()}>
+            <button className="btn btn--sm btn--ghost" onClick={() => void clearDoneShopping().catch(() => {})}>
               Opruimen
             </button>
           </div>

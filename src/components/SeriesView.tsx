@@ -75,7 +75,6 @@ export function SeriesView({ seriesId, onClose }: { seriesId: string; onClose: (
   };
 
   const verwijderReeks = async () => {
-    if (!confirm(`De hele reeks "${eerste.title}" verwijderen? Dat zijn ${keren.length} keer.`)) return;
     setBusy(true);
     try {
       await deleteSeries(seriesId);

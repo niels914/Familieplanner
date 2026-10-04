@@ -1,6 +1,6 @@
 /** Controleert de regels voor het bewaren van agenda-items en taken (server en app delen ze). */
 import type { CalendarEvent, Task } from '../shared/types';
-import { saveEvent, saveTask } from '../shared/rules';
+import { restoreItems, saveEvent, saveTask } from '../shared/rules';
 import { check, report } from './helpers';
 
 const ctx = { now: '2026-10-04T10:00:00.000Z', newId: () => 'nieuw-id' };
@@ -87,5 +87,15 @@ check('weer openzetten wist het afrondmoment', [taken[0].done, taken[0].doneAt],
 check('aanmaakmoment blijft', taken[0].createdAt, '2026-10-01T08:00:00.000Z');
 taken = saveTask([taak()], { id: 't1', title: '  Anders  ' }, later);
 check('titel wordt getrimd bij bijwerken', taken[0].title, 'Anders');
+
+// ------------------------------------------------------------- ongedaan maken
+const weg = basis({ source: 'parro', parroUid: 'p-9', series: { id: 's1', interval: 2, until: '2026-12-01' }, createdAt: '2026-09-01T00:00:00.000Z' });
+const terug = restoreItems([basis({ id: 'andere' })], [weg]);
+check('terugzetten: komt terug zoals het was, met bron en reeks', [terug[1].id, terug[1].source, terug[1].parroUid, terug[1].series?.id, terug[1].createdAt], ['e1', 'parro', 'p-9', 's1', '2026-09-01T00:00:00.000Z']);
+check('terugzetten: wat er staat blijft staan', terug.map((e) => e.id), ['andere', 'e1']);
+check('tweemaal terugzetten voegt niets dubbel toe', restoreItems(terug, [weg]).length, 2);
+check('terugzetten laat een inmiddels nieuwe versie met hetzelfde id ongemoeid', restoreItems([basis({ title: 'Nieuwer' })], [weg])[0].title, 'Nieuwer');
+check('meerdere tegelijk (een reeks)', restoreItems([], [weg, basis({ id: 'e2' }), basis({ id: 'e3' })]).map((e) => e.id), ['e1', 'e2', 'e3']);
+check('niets terug te zetten', restoreItems([weg], []), [weg]);
 
 report('opslagregels');

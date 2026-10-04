@@ -5,7 +5,7 @@
  * erachter, zonder scherm, zodat ze getest kunnen worden.
  */
 
-export const MINUTE_STEP = 5;
+const MINUTE_STEP = 5;
 
 const pad = (n: number) => String(n).padStart(2, '0');
 

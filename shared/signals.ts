@@ -21,17 +21,17 @@ export type Span = [number, number];
 
 export const DEFAULT_HOME_TIME = '17:30';
 /** Zonder eindtijd schatten we dit aantal minuten. */
-export const GUESS_AWAY_MIN = 180;
-export const GUESS_SITTER_MIN = 240;
+const GUESS_AWAY_MIN = 180;
+const GUESS_SITTER_MIN = 240;
 /** Korter dan dit tegelijk weg is geen signaal waard. */
-export const MIN_OVERLAP_MIN = 30;
+const MIN_OVERLAP_MIN = 30;
 
 export const toMin = (t: string): number => {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + (m || 0);
 };
 
-export const fromMin = (n: number): string => {
+const fromMin = (n: number): string => {
   const c = Math.max(0, Math.min(1440, n));
   return `${String(Math.floor(c / 60) % 24).padStart(2, '0')}:${String(c % 60).padStart(2, '0')}`;
 };
@@ -71,7 +71,7 @@ export function awaySpan(e: CalendarEvent, date: string): Span | null {
 }
 
 /** Welk deel van de dag dekt een oppas? De tijden van de oppas gaan voor. */
-export function sitterSpan(e: CalendarEvent, date: string): Span | null {
+function sitterSpan(e: CalendarEvent, date: string): Span | null {
   if (e.category !== 'oppas') return null;
   if (e.sitter?.start && e.sitter.end && coversDay(e, date) && e.date === date) {
     const start = toMin(e.sitter.start);
@@ -84,11 +84,11 @@ export function sitterSpan(e: CalendarEvent, date: string): Span | null {
 }
 
 /** Zonder eindtijd is het tijdvak een schatting, en dat zeggen we erbij. */
-export function isGuessed(e: CalendarEvent): boolean {
+function isGuessed(e: CalendarEvent): boolean {
   return !e.allDay && Boolean(e.time) && !e.endTime && !(e.endDate && e.endDate > e.date);
 }
 
-export function overlap(a: Span, b: Span): Span | null {
+function overlap(a: Span, b: Span): Span | null {
   const start = Math.max(a[0], b[0]);
   const end = Math.min(a[1], b[1]);
   return end - start >= MIN_OVERLAP_MIN ? [start, end] : null;

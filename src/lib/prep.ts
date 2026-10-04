@@ -19,7 +19,7 @@ export const doneBring = (events: CalendarEvent[]): number =>
   events.reduce((n, e) => n + e.bring.filter((b) => b.done).length, 0);
 
 /** De kinderen eerst, dan de ouders, dan wat voor iedereen is. */
-export const PREP_ORDER: PersonId[] = ['matthijs', 'amelie', 'lotte', 'niels', 'irene', 'gezin'];
+const PREP_ORDER: PersonId[] = ['matthijs', 'amelie', 'lotte', 'niels', 'irene', 'gezin'];
 
 export interface PrepGroup {
   person: PersonId;

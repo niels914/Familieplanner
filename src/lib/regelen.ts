@@ -56,7 +56,7 @@ export function sitterTaskDue(s: Signal, today: string): string {
 }
 
 /** Waarom een oppas-taak vanzelf sloot, voor in de lijst met afgeronde dingen. */
-export function autoClosedNote(s: Signal | undefined): string {
+function autoClosedNote(s: Signal | undefined): string {
   const oppas = s?.sitters[0];
   if (!oppas) return 'Opgelost: er staat een oppas in de agenda.';
   const wie = oppas.sitter?.name ?? oppas.title;

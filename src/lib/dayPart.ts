@@ -9,8 +9,8 @@ import { TZ, todayInNl } from '../../shared/dates';
 
 export type DayPart = 'ochtend' | 'middag' | 'avond';
 
-export const MORNING_UNTIL_HOUR = 12;
-export const AFTERNOON_UNTIL_HOUR = 18;
+const MORNING_UNTIL_HOUR = 12;
+const AFTERNOON_UNTIL_HOUR = 18;
 
 export function dayPart(hour: number): DayPart {
   if (hour < MORNING_UNTIL_HOUR) return 'ochtend';

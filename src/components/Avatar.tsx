@@ -146,7 +146,7 @@ const ART: Record<Animal, JSX.Element> = {
 };
 
 /** Wie welk dier is. */
-export const ANIMAL: Record<Exclude<PersonId, 'gezin'>, Animal> = {
+const ANIMAL: Record<Exclude<PersonId, 'gezin'>, Animal> = {
   matthijs: 'olifant',
   amelie: 'aap',
   lotte: 'lieveheersbeestje',

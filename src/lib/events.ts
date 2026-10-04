@@ -11,7 +11,7 @@ export function eventsOnDate(events: CalendarEvent[], date: string): CalendarEve
   return events.filter((e) => coversDate(e, date)).sort(byTime);
 }
 
-export function byTime(a: CalendarEvent, b: CalendarEvent): number {
+function byTime(a: CalendarEvent, b: CalendarEvent): number {
   if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
   const t = (a.time ?? '').localeCompare(b.time ?? '');
   return t !== 0 ? t : a.title.localeCompare(b.title);

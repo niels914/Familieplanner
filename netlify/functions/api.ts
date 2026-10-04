@@ -32,6 +32,7 @@ import { passwordMatches, hasValidSession } from '../lib/session';
 import { DEFAULT_SETTINGS, overwrite, read, readAll, update } from '../lib/store';
 import { publicKey, pushConfigured, sendToAll } from '../lib/push';
 import { restoreItems, saveEvent, saveTask } from '../../shared/rules';
+import { bumpOften, type Often } from '../../shared/shopping';
 import { configuredFeeds, runAgendaSync } from '../lib/agenda';
 import { syncParro } from '../lib/parro';
 
@@ -413,6 +414,17 @@ async function handlePickupOverrides(req: Request, id?: string): Promise<Respons
 
 // ------------------------------------------------------------ boodschappen
 
+/** Onthoudt wat er op de lijst is gezet, voor de snelkeuze. Geeft de stand daarna terug. */
+async function rememberOften(texts: string[]): Promise<Often> {
+  if (texts.length === 0) return (await read<Settings>('settings')).shoppingOften ?? {};
+  const saved = await update<Settings>('settings', (s) => ({
+    ...DEFAULT_SETTINGS,
+    ...s,
+    shoppingOften: bumpOften(s.shoppingOften, texts, nowIso()),
+  }));
+  return saved.shoppingOften ?? {};
+}
+
 async function handleShopping(req: Request, id?: string, action?: string): Promise<Response> {
   if (req.method === 'POST' && id === 'clear-done') {
     const saved = await update<ShoppingItem[]>('shopping', (l) => l.filter((i) => !i.done));
@@ -433,24 +445,29 @@ async function handleShopping(req: Request, id?: string, action?: string): Promi
     if (body.items) {
       const texts = body.items.map((t) => t.trim()).filter(Boolean);
       if (texts.length === 0) return error('Geen items opgegeven.');
+      let added: string[] = [];
       const saved = await update<ShoppingItem[]>('shopping', (list) => {
+        added = [];
         for (const text of texts) {
           const exists = list.some(
             (i) => !i.done && i.text.toLowerCase() === text.toLowerCase(),
           );
           if (!exists) {
             list.push({ id: newId(), text, done: false, createdAt: nowIso() });
+            added.push(text);
           }
         }
         return list;
       });
-      return json({ shopping: saved });
+      return json({ shopping: saved, shoppingOften: await rememberOften(added) });
     }
 
     const item = body.item;
     if (!item?.text?.trim()) return error('Geef een boodschap op.');
+    let isNew = false;
     const saved = await update<ShoppingItem[]>('shopping', (list) => {
       const index = item.id ? list.findIndex((i) => i.id === item.id) : -1;
+      isNew = index < 0;
       if (index >= 0) {
         list[index] = { ...list[index], ...item } as ShoppingItem;
       } else {
@@ -464,7 +481,7 @@ async function handleShopping(req: Request, id?: string, action?: string): Promi
       }
       return list;
     });
-    return json({ shopping: saved });
+    return json({ shopping: saved, shoppingOften: await rememberOften(isNew ? [item.text!] : []) });
   }
 
   if (req.method === 'DELETE' && id) {

@@ -1,101 +1,142 @@
 import { useMemo, useState } from 'react';
 import { addDays, formatShort, startOfWeek, todayInNl, weekdayShort } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
+import { quickPicks } from '../../shared/shopping';
 import { Icon } from '../components/Icon';
+import { SwipeRow } from '../components/SwipeRow';
 import { EmptyState } from '../components/EmptyState';
 
 export function Shopping() {
-  const { shopping } = useData();
+  const { shopping, settings } = useData();
   const { addShopping, toggleShopping, deleteShopping, clearDoneShopping } = useStore();
   const [text, setText] = useState('');
 
   const open = shopping.filter((i) => !i.done);
   const done = shopping.filter((i) => i.done);
+  // Wat jullie vaak kopen, en nu niet al op de lijst staat.
+  const picks = quickPicks(
+    settings.shoppingOften,
+    open.map((i) => i.text),
+  );
 
   const add = () => {
     const value = text.trim();
     if (!value) return;
     // Meerdere in één keer: "melk, brood, kaas"
     const parts = value.split(',').map((p) => p.trim()).filter(Boolean);
-    for (const part of parts) void addShopping(part);
+    for (const part of parts) void addShopping(part).catch(() => {});
     setText('');
   };
 
-  return (
-    <div className="stack">
-      <div className="row">
-        <input
-          className="input grow"
-          placeholder="Melk, brood, luiers"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              add();
-            }
-          }}
-        />
-        <button className="btn btn--primary" onClick={add} disabled={!text.trim()}>
-          Toevoegen
-        </button>
-      </div>
+  const remove = (id: string) => void deleteShopping(id).catch(() => {});
+  const toggle = (id: string) => void toggleShopping(id).catch(() => {});
 
-      <div className="list">
-        {open.length === 0 && done.length === 0 ? (
-          <EmptyState
-            icon="mandje"
-            title="De boodschappenlijst is leeg."
-            hint="Typ hierboven wat er op moet."
-          />
-        ) : (
-          open.map((item) => (
-            <div key={item.id} className="shopitem">
-              <label className="shopitem__label grow">
-                <input
-                  type="checkbox"
-                  checked={false}
-                  onChange={() => void toggleShopping(item.id)}
-                />
-                <span className="shopitem__text">
-                  {item.text}
-                  {item.source && <span className="muted tiny"> · {item.source}</span>}
-                </span>
-              </label>
-              <button
-                className="btn btn--ghost btn--sm"
-                aria-label={`${item.text} verwijderen`}
-                onClick={() => void deleteShopping(item.id).catch(() => {})}
+  return (
+    <div className="shopping">
+      <div className="stack">
+        <div className="list">
+          {open.length === 0 && done.length === 0 ? (
+            <EmptyState
+              icon="mandje"
+              title="De boodschappenlijst is leeg."
+              hint="Typ hieronder wat er op moet."
+            />
+          ) : (
+            open.map((item) => (
+              <SwipeRow
+                key={item.id}
+                right={{ label: 'Afvinken', icon: 'vinkje', run: () => toggle(item.id) }}
+                left={{ label: 'Weg', icon: 'prullenbak', run: () => remove(item.id) }}
               >
-                <Icon name="kruis" size={16} />
+                <div className="shopitem">
+                  <label className="shopitem__label grow">
+                    <input type="checkbox" checked={false} onChange={() => toggle(item.id)} />
+                    <span className="shopitem__text">
+                      {item.text}
+                      {item.source && <span className="muted tiny"> · {item.source}</span>}
+                    </span>
+                  </label>
+                  <button
+                    className="btn btn--ghost btn--sm"
+                    aria-label={`${item.text} verwijderen`}
+                    onClick={() => remove(item.id)}
+                  >
+                    <Icon name="kruis" size={16} />
+                  </button>
+                </div>
+              </SwipeRow>
+            ))
+          )}
+        </div>
+
+        {done.length > 0 && (
+          <>
+            <div className="row row--between">
+              <div className="section-title" style={{ margin: 0 }}>
+                Afgevinkt ({done.length})
+              </div>
+              <button className="btn btn--sm btn--ghost" onClick={() => void clearDoneShopping().catch(() => {})}>
+                Opruimen
               </button>
             </div>
-          ))
+            <div className="list">
+              {done.map((item) => (
+                <SwipeRow
+                  key={item.id}
+                  right={{ label: 'Terugzetten', icon: 'terugdraaien', run: () => toggle(item.id) }}
+                  left={{ label: 'Weg', icon: 'prullenbak', run: () => remove(item.id) }}
+                >
+                  <div className="shopitem shopitem--done">
+                    <label className="shopitem__label grow">
+                      <input type="checkbox" checked onChange={() => toggle(item.id)} />
+                      <span className="shopitem__text">{item.text}</span>
+                    </label>
+                  </div>
+                </SwipeRow>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
-      {done.length > 0 && (
-        <>
-          <div className="row row--between">
-            <div className="section-title" style={{ margin: 0 }}>
-              Afgevinkt ({done.length})
+      {/* Onderaan, binnen bereik van je duim. Op een groot scherm staat dit bovenaan. */}
+      <div className="shopbar">
+        <div className="shopbar__inner">
+          {picks.length > 0 && (
+            <div className="picks shopbar__picks" role="group" aria-label="Vaak gekocht">
+              {picks.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className="pick"
+                  onClick={() => void addShopping(p).catch(() => {})}
+                >
+                  <Icon name="plus" size={14} /> {p}
+                </button>
+              ))}
             </div>
-            <button className="btn btn--sm btn--ghost" onClick={() => void clearDoneShopping().catch(() => {})}>
-              Opruimen
+          )}
+          <div className="row">
+            <input
+              className="input grow"
+              placeholder="Melk, brood, luiers"
+              aria-label="Wat moet er op de lijst?"
+              enterKeyHint="done"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  add();
+                }
+              }}
+            />
+            <button className="btn btn--primary" onClick={add} disabled={!text.trim()}>
+              Toevoegen
             </button>
           </div>
-          <div className="list">
-            {done.map((item) => (
-              <div key={item.id} className="shopitem shopitem--done">
-                <label className="shopitem__label grow">
-                  <input type="checkbox" checked onChange={() => void toggleShopping(item.id)} />
-                  <span className="shopitem__text">{item.text}</span>
-                </label>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

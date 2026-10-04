@@ -1127,6 +1127,60 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 }
 .event__open > span { display: block; }
 
+/* Filters op één regel: keuzelijsten naast elkaar. */
+.filterbar { display: flex; gap: 8px; margin-bottom: 14px; }
+.filterbar .select { flex: 1; min-width: 0; }
+
+/* ------------------------------------------------------------ vegen */
+.swipe { position: relative; border-radius: var(--radius); }
+.swipe:has(.shopitem) { border-radius: var(--radius-sm); }
+.swipe__fg {
+  position: relative;
+  /* Verticaal scrollen blijft van de pagina; horizontaal is voor de veeg. */
+  touch-action: pan-y;
+}
+.swipe__fg--settling { transition: transform 0.16s var(--ease); }
+.swipe__bg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  border-radius: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.swipe__bg--right { justify-content: flex-start; background: var(--primary); color: var(--primary-ink); }
+.swipe__bg--left { justify-content: flex-end; background: var(--danger); color: var(--bg); }
+
+/* --------------------------------------------------------- boodschappen */
+.shopping { display: flex; flex-direction: column; gap: 12px; padding-bottom: 150px; }
+/* Invoer onderaan, boven de tabbalk; de zweefknop steekt eronder uit. */
+.shopbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
+  z-index: 30;
+  padding: 10px 16px 30px;
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--line);
+}
+.shopbar__inner { display: flex; flex-direction: column; gap: 8px; max-width: 880px; margin: 0 auto; }
+.shopbar__picks { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -16px; padding: 0 16px; }
+.shopbar__picks::-webkit-scrollbar { display: none; }
+.shopbar__picks .pick { flex-shrink: 0; }
+/* De melding komt boven de invoer, niet erachter. */
+:root:has(.shopbar) .toast { bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 170px); }
+@media (min-width: 860px) {
+  .shopping { padding-bottom: 0; }
+  .shopbar { position: static; order: -1; padding: 0; background: none; border: 0; backdrop-filter: none; }
+  .shopbar__picks { margin: 0; padding: 0; flex-wrap: wrap; }
+  :root:has(.shopbar) .toast { bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 76px); }
+}
+
 /* --------------------------------------------------------- meer opties */
 .more { border-top: 1px solid var(--line); }
 .more__toggle {
@@ -1240,6 +1294,16 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 }
 
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+/* Rustige overgangen: alleen doorzichtigheid en een paar pixels, nooit een sprong.
+   Bij 'verminderde beweging' staan ze uit (zie de regel onderaan). */
+@keyframes unfold { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@keyframes toastin { from { opacity: 0; transform: translateX(-50%) translateY(8px); } to { opacity: 1; transform: translateX(-50%); } }
+/* Alleen doorzichtigheid, geen transform: dat zou de vaste invoer bij boodschappen laten verspringen. */
+.viewin { animation: fade 0.2s var(--ease); }
+.more__body,
+.foldout[open] > :not(summary),
+.compactprep + .prep { animation: unfold 0.2s var(--ease); }
+.toast { animation: toastin 0.2s var(--ease); }
 @keyframes rise { from { transform: translateY(14px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 /* -------------------------------------------------------------- login */

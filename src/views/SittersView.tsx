@@ -3,6 +3,7 @@ import type { CalendarEvent } from '../../shared/types';
 import { formatLong, todayInNl } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
 import { byDate, euro, sitterCost, sitterHours } from '../lib/events';
+import { sitterKey, sitterLabel, sitterOptions } from '../lib/oppas';
 import { EventForm } from '../components/EventForm';
 import { EmptyState } from '../components/EmptyState';
 import { Icon } from '../components/Icon';
@@ -37,21 +38,16 @@ export function SittersView({ embedded = false }: { embedded?: boolean }) {
     [events],
   );
 
-  const names = useMemo(() => {
-    const set = new Set<string>();
-    for (const e of all) if (e.sitter?.name) set.add(e.sitter.name);
-    for (const c of contacts) if (c.kind === 'oppas') set.add(c.name);
-    return [...set].sort((a, b) => a.localeCompare(b, 'nl'));
-  }, [all, contacts]);
+  const options = useMemo(() => sitterOptions(all, contacts), [all, contacts]);
 
   const list = useMemo(() => {
     let filtered = all;
     if (period === 'komend') filtered = filtered.filter((e) => e.date >= today);
     else if (period === 'maand') filtered = filtered.filter((e) => e.date.startsWith(month));
     else if (period === 'vorige') filtered = filtered.filter((e) => e.date.startsWith(previousMonth));
-    if (who !== 'alle') filtered = filtered.filter((e) => e.sitter?.name === who);
+    if (who !== 'alle') filtered = filtered.filter((e) => sitterKey(e, contacts) === who);
     return period === 'komend' ? filtered : [...filtered].reverse();
-  }, [all, period, who, today, month, previousMonth]);
+  }, [all, contacts, period, who, today, month, previousMonth]);
 
   const totals = useMemo(() => {
     let hours = 0;
@@ -69,17 +65,17 @@ export function SittersView({ embedded = false }: { embedded?: boolean }) {
   const perOppas = useMemo(() => {
     const op = new Map<string, { naam: string; aantal: number; uren: number; bedrag: number; open: number }>();
     for (const e of list) {
-      const naam = e.sitter!.name || 'Zonder naam';
-      const rij = op.get(naam) ?? { naam, aantal: 0, uren: 0, bedrag: 0, open: 0 };
+      const sleutel = sitterKey(e, contacts);
+      const rij = op.get(sleutel) ?? { naam: sitterLabel(e, contacts), aantal: 0, uren: 0, bedrag: 0, open: 0 };
       const kosten = sitterCost(e);
       rij.aantal++;
       rij.uren += sitterHours(e.sitter!.start, e.sitter!.end);
       rij.bedrag += kosten;
       if (!e.sitter!.paid) rij.open += kosten;
-      op.set(naam, rij);
+      op.set(sleutel, rij);
     }
     return [...op.values()].sort((a, b) => b.bedrag - a.bedrag);
-  }, [list]);
+  }, [list, contacts]);
 
   const togglePaid = (e: CalendarEvent) => {
     void saveEvent({ ...e, sitter: { ...e.sitter!, paid: !e.sitter!.paid } });
@@ -90,33 +86,38 @@ export function SittersView({ embedded = false }: { embedded?: boolean }) {
       <div className="page__head">
         <div>
           <h1>Oppas</h1>
-          <div className="page__sub">Alle oppasmomenten, uren en wat er nog openstaat.</div>
+          <div className="page__sub">Uren en wat er openstaat.</div>
         </div>
         <button className="btn btn--primary btn--sm" onClick={() => setCreating(true)}>
           + Moment
         </button>
       </div>
 
-      <div className="picks" style={{ marginBottom: 10 }} role="group" aria-label="Periode">
-        {(Object.keys(PERIOD_LABEL) as Period[]).map((p) => (
-          <button key={p} className="pick" aria-pressed={period === p} onClick={() => setPeriod(p)}>
-            {PERIOD_LABEL[p]}
-          </button>
-        ))}
-      </div>
-
-      {names.length > 0 && (
-        <div className="picks" style={{ marginBottom: 14 }} role="group" aria-label="Oppas">
-          <button className="pick" aria-pressed={who === 'alle'} onClick={() => setWho('alle')}>
-            Alle oppassen
-          </button>
-          {names.map((n) => (
-            <button key={n} className="pick" aria-pressed={who === n} onClick={() => setWho(n)}>
-              {n}
-            </button>
+      {/* Eén regel: de periode en de oppas als keuzelijsten, in plaats van twee rijen knoppen. */}
+      <div className="filterbar">
+        <select
+          className="select"
+          aria-label="Periode"
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as Period)}
+        >
+          {(Object.keys(PERIOD_LABEL) as Period[]).map((p) => (
+            <option key={p} value={p}>
+              {PERIOD_LABEL[p]}
+            </option>
           ))}
-        </div>
-      )}
+        </select>
+        {options.length > 0 && (
+          <select className="select" aria-label="Oppas" value={who} onChange={(e) => setWho(e.target.value)}>
+            <option value="alle">Alle oppassen</option>
+            {options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       {list.length > 0 && (
         <div className="totals">
@@ -189,7 +190,7 @@ export function SittersView({ embedded = false }: { embedded?: boolean }) {
                     style={{ all: 'unset', cursor: 'pointer', flex: 1, minWidth: 0 }}
                     onClick={() => setEditing(e)}
                   >
-                    <strong>{e.sitter!.name || 'Oppas'}</strong>
+                    <strong>{sitterLabel(e, contacts) === 'Zonder naam' ? 'Oppas' : sitterLabel(e, contacts)}</strong>
                     <div className="small muted cap">
                       {formatLong(e.date)} · {e.sitter!.start}–{e.sitter!.end} ·{' '}
                       {hours.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} uur

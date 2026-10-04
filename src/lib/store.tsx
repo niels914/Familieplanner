@@ -24,6 +24,7 @@ import type {
   Task,
 } from '../../shared/types';
 import { restoreItems, saveEvent, saveTask } from '../../shared/rules';
+import { bumpOften, type Often } from '../../shared/shopping';
 import { api, isOffline, setUnauthorizedHandler } from './api';
 import { clearCache, readCache, writeCache } from './cache';
 
@@ -473,30 +474,43 @@ export function StoreProvider({
       addShopping: (text, source) => {
         const id = uuid();
         return mutate({
-          keys: ['shopping'],
+          keys: ['shopping', 'settings'],
           optimistic: (d) => ({
             shopping: [...d.shopping, { id, text: text.trim(), done: false, source, createdAt: now() }],
+            settings: { ...d.settings, shoppingOften: bumpOften(d.settings.shoppingOften, [text], now()) },
           }),
-          request: () => api.post<{ shopping: ShoppingItem[] }>('shopping', { item: { id, text, source } }),
-          apply: (r) => ({ shopping: r.shopping }),
+          request: () =>
+            api.post<{ shopping: ShoppingItem[]; shoppingOften: Often }>('shopping', { item: { id, text, source } }),
+          apply: (r) => ({
+            shopping: r.shopping,
+            settings: { ...dataRef.current!.settings, shoppingOften: r.shoppingOften },
+          }),
         });
       },
 
       addShoppingBulk: (items) =>
         mutate({
-          keys: ['shopping'],
+          keys: ['shopping', 'settings'],
           optimistic: (d) => {
             const list = [...d.shopping];
+            const added: string[] = [];
             for (const raw of items) {
               const text = raw.trim();
               if (!text) continue;
               if (list.some((i) => !i.done && i.text.toLowerCase() === text.toLowerCase())) continue;
               list.push({ id: uuid(), text, done: false, createdAt: now() });
+              added.push(text);
             }
-            return { shopping: list };
+            return {
+              shopping: list,
+              settings: { ...d.settings, shoppingOften: bumpOften(d.settings.shoppingOften, added, now()) },
+            };
           },
-          request: () => api.post<{ shopping: ShoppingItem[] }>('shopping', { items }),
-          apply: (r) => ({ shopping: r.shopping }),
+          request: () => api.post<{ shopping: ShoppingItem[]; shoppingOften: Often }>('shopping', { items }),
+          apply: (r) => ({
+            shopping: r.shopping,
+            settings: { ...dataRef.current!.settings, shoppingOften: r.shoppingOften },
+          }),
         }),
 
       toggleShopping: (id) =>

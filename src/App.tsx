@@ -193,7 +193,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
               <DaySkeleton />
             )
           ) : (
-            <>
+            <div key={view} className="viewin">
               {inGezin && view !== 'gezin' && (
                 <div className="page page--back">
                   <button className="btn btn--ghost btn--sm" onClick={() => nav.go('gezin')}>
@@ -208,7 +208,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
               {view === 'gezin' && <GezinView />}
               {view === 'brengen' && <PickupView />}
               {view === 'instellingen' && <SettingsView onLogout={onLogout} />}
-            </>
+            </div>
           )}
         </main>
 

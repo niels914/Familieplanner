@@ -387,6 +387,21 @@ per persoon bestaan al en horen bij de achtergrond van het dier.
   wie en deadline; kind, besluit en notitie erachter. Contact: soort, naam, ouders en
   telefoon; groep, adres, verjaardag en notitie erachter. Dichtgeklapt staat er kort wat er al
   is ingevuld, en staat er al iets in, dan begint het formulier open (`MoreOptions`).
-- **Nog te doen in fase D:** vegen op lijsten, boodschappen met invoer onderaan en
-  snelkeuze, oppasfilters op één regel, en rustige overgangen.
 
+### Fase D, tweede deel
+
+- **Vegen op lijsten** (`SwipeRow`): naar rechts afronden of afvinken, naar links weghalen, beide
+  met ongedaan maken. Voor taken en boodschappen; bewust niet voor agenda-items. Alleen
+  voor aanraking, verticaal scrollen blijft gewoon werken, en de knoppen blijven bestaan.
+- **Boodschappen:** invoer onderaan boven de tabbalk, binnen bereik van je duim (op een groot
+  scherm blijft hij bovenaan). De snelkeuze *Vaak gekocht* leert zelf: wat minstens twee keer
+  is toegevoegd en nu niet op de lijst staat (`shared/shopping.ts`, bewaard in de instellingen).
+- **Oppas:** de filters staan op één regel, als twee keuzelijsten. Het filter werkt op het
+  contact in plaats van op de naam, ook bij oudere momenten waar alleen een naam stond (de
+  hele naam, of een voornaam als er maar één oppas zo heet; `src/lib/oppas.ts`).
+- **Rustige overgangen:** een scherm komt zacht binnen, en *Meer opties*, het uitklappen van
+  morgen en de melding schuiven een paar pixels in. Bij *verminderde beweging* staat alles
+  uit.
+
+**Niet gedaan in fase D:** contacten *zoeken eerst* en een breder telefoonknop zijn al eerder
+gebouwd (naam en nummer gescheiden, nummer nooit afgebroken, een WhatsApp-knop ernaast).

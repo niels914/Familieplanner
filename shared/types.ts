@@ -1,5 +1,7 @@
 /** Gedeelde types tussen de web-app en de Netlify Functions. */
 
+import type { Often } from './shopping';
+
 export type PersonId = 'matthijs' | 'amelie' | 'lotte' | 'gezin' | 'niels' | 'irene';
 
 /** De kinderen, in volgorde van leeftijd. Gebruikt voor filters, het breng- en
@@ -256,6 +258,8 @@ export interface Settings {
   parroPerson?: ChildId;
   /** Vaste info die je met de oppas deelt. */
   sitterBriefing?: string;
+  /** Wat vaak op de boodschappenlijst komt, voor de snelkeuze. */
+  shoppingOften?: Often;
   /** Wanneer je normaal thuis bent, 'HH:MM'. Daarvan telt "later thuis" tot het opgegeven tijdstip. */
   homeTime?: string;
 }

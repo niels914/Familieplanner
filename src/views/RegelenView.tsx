@@ -24,6 +24,7 @@ import { useNav } from '../lib/nav';
 import { useStore } from '../lib/store';
 import { EmptyState } from '../components/EmptyState';
 import { Avatar } from '../components/Avatar';
+import { SwipeRow } from '../components/SwipeRow';
 import { Icon } from '../components/Icon';
 import { PageHead } from '../components/PageHead';
 import { Shopping, WeekMenu } from '../components/FoodLists';
@@ -140,13 +141,28 @@ function Row({ item, today }: { item: RegelItem; today: string }) {
 }
 
 function TaskRow({ task, today }: { task: Task; today: string }) {
-  const { saveTask } = useStore();
+  const { saveTask, deleteTask, setNotice } = useStore();
   const { openTask, openDate } = useNav();
   const { events } = useData();
   const due = dueInfo(task.due, today);
   const linked = task.eventId ? events.find((e) => e.id === task.eventId) : undefined;
 
+  // Vegen: naar rechts afronden (of weer openen), naar links weghalen. Beide met ongedaan maken.
+  const reopen = () => void saveTask({ ...task, done: false }).catch(() => {});
+  const finish = () => {
+    void saveTask({ ...task, done: true }).catch(() => {});
+    setNotice(`‘${task.title}’ klaar`, reopen);
+  };
+
   return (
+    <SwipeRow
+      right={
+        task.done
+          ? { label: 'Weer openen', icon: 'terugdraaien', run: reopen }
+          : { label: 'Klaar', icon: 'vinkje', run: finish }
+      }
+      left={{ label: 'Weg', icon: 'prullenbak', run: () => void deleteTask(task.id).catch(() => {}) }}
+    >
     <div className={`actrow ${task.done ? 'actrow--done' : ''}`}>
       <label className="actrow__check">
         <input
@@ -189,6 +205,7 @@ function TaskRow({ task, today }: { task: Task; today: string }) {
         {task.done && task.decision && <span className="tiny muted">Besloten: {task.decision}</span>}
       </button>
     </div>
+    </SwipeRow>
   );
 }
 

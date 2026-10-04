@@ -18,8 +18,9 @@ gedraagt zich als een gewone app.
 | **Vandaag** | Volgt de tijd: 's ochtends wat er vandaag mee moet, 's middags wat er nog komt, 's avonds morgen met wat er klaar moet staan. Daaronder één regel als er iets te regelen valt. |
 | **Agenda** | Maandoverzicht met de items van de gekozen dag eronder, filterbaar per persoon, met weeknummers (ISO, zoals in Nederland). Op de telefoon rustig, zoals de iOS-agenda: dagcijfers met stipjes; vegen bladert een maand. Elk item kan een meeneem-lijstje en een eindtijd hebben. |
 | **Nieuw** (middenknop) | Eén blad met de keuze *Agenda-item* of *Taak*. Typ *"Matthijs vrijdag gymtas mee"* of *"Niels niet thuis 18:00-22:00"* en de app maakt er het juiste item van. |
-| **Regelen** | Openstaande taken om te regelen of af te stemmen, gegroepeerd op urgentie. Daarnaast Boodschappen en Weekmenu. Zie ook *Signaleren* hieronder. |
+| **Regelen** | Openstaande taken om te regelen of af te stemmen, gegroepeerd op urgentie. Daarnaast Boodschappen (invoer onderaan, met een snelkeuze van wat jullie vaak kopen) en Weekmenu. Zie ook *Signaleren* hieronder. |
 | **Signaleren** | Zetten Niels en Irene in de agenda wanneer ze *niet thuis* of *later thuis* zijn, dan ziet de app zelf wanneer jullie allebei weg zijn zonder oppas. Dat komt bij Regelen, met keuzes: iemand blijft thuis, een oppas regelen (wordt een taak) of geen probleem. |
+| **Vegen** | Op taken en boodschappen: naar rechts afronden, naar links weghalen, beide met ongedaan maken. |
 | **Ongedaan maken** | Verwijderen gaat meteen; in de melding staat 8 seconden *Ongedaan maken*. Dat zet het precies terug, ook een hele reeks. |
 | **Reeksen** | Zwemles elke dinsdag, of om de week, tot een einddatum. Elke keer is een eigen item: vink in het reeksoverzicht de lessen aan waarin met kleren gezwommen wordt en zet er in één keer "kleren om in te zwemmen" bij. Wijzigen of verwijderen kan voor één keer of voor deze en alle volgende. |
 | **Mensen** | Contacten (klasgenootjes met adres en de telefoonnummers van de ouders, tikbaar om te bellen of te appen via WhatsApp) en Oppas (alle momenten met uren, tarief en wat er nog openstaat). |

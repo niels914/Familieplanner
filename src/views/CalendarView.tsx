@@ -12,7 +12,7 @@ import {
   weekdayShort,
 } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
-import { birthdaysOnDate, coversDate, eventsOnDate, pickupForDate } from '../lib/events';
+import { birthdaysOnDate, coversDate, eventsOnDate } from '../lib/events';
 import { EventForm } from '../components/EventForm';
 import { Timeline } from '../components/Timeline';
 import { DayFacts } from '../components/DayFacts';
@@ -32,7 +32,7 @@ export function CalendarView({
   selected: string;
   onSelect: (date: string) => void;
 }) {
-  const { events, contacts, pickupRules, pickupOverrides, meals } = useData();
+  const { events, contacts, meals } = useData();
   const { saveEvent } = useStore();
   const regel = useRegel();
 
@@ -53,7 +53,6 @@ export function CalendarView({
 
   const dayEvents = eventsOnDate(visible, selected);
   const birthdays = birthdaysOnDate(contacts, selected);
-  const pickups = pickupForDate(selected, pickupRules, pickupOverrides);
   const dinner = meals.find((m) => m.date === selected);
 
   /** Bladeren neemt de selectie mee, zodat de daglijst altijd een dag toont
@@ -239,7 +238,8 @@ export function CalendarView({
           ) : null,
         )}
 
-        <DayFacts pickups={pickups} dish={dinner?.dish} />
+        {/* Breng en haal staat bij Gezin; hier alleen wat we eten. */}
+        <DayFacts pickups={[]} dish={dinner?.dish} />
 
         {birthdays.map((c) => (
           <p key={c.id} className="banner banner--info iconrow">

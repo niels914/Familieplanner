@@ -21,7 +21,6 @@ import type {
   Task,
 } from '../../shared/types';
 import { createKv } from './kv';
-import { leesUitBlobs } from './legacy-blobs';
 import { supabaseBackend, type SupabaseLike } from './supabase-backend';
 
 export type Collection =
@@ -76,8 +75,6 @@ function opslag() {
     kv = createKv<Collection>({
       backend: supabaseBackend(maakClient()),
       empty: EMPTY,
-      // Eenmalig overzetten van de vorige opslag; zie legacy-blobs.ts.
-      legacy: leesUitBlobs,
     });
   }
   return kv;

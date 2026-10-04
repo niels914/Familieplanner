@@ -64,10 +64,6 @@ van het project en kun je daarna niet meer wijzigen, dus let daar nu op.
 > omgevingsvariabelen van Netlify, nooit in de code. De tabel heeft Row Level Security
 > zonder policies, dus de publieke sleutel kan er niets uit lezen.
 
-**Had je de app al gebruikt met de vorige opslag (Netlify Blobs)?** Dan hoef je niets te
-doen. De eerste keer dat de app opent, worden de bestaande gegevens automatisch
-overgezet. Daarna kan `netlify/lib/legacy-blobs.ts` weg.
-
 ### 3. Omgevingsvariabelen instellen
 
 Netlify → *Site configuration* → *Environment variables*. Zie ook `.env.example`.

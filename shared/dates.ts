@@ -78,9 +78,12 @@ export function formatLong(s: string): string {
   return `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 
+/** De gebruikelijke korte maandnamen. Gewoon de eerste drie letters geeft "maa" voor maart. */
+const MONTHS_SHORT = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
 export function formatShort(s: string): string {
   const d = parseYmd(s);
-  return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`;
+  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
 }
 
 export function monthName(month: number): string {

@@ -1,6 +1,6 @@
 /** Controleert de regels voor het bewaren van agenda-items en taken (server en app delen ze). */
-import type { CalendarEvent, Task } from '../shared/types';
-import { restoreItems, saveEvent, saveTask } from '../shared/rules';
+import type { CalendarEvent, Receipt, Task } from '../shared/types';
+import { checkReceipt, restoreItems, saveEvent, saveReceipt, saveTask } from '../shared/rules';
 import { check, report } from './helpers';
 
 const ctx = { now: '2026-10-04T10:00:00.000Z', newId: () => 'nieuw-id' };
@@ -97,5 +97,52 @@ check('tweemaal terugzetten voegt niets dubbel toe', restoreItems(terug, [weg]).
 check('terugzetten laat een inmiddels nieuwe versie met hetzelfde id ongemoeid', restoreItems([basis({ title: 'Nieuwer' })], [weg])[0].title, 'Nieuwer');
 check('meerdere tegelijk (een reeks)', restoreItems([], [weg, basis({ id: 'e2' }), basis({ id: 'e3' })]).map((e) => e.id), ['e1', 'e2', 'e3']);
 check('niets terug te zetten', restoreItems([weg], []), [weg]);
+
+// -------------------------------------------------------------------- bonnetjes
+const bon = (extra: Partial<Receipt> = {}): Receipt => ({
+  id: 'r1',
+  title: 'Wasmachine',
+  purchaseDate: '2026-03-12',
+  person: 'gezin',
+  files: [{ id: 'f1', kind: 'image', thumb: true }],
+  warrantyMonths: 24,
+  createdAt: '2026-03-12T10:00:00.000Z',
+  updatedAt: '2026-03-12T10:00:00.000Z',
+  ...extra,
+});
+
+check('controle: een geldig bonnetje', checkReceipt({ purchaseDate: '2026-03-12', amountCents: 54900, warrantyMonths: 24, files: [{ id: 'a', kind: 'pdf' }] }), null);
+check('controle: zonder datum', checkReceipt({ title: 'x' }), 'Geef een geldige aankoopdatum op.');
+check('controle: een onzindatum', checkReceipt({ purchaseDate: '2026-13-45' }), 'Geef een geldige aankoopdatum op.');
+check('controle: een bedrag met komma', checkReceipt({ purchaseDate: '2026-03-12', amountCents: 12.5 }), 'Het bedrag klopt niet.');
+check('controle: een negatief bedrag', checkReceipt({ purchaseDate: '2026-03-12', amountCents: -1 }), 'Het bedrag klopt niet.');
+check('controle: garantie van 0 maanden', checkReceipt({ purchaseDate: '2026-03-12', warrantyMonths: 0 }), 'De garantietermijn klopt niet.');
+check('controle: een kapotte einddatum', checkReceipt({ purchaseDate: '2026-03-12', returnUntil: 'morgen' }), 'Een einddatum klopt niet.');
+check('controle: een onbekend soort bijlage', checkReceipt({ purchaseDate: '2026-03-12', files: [{ id: 'a', kind: 'exe' as 'pdf' }] }), 'Een bijlage klopt niet.');
+check('controle: te veel bijlagen', checkReceipt({ purchaseDate: '2026-03-12', files: Array.from({ length: 21 }, (_, i) => ({ id: `f${i}`, kind: 'image' as const })) }), 'Een bijlage klopt niet.');
+
+let bonnen = saveReceipt([], { title: '  Magnetron ', purchaseDate: '2026-03-12', store: ' Coolblue ', serial: '   ' }, ctx);
+check('nieuw bonnetje: id, getrimd, leeg is niets', [bonnen[0].id, bonnen[0].title, bonnen[0].store, bonnen[0].serial], ['nieuw-id', 'Magnetron', 'Coolblue', undefined]);
+check('nieuw bonnetje: standaardwaarden', [bonnen[0].person, bonnen[0].files, bonnen[0].createdAt], ['gezin', [], ctx.now]);
+bonnen = saveReceipt([], { purchaseDate: '2026-03-12' }, ctx);
+check('alleen een foto en datum is genoeg: lege titel', bonnen[0].title, '');
+
+let na = saveReceipt([bon({ reminded: { warranty: '2028-02-11' }, handled: { warranty: '2028-02-12' } })], { id: 'r1', title: 'Wasmachine Bosch', purchaseDate: '2026-03-12', warrantyMonths: 24, handled: { warranty: '2028-02-12' } }, later);
+check('bijwerken: titel verandert, bijlagen blijven', [na[0].title, na[0].files.length], ['Wasmachine Bosch', 1]);
+check('bijwerken: aanmaakmoment blijft', [na[0].createdAt, na[0].updatedAt], ['2026-03-12T10:00:00.000Z', later.now]);
+check('bijwerken: niets aan de garantie veranderd, dus herinnering en afhandeling blijven', [na[0].reminded?.warranty, na[0].handled?.warranty], ['2028-02-11', '2028-02-12']);
+na = saveReceipt([bon({ reminded: { warranty: '2028-02-11' }, handled: { warranty: '2028-02-12' } })], { id: 'r1', purchaseDate: '2026-03-12', warrantyMonths: 36 }, later);
+check('een nieuwe garantietermijn begint opnieuw: herinnering en afhandeling weg', [na[0].reminded, na[0].handled], [undefined, undefined]);
+na = saveReceipt([bon({ reminded: { warranty: 'x', return: 'y' } })], { id: 'r1', purchaseDate: '2026-03-12', returnUntil: '2026-04-01' }, later);
+check('een retourdatum erbij wist alleen de retourherinnering', [na[0].reminded?.warranty, na[0].reminded?.return], ['x', undefined]);
+na = saveReceipt([bon({ reminded: { warranty: 'x' } })], { id: 'r1', purchaseDate: '2026-03-12', warrantyMonths: 24, reminded: { warranty: undefined } }, later);
+check('van buitenaf kun je niet wijzigen wat al verstuurd is', na[0].reminded?.warranty, 'x');
+na = saveReceipt([bon({ amountCents: 54900 })], { id: 'r1', purchaseDate: '2026-03-12', warrantyMonths: 24, amountCents: undefined }, later);
+check('een bedrag wissen kan', na[0].amountCents, undefined);
+na = saveReceipt([bon({ store: 'Bol' })], { id: 'r1', purchaseDate: '2026-03-12' }, later);
+check('een veld dat niet meekomt blijft staan', na[0].store, 'Bol');
+na = saveReceipt([bon({ store: 'Bol' })], { id: 'r1', purchaseDate: '2026-03-12', store: '' }, later);
+check('een veld dat leeg meekomt, wordt gewist', na[0].store, undefined);
+check('de oorspronkelijke lijst is niet aangeraakt', [bon()].length, 1);
 
 report('opslagregels');

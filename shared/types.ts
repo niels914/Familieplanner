@@ -227,6 +227,54 @@ export type NewSignalDecision =
 /** Per signaalsleutel de gemaakte keuze. */
 export type Decisions = Record<string, SignalDecision>;
 
+/** Een bijlage bij een bonnetje: een foto of een pdf. De bestanden staan in de opslag, hier alleen de verwijzing. */
+export interface ReceiptFile {
+  id: string;
+  kind: 'image' | 'pdf';
+  /** Alleen bij een foto: er is ook een miniatuur. */
+  thumb?: boolean;
+}
+
+/** Een bonnetje met wat erbij hoort om de garantie te kunnen volgen. */
+export interface Receipt {
+  id: string;
+  /** Wat het is. Leeg als het nog aangevuld moet worden. */
+  title: string;
+  store?: string;
+  /** 'YYYY-MM-DD' */
+  purchaseDate: string;
+  amountCents?: number;
+  /** Van wie of voor wie het is; gezin als het niemand in het bijzonder is. */
+  person: PersonId;
+  /** Fabrieks- of winkelgarantie in maanden vanaf de aankoop. */
+  warrantyMonths?: number;
+  /** Een afwijkende einddatum (zoals de fabrikant die noemt); gaat voor op de maanden. */
+  warrantyUntil?: string;
+  /** Tot wanneer je het kunt retourneren. */
+  returnUntil?: string;
+  serial?: string;
+  notes?: string;
+  files: ReceiptFile[];
+  /** Expliciet aan of uit; zonder keuze herinneren we bij een bedrag vanaf 50 euro. */
+  remind?: boolean;
+  /** Wat je al hebt afgehandeld ("geen klachten"), met de datum. */
+  handled?: { warranty?: string; return?: string };
+  /** Welke herinneringen al verstuurd zijn, met de datum. */
+  reminded?: { warranty?: string; return?: string };
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Een garantie of retourtermijn die bijna afloopt. Dit gaat mee met het openen van de app. */
+export interface ReceiptAlert {
+  id: string;
+  title: string;
+  kind: 'warranty' | 'return';
+  /** Laatste dag, 'YYYY-MM-DD'. */
+  date: string;
+  daysLeft: number;
+}
+
 export interface PushSubscriptionRecord {
   id: string;
   endpoint: string;

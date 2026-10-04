@@ -371,3 +371,22 @@ Het gezin als hoofdpersoon, in de echte app.
 
 Niet gedaan, bewust: foto's, en een eigen kleur per kind buiten wat er al was. De kleuren
 per persoon bestaan al en horen bij de achtergrond van het dier.
+
+---
+
+## 11. Gebouwd: fase D, eerste deel
+
+- **Ongedaan maken in plaats van de bevestigingsvraag.** Verwijderen gaat meteen; de
+  melding heeft een knop *Ongedaan maken* die 8 seconden blijft staan. Het geldt voor een
+  los item, een hele reeks of een reeks vanaf een datum, een taak, een contact, boodschappen
+  (los en *Opruimen*) en een afwijking bij breng en haal. Herstel zet het ongewijzigd terug
+  (`POST /api/restore`, `restoreItems` in `shared/rules.ts`): met bron, reeks en tijdstempels,
+  en wat er al weer staat blijft ongemoeid. De vier browserdialogen zijn weg.
+- **Kortere formulieren.** Agenda-item: wat, wanneer, voor wie en meenemen staan open; soort,
+  oppasgegevens, herhalen, notitie en herinnering zitten achter *Meer opties*. Taak: wat,
+  wie en deadline; kind, besluit en notitie erachter. Contact: soort, naam, ouders en
+  telefoon; groep, adres, verjaardag en notitie erachter. Dichtgeklapt staat er kort wat er al
+  is ingevuld, en staat er al iets in, dan begint het formulier open (`MoreOptions`).
+- **Nog te doen in fase D:** vegen op lijsten, boodschappen met invoer onderaan en
+  snelkeuze, oppasfilters op één regel, en rustige overgangen.
+

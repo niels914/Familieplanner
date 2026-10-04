@@ -1127,6 +1127,35 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 }
 .event__open > span { display: block; }
 
+/* --------------------------------------------------------- meer opties */
+.more { border-top: 1px solid var(--line); }
+.more__toggle {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.more__label { flex-shrink: 0; font-size: 0.95rem; font-weight: 700; }
+.more__preview {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+.more__chevron { flex-shrink: 0; color: var(--muted); transition: transform var(--dur) var(--ease); }
+.more__toggle[aria-expanded='true'] .more__chevron { transform: rotate(90deg); }
+.more__body { padding: 4px 0 6px; }
+
 /* --------------------------------------------------------- morgen-uitklap */
 .foldout { margin-top: 20px; border-top: 1px solid var(--line); }
 .foldout > summary {

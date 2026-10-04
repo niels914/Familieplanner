@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ChildId, Contact, Parent, ParentRole } from '../../shared/types';
 import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { Modal } from './Modal';
+import { MoreOptions } from './MoreOptions';
 import { ChipPicker, type ChipOption } from './ChipPicker';
 import { useStore } from '../lib/store';
 import { Icon } from './Icon';
@@ -83,6 +84,21 @@ export function ContactForm({
 
   const isClassmate = draft.kind === 'klasgenoot';
 
+  // Groep, adres, verjaardag en notitie staan achter "Meer opties", tenzij er al iets in staat.
+  const [meerOpen, setMeerOpen] = useState(() =>
+    Boolean(initial && (initial.group || initial.address || initial.notes || (initial.kind === 'overig' && initial.birthday))),
+  );
+  const meerVoorbeeld =
+    [
+      isClassmate && draft.group ? draft.group : null,
+      isClassmate && draft.address ? 'adres' : null,
+      draft.kind === 'overig' && draft.birthday ? 'verjaardag' : null,
+      draft.notes ? 'notitie' : null,
+    ]
+      .filter(Boolean)
+      .join(' · ') ||
+    (isClassmate ? 'Groep, adres, notitie' : draft.kind === 'overig' ? 'Verjaardag, notitie' : 'Notitie');
+
   return (
     <Modal
       title={initial ? 'Contact bewerken' : 'Nieuw contact'}
@@ -119,24 +135,12 @@ export function ContactForm({
         </div>
 
         {isClassmate && (
-          <>
-            <ChipPicker
-              label="Klasgenootje van"
-              value={draft.childOf ?? 'matthijs'}
-              options={KIND_OPTIES}
-              onChange={(v) => set('childOf', v)}
-            />
-            <div className="field">
-              <label htmlFor="ct-group">Groep / klas</label>
-              <input
-                id="ct-group"
-                className="input"
-                placeholder="Bijv. groep 1/2A"
-                value={draft.group ?? ''}
-                onChange={(e) => set('group', e.target.value)}
-              />
-            </div>
-          </>
+          <ChipPicker
+            label="Klasgenootje van"
+            value={draft.childOf ?? 'matthijs'}
+            options={KIND_OPTIES}
+            onChange={(v) => set('childOf', v)}
+          />
         )}
 
         {draft.kind === 'oppas' && (
@@ -167,40 +171,14 @@ export function ContactForm({
         )}
 
         {draft.kind === 'overig' && (
-          <div className="field-row">
-            <div className="field">
-              <label htmlFor="ct-phone2">Telefoon</label>
-              <input
-                id="ct-phone2"
-                className="input"
-                type="tel"
-                value={draft.phone ?? ''}
-                onChange={(e) => set('phone', e.target.value)}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="ct-bday">Verjaardag</label>
-              <input
-                id="ct-bday"
-                className="input"
-                type="date"
-                value={draft.birthday ?? ''}
-                onChange={(e) => set('birthday', e.target.value)}
-              />
-            </div>
-          </div>
-        )}
-
-        {isClassmate && (
           <div className="field">
-            <label htmlFor="ct-address">Adres</label>
+            <label htmlFor="ct-phone2">Telefoon</label>
             <input
-              id="ct-address"
+              id="ct-phone2"
               className="input"
-              autoComplete="off"
-              placeholder="Straat en huisnummer"
-              value={draft.address ?? ''}
-              onChange={(e) => set('address', e.target.value)}
+              type="tel"
+              value={draft.phone ?? ''}
+              onChange={(e) => set('phone', e.target.value)}
             />
           </div>
         )}
@@ -265,16 +243,57 @@ export function ContactForm({
           </div>
         )}
 
-        <div className="field">
-          <label htmlFor="ct-notes">Notitie</label>
-          <textarea
-            id="ct-notes"
-            className="textarea"
-            placeholder="Bijv. allergieën, wie waar woont"
-            value={draft.notes ?? ''}
-            onChange={(e) => set('notes', e.target.value)}
-          />
-        </div>
+        <MoreOptions open={meerOpen} onToggle={() => setMeerOpen((o) => !o)} preview={meerVoorbeeld}>
+          {isClassmate && (
+            <>
+              <div className="field">
+                <label htmlFor="ct-group">Groep / klas</label>
+                <input
+                  id="ct-group"
+                  className="input"
+                  placeholder="Bijv. groep 1/2A"
+                  value={draft.group ?? ''}
+                  onChange={(e) => set('group', e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="ct-address">Adres</label>
+                <input
+                  id="ct-address"
+                  className="input"
+                  autoComplete="off"
+                  placeholder="Straat en huisnummer"
+                  value={draft.address ?? ''}
+                  onChange={(e) => set('address', e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
+          {draft.kind === 'overig' && (
+            <div className="field">
+              <label htmlFor="ct-bday">Verjaardag</label>
+              <input
+                id="ct-bday"
+                className="input"
+                type="date"
+                value={draft.birthday ?? ''}
+                onChange={(e) => set('birthday', e.target.value)}
+              />
+            </div>
+          )}
+
+          <div className="field">
+            <label htmlFor="ct-notes">Notitie</label>
+            <textarea
+              id="ct-notes"
+              className="textarea"
+              placeholder="Bijv. allergieën, wie waar woont"
+              value={draft.notes ?? ''}
+              onChange={(e) => set('notes', e.target.value)}
+            />
+          </div>
+        </MoreOptions>
       </div>
     </Modal>
   );

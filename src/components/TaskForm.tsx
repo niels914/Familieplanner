@@ -11,6 +11,7 @@ import { addDays, formatLong, todayInNl } from '../../shared/dates';
 import { dueInfo } from '../lib/regelen';
 import { useData, useStore } from '../lib/store';
 import { useNav } from '../lib/nav';
+import { MoreOptions } from './MoreOptions';
 import { ChipPicker, type ChipOption } from './ChipPicker';
 import { Icon } from './Icon';
 import { Modal } from './Modal';
@@ -36,11 +37,17 @@ export function TaskForm({ task, onClose }: { task: Task; onClose: () => void })
   const today = todayInNl();
 
   const [draft, setDraft] = useState<Task>(task);
+  // Kind, besluit en notitie staan achter "Meer opties", tenzij er al iets in staat.
+  const [meerOpen, setMeerOpen] = useState(Boolean(task.kid || task.note || task.decision || task.owner === 'samen'));
   const set = <K extends keyof Task>(key: K, value: Task[K]) => setDraft((d) => ({ ...d, [key]: value }));
 
   const linked = task.eventId ? events.find((e) => e.id === task.eventId) : undefined;
   const due = dueInfo(draft.due, today);
   const canSave = draft.title.trim().length > 0;
+  const meerVoorbeeld =
+    [draft.kid ? PERSON_LABEL[draft.kid] : null, draft.note ? 'notitie' : null, draft.decision ? 'besluit' : null]
+      .filter(Boolean)
+      .join(' · ') || 'Voor welk kind, notitie';
 
   const save = (extra: Partial<Task> = {}) => {
     if (!canSave) return;
@@ -83,13 +90,6 @@ export function TaskForm({ task, onClose }: { task: Task; onClose: () => void })
         </div>
 
         <ChipPicker label="Wie moet het doen" value={draft.owner} options={OWNERS} onChange={(v) => set('owner', v)} />
-        <ChipPicker
-          label="Voor welk kind"
-          value={draft.kid ?? 'gezin'}
-          options={KIDS}
-          onChange={(v) => set('kid', v === 'gezin' ? undefined : v)}
-        />
-
         <div className="field">
           <label htmlFor="taak-deadline">Deadline</label>
           <div className="row row--wrap">
@@ -138,34 +138,38 @@ export function TaskForm({ task, onClose }: { task: Task; onClose: () => void })
           </button>
         )}
 
-        {(draft.owner === 'samen' || draft.decision) && (
+        <MoreOptions open={meerOpen} onToggle={() => setMeerOpen((o) => !o)} preview={meerVoorbeeld}>
+          <ChipPicker
+            label="Voor welk kind"
+            value={draft.kid ?? 'gezin'}
+            options={KIDS}
+            onChange={(v) => set('kid', v === 'gezin' ? undefined : v)}
+          />
+
+          {(draft.owner === 'samen' || draft.decision) && (
+            <div className="field">
+              <label htmlFor="taak-besluit">Wat is besloten?</label>
+              <input
+                id="taak-besluit"
+                className="input"
+                placeholder="Bijvoorbeeld: Niels gaat, Irene past op"
+                value={draft.decision ?? ''}
+                onChange={(e) => set('decision', e.target.value || undefined)}
+              />
+            </div>
+          )}
+
           <div className="field">
-            <label htmlFor="taak-besluit">Wat is besloten?</label>
-            <input
-              id="taak-besluit"
-              className="input"
-              placeholder="Bijvoorbeeld: Niels gaat, Irene past op"
-              value={draft.decision ?? ''}
-              onChange={(e) => set('decision', e.target.value || undefined)}
+            <label htmlFor="taak-notitie">Notitie</label>
+            <textarea
+              id="taak-notitie"
+              className="textarea"
+              value={draft.note ?? ''}
+              onChange={(e) => set('note', e.target.value || undefined)}
             />
           </div>
-        )}
 
-        <div className="field">
-          <label htmlFor="taak-notitie">Notitie</label>
-          <textarea
-            id="taak-notitie"
-            className="textarea"
-            value={draft.note ?? ''}
-            onChange={(e) => set('note', e.target.value || undefined)}
-          />
-        </div>
-
-        {draft.kid && (
-          <p className="small muted" style={{ margin: 0 }}>
-            Hoort bij {PERSON_LABEL[draft.kid]}.
-          </p>
-        )}
+        </MoreOptions>
       </div>
     </Modal>
   );

@@ -20,6 +20,7 @@ gedraagt zich als een gewone app.
 | **Nieuw** (middenknop) | Eén blad met de keuze *Agenda-item* of *Taak*. Typ *"Matthijs vrijdag gymtas mee"* of *"Niels niet thuis 18:00-22:00"* en de app maakt er het juiste item van. |
 | **Regelen** | Openstaande taken om te regelen of af te stemmen, gegroepeerd op urgentie. Daarnaast Boodschappen en Weekmenu. Zie ook *Signaleren* hieronder. |
 | **Signaleren** | Zetten Niels en Irene in de agenda wanneer ze *niet thuis* of *later thuis* zijn, dan ziet de app zelf wanneer jullie allebei weg zijn zonder oppas. Dat komt bij Regelen, met keuzes: iemand blijft thuis, een oppas regelen (wordt een taak) of geen probleem. |
+| **Ongedaan maken** | Verwijderen gaat meteen; in de melding staat 8 seconden *Ongedaan maken*. Dat zet het precies terug, ook een hele reeks. |
 | **Reeksen** | Zwemles elke dinsdag, of om de week, tot een einddatum. Elke keer is een eigen item: vink in het reeksoverzicht de lessen aan waarin met kleren gezwommen wordt en zet er in één keer "kleren om in te zwemmen" bij. Wijzigen of verwijderen kan voor één keer of voor deze en alle volgende. |
 | **Mensen** | Contacten (klasgenootjes met adres en de telefoonnummers van de ouders, tikbaar om te bellen of te appen via WhatsApp) en Oppas (alle momenten met uren, tarief en wat er nog openstaat). |
 | **Klaarzetten** | Wat er mee moet staat per persoon bij elkaar, met een dier en naam erboven. Zodra er iets is afgevinkt zie je "1 van 4 klaar"; is alles klaar, dan volgt een rustig vinkje. |

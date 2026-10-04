@@ -12,6 +12,7 @@ import { spanLabel } from '../../shared/signals';
 import { DRAFT_ID, useAwayWarnings } from '../lib/useAwayWarnings';
 import { seriesCount } from '../../shared/series';
 import { Modal } from './Modal';
+import { MoreOptions } from './MoreOptions';
 import { ChipPicker, type ChipOption } from './ChipPicker';
 import { CATEGORY_ICON } from './EventBody';
 import { useData, useStore } from '../lib/store';
@@ -87,6 +88,12 @@ export function EventForm({
   const [tot, setTot] = useState(() => addDays(initial?.date ?? date, 7 * 13));
   const [bereik, setBereik] = useState<'deze' | 'volgende'>('deze');
   const [verwijderKeuze, setVerwijderKeuze] = useState(false);
+  // De minder gebruikte velden staan dicht, tenzij er al iets in staat.
+  const [meerOpen, setMeerOpen] = useState(() => {
+    const d: Partial<CalendarEvent> = initial ?? {};
+    if (d.source === 'parro' || d.source === 'agenda') return Boolean(d.notes);
+    return Boolean((d.category && d.category !== 'anders') || d.notes || d.sitter || d.reminder === false);
+  });
 
   const isEditing = Boolean(initial?.id);
   const reeks = initial?.series;
@@ -100,6 +107,16 @@ export function EventForm({
   // Uit Parro of een gekoppelde agenda: de bron bepaalt titel, datum en tijd.
   const isParro = draft.source === 'parro' || draft.source === 'agenda';
   const isSitter = draft.category === 'oppas';
+  // Wat achter "Meer opties" al is ingevuld, zodat je dat dichtgeklapt toch ziet.
+  const meerVoorbeeld =
+    [
+      draft.category && draft.category !== 'anders' ? CATEGORY_LABEL[draft.category] : null,
+      herhaal > 0 ? 'herhaalt' : null,
+      draft.notes ? 'notitie' : null,
+      draft.reminder === false ? 'geen herinnering' : null,
+    ]
+      .filter(Boolean)
+      .join(' · ') || 'Soort, herhalen, notitie';
   const heeftTijd = Boolean(draft.time);
   const isAway = draft.category === 'weg';
   const awayWithoutParent = isAway && draft.person !== 'niels' && draft.person !== 'irene';
@@ -240,8 +257,8 @@ export function EventForm({
         {isParro && (
           <div className="banner banner--info">
             {draft.source === 'agenda'
-              ? 'Dit item komt uit je gekoppelde agenda. Titel, datum en tijd worden bij elke synchronisatie overschreven. Wijzig ze daar. Je meeneem-lijstje en notitie blijven wel staan.'
-              : 'Dit item komt uit Parro. Titel, datum en tijd worden bij elke synchronisatie overschreven — je meeneem-lijstje en notitie blijven wel staan.'}
+              ? 'Komt uit je agenda. Titel, datum en tijd wijzig je daar; je meeneem-lijstje en notitie blijven staan.'
+              : 'Komt uit Parro. Titel, datum en tijd worden bij elke synchronisatie overschreven; je meeneem-lijstje en notitie blijven staan.'}
           </div>
         )}
 
@@ -379,180 +396,12 @@ export function EventForm({
           </p>
         ))}
 
-        {!isEditing && !isParro && (
-          <div className="field">
-            <span className="field__label">Herhalen</span>
-            <div className="segmented" role="group" aria-label="Herhalen">
-              <button type="button" aria-pressed={herhaal === 0} onClick={() => setHerhaal(0)}>
-                Niet
-              </button>
-              <button type="button" aria-pressed={herhaal === 1} onClick={() => setHerhaal(1)}>
-                Elke week
-              </button>
-              <button type="button" aria-pressed={herhaal === 2} onClick={() => setHerhaal(2)}>
-                Om de week
-              </button>
-            </div>
-
-            {herhaal > 0 && (
-              <div className="stack stack--sm" style={{ marginTop: 4 }}>
-                <div className="row row--wrap">
-                  <label htmlFor="ev-tot" className="small muted">
-                    Tot en met
-                  </label>
-                  <input
-                    id="ev-tot"
-                    className="input"
-                    style={{ width: 170 }}
-                    type="date"
-                    min={startDatum}
-                    value={tot}
-                    onChange={(e) => setTot(e.target.value)}
-                  />
-                </div>
-                <div className="picks">
-                  {TOT_KEUZES.map((k) => (
-                    <button
-                      key={k.label}
-                      type="button"
-                      className="pick"
-                      aria-pressed={tot === addDays(startDatum, 7 * k.weken)}
-                      onClick={() => setTot(addDays(startDatum, 7 * k.weken))}
-                    >
-                      {k.label}
-                    </button>
-                  ))}
-                </div>
-                <p className="small muted" style={{ margin: 0 }}>
-                  {herhaal === 2 ? 'Om de week' : 'Elke week'} op {weekdag(startDatum)} ·{' '}
-                  <strong>{aantalKeer} keer</strong>. Per keer kun je daarna nog iets toevoegen, zoals
-                  wat er die dag extra mee moet.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
         <ChipPicker
           label="Voor wie"
           value={draft.person ?? 'gezin'}
           options={PERSON_OPTIONS}
           onChange={(v) => set('person', v)}
         />
-
-        <ChipPicker
-          label="Soort"
-          value={draft.category ?? 'anders'}
-          options={CATEGORY_OPTIONS}
-          onChange={(v) =>
-            setDraft((d) => ({
-              ...d,
-              category: v,
-              // Een "niet thuis" hoeft niet in de avondherinnering.
-              reminder: v === 'weg' ? false : d.category === 'weg' ? true : d.reminder,
-              // Meteen de standaardtijden zetten, anders staat er 18:00–22:00 in
-              // beeld terwijl het item zonder oppasgegevens opgeslagen zou worden.
-              sitter: v === 'oppas' ? (d.sitter ?? { ...LEGE_OPPAS }) : d.sitter,
-            }))
-          }
-        />
-
-        {isSitter && (
-          <div className="card card--pad stack stack--sm">
-            <strong className="small">Oppasgegevens</strong>
-
-            {sitters.length > 0 && (
-              <div className="picks">
-                {sitters.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    className="pick"
-                    aria-pressed={draft.sitter?.contactId === s.id}
-                    onClick={() => {
-                      setEigenNaam(false);
-                      setSitter({ contactId: s.id, name: s.name, rate: s.sitterRate ?? 0 });
-                    }}
-                  >
-                    {s.name}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  className="pick"
-                  aria-pressed={eigenNaam}
-                  onClick={() => {
-                    setEigenNaam(true);
-                    setSitter({ contactId: undefined });
-                  }}
-                >
-                  Anders…
-                </button>
-              </div>
-            )}
-
-            {(eigenNaam || sitters.length === 0) && (
-              <input
-                className="input"
-                placeholder="Naam van de oppas"
-                aria-label="Naam van de oppas"
-                value={draft.sitter?.name ?? ''}
-                onChange={(e) => setSitter({ name: e.target.value })}
-              />
-            )}
-
-            <div className="field-row">
-              <div className="field">
-                <label htmlFor="ev-start">Van</label>
-                <input
-                  id="ev-start"
-                  className="input"
-                  type="time"
-                  value={draft.sitter?.start ?? LEGE_OPPAS.start}
-                  onChange={(e) => setSitter({ start: e.target.value })}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="ev-end">Tot</label>
-                <input
-                  id="ev-end"
-                  className="input"
-                  type="time"
-                  value={draft.sitter?.end ?? LEGE_OPPAS.end}
-                  onChange={(e) => setSitter({ end: e.target.value })}
-                />
-              </div>
-            </div>
-
-            <div className="row row--wrap">
-              <div className="field" style={{ width: 104 }}>
-                <label htmlFor="ev-rate">€ per uur</label>
-                <input
-                  id="ev-rate"
-                  className="input"
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  value={draft.sitter?.rate ?? 0}
-                  onChange={(e) => setSitter({ rate: Number(e.target.value) })}
-                />
-              </div>
-              <span className="small muted grow" style={{ paddingTop: 18 }}>
-                {uren.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} uur ·{' '}
-                <strong>{euro(uren * (draft.sitter?.rate ?? 0))}</strong>
-              </span>
-              <button
-                type="button"
-                className="pick"
-                style={{ marginTop: 16 }}
-                aria-pressed={draft.sitter?.paid ?? false}
-                onClick={() => setSitter({ paid: !draft.sitter?.paid })}
-              >
-                <Icon name="vinkje" size={15} /> Betaald
-              </button>
-            </div>
-          </div>
-        )}
 
         <div className="field">
           <span className="field__label">Meenemen</span>
@@ -609,15 +458,194 @@ export function EventForm({
           </div>
         </div>
 
-        <div className="field">
-          <label htmlFor="ev-notes">Notitie</label>
-          <textarea
-            id="ev-notes"
-            className="textarea"
-            value={draft.notes ?? ''}
-            onChange={(e) => set('notes', e.target.value)}
+        <MoreOptions open={meerOpen} onToggle={() => setMeerOpen((o) => !o)} preview={meerVoorbeeld}>
+          <ChipPicker
+            label="Soort"
+            value={draft.category ?? 'anders'}
+            options={CATEGORY_OPTIONS}
+            onChange={(v) =>
+              setDraft((d) => ({
+                ...d,
+                category: v,
+                // Een "niet thuis" hoeft niet in de avondherinnering.
+                reminder: v === 'weg' ? false : d.category === 'weg' ? true : d.reminder,
+                // Meteen de standaardtijden zetten, anders staat er 18:00–22:00 in
+                // beeld terwijl het item zonder oppasgegevens opgeslagen zou worden.
+                sitter: v === 'oppas' ? (d.sitter ?? { ...LEGE_OPPAS }) : d.sitter,
+              }))
+            }
           />
-        </div>
+
+          {isSitter && (
+            <div className="card card--pad stack stack--sm">
+              <strong className="small">Oppasgegevens</strong>
+
+              {sitters.length > 0 && (
+                <div className="picks">
+                  {sitters.map((s) => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      className="pick"
+                      aria-pressed={draft.sitter?.contactId === s.id}
+                      onClick={() => {
+                        setEigenNaam(false);
+                        setSitter({ contactId: s.id, name: s.name, rate: s.sitterRate ?? 0 });
+                      }}
+                    >
+                      {s.name}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="pick"
+                    aria-pressed={eigenNaam}
+                    onClick={() => {
+                      setEigenNaam(true);
+                      setSitter({ contactId: undefined });
+                    }}
+                  >
+                    Anders…
+                  </button>
+                </div>
+              )}
+
+              {(eigenNaam || sitters.length === 0) && (
+                <input
+                  className="input"
+                  placeholder="Naam van de oppas"
+                  aria-label="Naam van de oppas"
+                  value={draft.sitter?.name ?? ''}
+                  onChange={(e) => setSitter({ name: e.target.value })}
+                />
+              )}
+
+              <div className="field-row">
+                <div className="field">
+                  <label htmlFor="ev-start">Van</label>
+                  <input
+                    id="ev-start"
+                    className="input"
+                    type="time"
+                    value={draft.sitter?.start ?? LEGE_OPPAS.start}
+                    onChange={(e) => setSitter({ start: e.target.value })}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="ev-end">Tot</label>
+                  <input
+                    id="ev-end"
+                    className="input"
+                    type="time"
+                    value={draft.sitter?.end ?? LEGE_OPPAS.end}
+                    onChange={(e) => setSitter({ end: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="row row--wrap">
+                <div className="field" style={{ width: 104 }}>
+                  <label htmlFor="ev-rate">€ per uur</label>
+                  <input
+                    id="ev-rate"
+                    className="input"
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={draft.sitter?.rate ?? 0}
+                    onChange={(e) => setSitter({ rate: Number(e.target.value) })}
+                  />
+                </div>
+                <span className="small muted grow" style={{ paddingTop: 18 }}>
+                  {uren.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} uur ·{' '}
+                  <strong>{euro(uren * (draft.sitter?.rate ?? 0))}</strong>
+                </span>
+                <button
+                  type="button"
+                  className="pick"
+                  style={{ marginTop: 16 }}
+                  aria-pressed={draft.sitter?.paid ?? false}
+                  onClick={() => setSitter({ paid: !draft.sitter?.paid })}
+                >
+                  <Icon name="vinkje" size={15} /> Betaald
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!isEditing && !isParro && (
+            <div className="field">
+              <span className="field__label">Herhalen</span>
+              <div className="segmented" role="group" aria-label="Herhalen">
+                <button type="button" aria-pressed={herhaal === 0} onClick={() => setHerhaal(0)}>
+                  Niet
+                </button>
+                <button type="button" aria-pressed={herhaal === 1} onClick={() => setHerhaal(1)}>
+                  Elke week
+                </button>
+                <button type="button" aria-pressed={herhaal === 2} onClick={() => setHerhaal(2)}>
+                  Om de week
+                </button>
+              </div>
+
+              {herhaal > 0 && (
+                <div className="stack stack--sm" style={{ marginTop: 4 }}>
+                  <div className="row row--wrap">
+                    <label htmlFor="ev-tot" className="small muted">
+                      Tot en met
+                    </label>
+                    <input
+                      id="ev-tot"
+                      className="input"
+                      style={{ width: 170 }}
+                      type="date"
+                      min={startDatum}
+                      value={tot}
+                      onChange={(e) => setTot(e.target.value)}
+                    />
+                  </div>
+                  <div className="picks">
+                    {TOT_KEUZES.map((k) => (
+                      <button
+                        key={k.label}
+                        type="button"
+                        className="pick"
+                        aria-pressed={tot === addDays(startDatum, 7 * k.weken)}
+                        onClick={() => setTot(addDays(startDatum, 7 * k.weken))}
+                      >
+                        {k.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="small muted" style={{ margin: 0 }}>
+                    {herhaal === 2 ? 'Om de week' : 'Elke week'} op {weekdag(startDatum)} ·{' '}
+                    <strong>{aantalKeer} keer</strong>. Per keer kun je daarna nog iets toevoegen, zoals
+                    wat er die dag extra mee moet.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="field">
+            <label htmlFor="ev-notes">Notitie</label>
+            <textarea
+              id="ev-notes"
+              className="textarea"
+              value={draft.notes ?? ''}
+              onChange={(e) => set('notes', e.target.value)}
+            />
+          </div>
+
+          <label className="checkline">
+            <input
+              type="checkbox"
+              checked={draft.reminder ?? true}
+              onChange={(e) => set('reminder', e.target.checked)}
+            />
+            <span className="small">Meenemen in de herinnering van de avond ervoor</span>
+          </label>
+        </MoreOptions>
 
         {gedeeldGewijzigd && (
           <div className="field">
@@ -637,14 +665,6 @@ export function EventForm({
           </div>
         )}
 
-        <label className="checkline">
-          <input
-            type="checkbox"
-            checked={draft.reminder ?? true}
-            onChange={(e) => set('reminder', e.target.checked)}
-          />
-          <span className="small">Meenemen in de herinnering van de avond ervoor</span>
-        </label>
       </div>
     </Modal>
   );

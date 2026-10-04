@@ -1,4 +1,4 @@
-/** Controleert de opslaglogica: tegelijk schrijven en het overzetten van de oude opslag. */
+/** Controleert de opslaglogica: tegelijk schrijven zonder elkaars wijziging te verliezen. */
 import { createKv, type KvBackend, type KvRow } from '../netlify/lib/kv';
 import { check, report } from './helpers';
 
@@ -31,7 +31,7 @@ function geheugen(): KvBackend & { rijen: Map<string, KvRow>; schrijfpogingen: n
   return b;
 }
 
-const snel = { sleep: async () => {}, log: () => {} };
+const snel = { sleep: async () => {} };
 
 // --- lezen en schrijven ---------------------------------------------------
 {

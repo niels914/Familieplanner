@@ -571,6 +571,30 @@ section:first-of-type > .grouphead { margin-top: 6px; }
 }
 .textarea { min-height: 78px; resize: vertical; }
 
+/* Safari op iPhone tekent datum- en tijdvelden met een eigen, bredere maat en
+   negeert width. Zonder eigen uiterlijk past het veld zich wel aan de kolom aan;
+   het kiezerblad opent nog steeds bij een tik. */
+input[type='date'],
+input[type='time'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  height: 42px;
+  line-height: 1.2;
+  text-align: left;
+}
+input[type='date']::-webkit-date-and-time-value,
+input[type='time']::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.2em;
+  margin: 0;
+}
+/* Een leeg veld in iOS kan een verborgen minimumbreedte houden. */
+input[type='date']::-webkit-datetime-edit,
+input[type='time']::-webkit-datetime-edit { padding: 0; }
+
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
 .checkline { display: flex; align-items: center; gap: 9px; cursor: pointer; }
@@ -1154,7 +1178,7 @@ section:first-of-type > .grouphead { margin-top: 6px; }
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
-.modal__body { padding: 16px; }
+.modal__body { padding: 16px; overflow-x: hidden; }
 .modal__foot {
   display: flex;
   gap: 10px;

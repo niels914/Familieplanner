@@ -3,6 +3,7 @@ import type { ChildId, Contact } from '../../shared/types';
 import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { useData } from '../lib/store';
 import { euro, initials } from '../lib/events';
+import { whatsappLink } from '../../shared/phone';
 import { ContactForm } from '../components/ContactForm';
 import { Icon } from '../components/Icon';
 import { EmptyState } from '../components/EmptyState';
@@ -56,7 +57,7 @@ export function ContactsView({ embedded = false }: { embedded?: boolean }) {
 
     const matchtZoek = (c: Contact) => {
       if (!q) return true;
-      return [c.name, c.group, c.notes, c.phone, ...c.parents.flatMap((p) => [p.name, p.phone, p.email])]
+      return [c.name, c.group, c.address, c.notes, c.phone, ...c.parents.flatMap((p) => [p.name, p.phone, p.email])]
         .filter(Boolean)
         .join(' ')
         .toLowerCase()
@@ -106,7 +107,7 @@ export function ContactsView({ embedded = false }: { embedded?: boolean }) {
 
       <input
         className="input"
-        placeholder="Zoek op naam, ouder of telefoonnummer"
+        placeholder="Zoek op naam, ouder, adres, nummer"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         style={{ marginBottom: 12 }}
@@ -178,11 +179,12 @@ function ContactTile({ contact, onEdit }: { contact: Contact; onEdit: () => void
   const avatarClass =
     contact.kind === 'oppas' ? 'avatar--oppas' : contact.childOf ? `avatar--${contact.childOf}` : '';
 
+  // Bij een ouder staat de naam boven het nummer; het eigen nummer hoort bij de kop van de kaart.
   const phones = [
-    ...(contact.phone ? [{ name: contact.name, phone: contact.phone }] : []),
+    ...(contact.phone ? [{ name: contact.name, label: undefined, phone: contact.phone }] : []),
     ...contact.parents
       .filter((p) => p.phone)
-      .map((p) => ({ name: `${p.name} (${p.role})`, phone: p.phone! })),
+      .map((p) => ({ name: p.name, label: `${p.name} (${p.role})`, phone: p.phone! })),
   ];
 
   return (
@@ -215,13 +217,39 @@ function ContactTile({ contact, onEdit }: { contact: Contact; onEdit: () => void
           </div>
 
           {phones.length > 0 && (
-            <div className="row row--wrap" style={{ marginTop: 8 }}>
-              {phones.map((p) => (
-                <a key={p.phone} className="phone" href={`tel:${p.phone.replace(/\s/g, '')}`}>
-                  <Icon name="telefoon" size={16} />
-                  {p.name}: {p.phone}
-                </a>
-              ))}
+            <div className="stack stack--sm" style={{ marginTop: 8 }}>
+              {phones.map((p) => {
+                const wa = whatsappLink(p.phone);
+                return (
+                  <div key={p.phone} className="phonegroup">
+                    {p.label && <div className="small muted">{p.label}</div>}
+                    <div className="phonerow">
+                      <a className="phone" href={`tel:${p.phone.replace(/\s/g, '')}`} aria-label={`Bel ${p.name}`}>
+                        <Icon name="telefoon" size={16} />
+                        {p.phone}
+                      </a>
+                      {wa && (
+                        <a
+                          className="phone phone--wa"
+                          href={wa}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${p.name} in WhatsApp openen`}
+                        >
+                          <Icon name="bericht" size={16} />
+                          WhatsApp
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {contact.address && (
+            <div className="iconrow small" style={{ marginTop: 8 }}>
+              <Icon name="speld" size={15} /> {contact.address}
             </div>
           )}
 

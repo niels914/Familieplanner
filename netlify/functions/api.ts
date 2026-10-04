@@ -355,6 +355,7 @@ async function handleContacts(req: Request, id?: string): Promise<Response> {
           parents,
           sitterRate: body.sitterRate,
           phone: body.phone,
+          address: body.address,
           notes: body.notes,
           createdAt: now,
           updatedAt: now,

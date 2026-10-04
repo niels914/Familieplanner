@@ -134,6 +134,8 @@ export interface Contact {
   /** Alleen bij kind 'oppas'. */
   sitterRate?: number;
   phone?: string;
+  /** Straat en huisnummer, handig voor een verjaardag of het ophalen. */
+  address?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;

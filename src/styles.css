@@ -1292,6 +1292,16 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
   text-decoration: none;
 }
 
+.phonegroup { display: flex; flex-direction: column; gap: 3px; }
+.phonerow { display: flex; flex-wrap: wrap; gap: 8px; }
+.phonerow .phone { padding: 8px 12px; white-space: nowrap; }
+/* WhatsApp: rustig naast het nummer, niet nog een felle knop. */
+.phone--wa {
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
 /* ------------------------------------------------------------ tabellen */
 .weekgrid { display: grid; gap: 8px; }
 .weekgrid__row {

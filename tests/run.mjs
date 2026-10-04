@@ -8,6 +8,7 @@ const files = [
   'tests/ics.test.ts',
   'tests/agenda.test.ts',
   'tests/dates.test.ts',
+  'tests/phone.test.ts',
   'tests/quickparse.test.ts',
   'tests/series.test.ts',
   'tests/signals.test.ts',

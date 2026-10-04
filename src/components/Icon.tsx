@@ -20,6 +20,7 @@ export type IconName =
   | 'speld'
   | 'klok'
   | 'telefoon'
+  | 'bericht'
   | 'zoeken'
   | 'plus'
   | 'vinkje'
@@ -130,6 +131,9 @@ const PATHS: Record<IconName, JSX.Element> = {
   ),
   telefoon: (
     <path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 5.5 5.5l1.5-2 4 1.5v3a1.8 1.8 0 0 1-2 1.8C11 18.4 5.6 13 4.7 5.3A1.8 1.8 0 0 1 6.5 3.5Z" />
+  ),
+  bericht: (
+    <path d="M5 4.5h14A1.5 1.5 0 0 1 20.5 6v9a1.5 1.5 0 0 1-1.5 1.5h-7.5L7 20.5v-4H5A1.5 1.5 0 0 1 3.5 15V6A1.5 1.5 0 0 1 5 4.5Z" />
   ),
   zoeken: (
     <>

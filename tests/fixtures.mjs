@@ -29,7 +29,7 @@ export function voorbeeldData() {
     { id: uid(), source: 'parro', parroUid: 'p2', title: 'Studiedag — alle kinderen vrij', date: plus(12), allDay: true, person: 'matthijs', category: 'school', bring: [], reminder: true, createdAt: '', updatedAt: '' },
   ],
   contacts: [
-    { id: uid(), kind: 'klasgenoot', name: 'Fenna de Wit', childOf: 'matthijs', group: 'groep 1/2A', birthday: '2021-03-14', giftIdeas: 'Iets met paarden', parents: [{ id: uid(), name: 'Marieke de Wit', role: 'moeder', phone: '06 12345678' }, { id: uid(), name: 'Joost de Wit', role: 'vader', phone: '06 87654321' }], createdAt: '', updatedAt: '' },
+    { id: uid(), kind: 'klasgenoot', name: 'Fenna de Wit', childOf: 'matthijs', group: 'groep 1/2A', address: 'Dierenriem 18', birthday: '2021-03-14', giftIdeas: 'Iets met paarden', parents: [{ id: uid(), name: 'Marieke de Wit', role: 'moeder', phone: '06 12345678' }, { id: uid(), name: 'Joost de Wit', role: 'vader', phone: '06 87654321' }], createdAt: '', updatedAt: '' },
     { id: uid(), kind: 'klasgenoot', name: 'Sem Bakker', childOf: 'matthijs', group: 'groep 1/2A', parents: [{ id: uid(), name: 'Anne Bakker', role: 'moeder', phone: '06 24681012' }], notes: 'Woont om de hoek, noten-allergie.', createdAt: '', updatedAt: '' },
     { id: uid(), kind: 'oppas', name: 'Joris Peters', phone: '06 55667788', sitterRate: 7, notes: 'Alleen doordeweeks.', parents: [], createdAt: '', updatedAt: '' },
     { id: uid(), kind: 'overig', name: 'Huisarts Elst', phone: '0481 371234', parents: [], createdAt: '', updatedAt: '' },

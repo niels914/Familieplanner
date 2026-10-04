@@ -204,6 +204,20 @@ export function ContactForm({
 
         {isClassmate && (
           <div className="field">
+            <label htmlFor="ct-address">Adres</label>
+            <input
+              id="ct-address"
+              className="input"
+              autoComplete="off"
+              placeholder="Straat en huisnummer"
+              value={draft.address ?? ''}
+              onChange={(e) => set('address', e.target.value)}
+            />
+          </div>
+        )}
+
+        {isClassmate && (
+          <div className="field">
             <label>Ouders</label>
             <div className="stack stack--sm">
               {(draft.parents ?? []).map((p) => (
@@ -267,7 +281,7 @@ export function ContactForm({
           <textarea
             id="ct-notes"
             className="textarea"
-            placeholder="Bijv. allergieën, adres, wie waar woont"
+            placeholder="Bijv. allergieën, wie waar woont"
             value={draft.notes ?? ''}
             onChange={(e) => set('notes', e.target.value)}
           />

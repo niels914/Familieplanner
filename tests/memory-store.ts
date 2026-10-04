@@ -1,6 +1,6 @@
 /**
  * Vervangt netlify/lib/store.ts in de lokale testserver: dezelfde functies,
- * maar de data staat in het geheugen in plaats van in Netlify Blobs. Zo draait
+ * maar de data staat in het geheugen in plaats van in Supabase. Zo draait
  * lokaal precies dezelfde API-code als op Netlify.
  */
 

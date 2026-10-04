@@ -89,11 +89,3 @@ export function birthdaysOnDate(contacts: Contact[], date: string): Contact[] {
   const mmdd = date.slice(5);
   return contacts.filter((c) => c.kind === 'overig' && c.birthday && c.birthday.slice(-5) === mmdd);
 }
-
-export function ageOn(birthday: string, date: string): number | null {
-  if (birthday.length < 10) return null;
-  const birthYear = Number(birthday.slice(0, 4));
-  if (!birthYear) return null;
-  const year = Number(date.slice(0, 4));
-  return year - birthYear;
-}

@@ -90,14 +90,3 @@ export function monthName(month: number): string {
 export function weekdayShort(index: number): string {
   return ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'][index];
 }
-
-/** 'Morgen', 'Over 3 dagen', 'Vandaag', ... */
-export function relativeLabel(date: string, today: string): string {
-  const d = diffDays(today, date);
-  if (d === 0) return 'Vandaag';
-  if (d === 1) return 'Morgen';
-  if (d === -1) return 'Gisteren';
-  if (d > 1 && d < 7) return `Over ${d} dagen`;
-  if (d < -1 && d > -7) return `${Math.abs(d)} dagen geleden`;
-  return formatLong(date);
-}

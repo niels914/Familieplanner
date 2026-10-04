@@ -23,6 +23,7 @@ import type {
   SignalDecision,
   Task,
 } from '../../shared/types';
+import { saveEvent, saveTask } from '../../shared/rules';
 import { api, isOffline, setUnauthorizedHandler } from './api';
 import { clearCache, readCache, writeCache } from './cache';
 
@@ -92,91 +93,8 @@ function normalize(d: DataResponse): DataResponse {
 const uuid = () => crypto.randomUUID();
 const now = () => new Date().toISOString();
 
-// ----------------------------------------------------- lokale versies van de server
-// Dezelfde regels als in netlify/functions/api.ts, zodat wat je ziet nadat je
-// tikt hetzelfde is als wat de server straks teruggeeft.
-
-function upsertEvent(events: CalendarEvent[], body: Partial<CalendarEvent> & { id: string }): CalendarEvent[] {
-  const stamp = now();
-  const index = events.findIndex((e) => e.id === body.id);
-  if (index >= 0) {
-    const current = events[index];
-    const next = [...events];
-    next[index] = {
-      ...current,
-      ...body,
-      source: current.source,
-      parroUid: current.parroUid,
-      agendaFeed: current.agendaFeed,
-      agendaUid: current.agendaUid,
-      series: current.series,
-      id: current.id,
-      bring: body.bring ?? current.bring,
-      createdAt: current.createdAt,
-      updatedAt: stamp,
-    } as CalendarEvent;
-    return next;
-  }
-  return [
-    ...events,
-    {
-      id: body.id,
-      source: 'local',
-      title: (body.title ?? '').trim(),
-      date: body.date!,
-      endDate: body.endDate,
-      allDay: body.allDay ?? true,
-      time: body.time,
-      endTime: body.endTime,
-      person: body.person ?? 'gezin',
-      category: body.category ?? 'anders',
-      bring: body.bring ?? [],
-      notes: body.notes,
-      reminder: body.reminder ?? true,
-      sitter: body.sitter,
-      location: body.location,
-      createdAt: stamp,
-      updatedAt: stamp,
-    },
-  ];
-}
-
-function upsertTask(tasks: Task[], body: Partial<Task> & { id: string }): Task[] {
-  const stamp = now();
-  const index = tasks.findIndex((t) => t.id === body.id);
-  if (index >= 0) {
-    const current = tasks[index];
-    const done = body.done ?? current.done;
-    const next = [...tasks];
-    next[index] = {
-      ...current,
-      ...body,
-      title: (body.title ?? current.title).trim(),
-      done,
-      doneAt: done ? (current.done ? current.doneAt : stamp) : undefined,
-      updatedAt: stamp,
-    } as Task;
-    return next;
-  }
-  return [
-    ...tasks,
-    {
-      id: body.id,
-      title: (body.title ?? '').trim(),
-      owner: body.owner ?? 'samen',
-      kid: body.kid,
-      due: body.due,
-      note: body.note,
-      decision: body.decision,
-      eventId: body.eventId,
-      signalKey: body.signalKey,
-      done: body.done ?? false,
-      doneAt: body.done ? stamp : undefined,
-      createdAt: stamp,
-      updatedAt: stamp,
-    },
-  ];
-}
+/** Hetzelfde bewaren als op de server (shared/rules.ts), zodat wat je ziet klopt met wat daar komt. */
+const ctx = () => ({ now: now(), newId: uuid });
 
 export function StoreProvider({
   children,
@@ -344,7 +262,7 @@ export function StoreProvider({
         const body = { ...event, id: event.id ?? uuid() };
         return mutate({
           keys: ['events'],
-          optimistic: (d) => ({ events: upsertEvent(d.events, body) }),
+          optimistic: (d) => ({ events: saveEvent(d.events, body, ctx()) }),
           request: () => api.post<{ events: CalendarEvent[] }>('events', body),
           apply: (r) => ({ events: r.events }),
         });
@@ -572,7 +490,7 @@ export function StoreProvider({
         const body = { ...task, id: task.id ?? uuid() };
         return mutate({
           keys: ['tasks'],
-          optimistic: (d) => ({ tasks: upsertTask(d.tasks, body) }),
+          optimistic: (d) => ({ tasks: saveTask(d.tasks, body, ctx()) }),
           request: () => api.post<{ tasks: Task[] }>('tasks', body),
           apply: (r) => ({ tasks: r.tasks }),
         });

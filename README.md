@@ -160,7 +160,7 @@ src/                  React-app (Vite, TypeScript)
   views/              de schermen
   components/         formulieren en herbruikbare onderdelen
   lib/                api-client, state, snelinvoer-parser
-shared/               types en datumhulp, gedeeld met de backend
+shared/               types, datumhulp, signalering en de opslagregels (rules.ts), gedeeld met de backend
 netlify/functions/    api.ts (alle endpoints), sync-parro.ts, send-reminders.ts
 netlify/lib/          opslag, sessie, iCalendar-parser, pushmeldingen
 public/               service worker, manifest, iconen
@@ -179,6 +179,12 @@ controleren en schrijven gebeurt in één databaseopdracht (`kv_write` in
 De code is in drie lagen verdeeld: `netlify/lib/kv.ts` (logica, kent Supabase niet),
 `netlify/lib/supabase-backend.ts` (de aanroepen) en `netlify/lib/store.ts` (koppelt
 ze). De rest van de app kent alleen `read`, `update`, `overwrite` en `readAll`.
+
+**Eén set regels voor opslaan.** Hoe een agenda-item of taak wordt bewaard (wat blijft staan,
+wanneer een taak als afgerond telt) staat in `shared/rules.ts`. De server gebruikt het om
+op te slaan en de app om het resultaat alvast te tonen terwijl het verzoek onderweg is, dus
+wat je ziet kan niet afwijken van wat daarna bewaard wordt. Wijzig je zo'n regel, dan doe je
+het op één plek, en `tests/rules.test.ts` laat zien of het nog klopt.
 
 **Inloggen.** Eén gedeeld wachtwoord, vergeleken via een HMAC zodat de vergelijking
 niets over de lengte verraadt. De sessie is een cookie die met `SESSION_SECRET`

@@ -264,7 +264,6 @@ input[type='checkbox'] {
 .small { font-size: 0.88rem; }
 .tiny { font-size: 0.76rem; }
 .center { text-align: center; }
-.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .nowrap { white-space: nowrap; }
 
 /* Nederlandse datums beginnen met een kleine letter; alleen de eerste letter
@@ -497,7 +496,6 @@ section:first-of-type > .grouphead { margin-top: 6px; }
 .btn--danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, transparent); }
 .btn--danger:hover { background: var(--danger-soft); }
 .btn--sm { min-height: 36px; padding: 6px 12px; font-size: 0.82rem; }
-.btn .icon-gap { margin-right: -2px; }
 .btn--block { width: 100%; }
 
 /* ------------------------------------------------------------ formulier */
@@ -907,20 +905,6 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
   width: 100%;
 }
 .event:hover { background: var(--surface-2); }
-.event--matthijs { border-left-color: var(--matthijs); }
-.event--amelie { border-left-color: var(--amelie); }
-.event--lotte { border-left-color: var(--lotte); }
-.event--gezin { border-left-color: var(--gezin); }
-.event--niels, .event--irene { border-left-color: var(--ouder); }
-
-.event__time {
-  flex-shrink: 0;
-  width: 44px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--muted);
-  padding-top: 1px;
-}
 .event__title { font-weight: 600; }
 .event__meta { font-size: 0.85rem; color: var(--muted); }
 
@@ -958,8 +942,6 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 .bringrow--done span { text-decoration: line-through; color: var(--muted); }
 
 /* --------------------------------------------------------- vandaag-scherm */
-.dayhead { margin-bottom: 16px; }
-.dayhead h1 { margin-bottom: 2px; }
 
 /* Klaarzetten voor morgen: het blok waarvoor de app bestaat. */
 .prep {
@@ -1271,36 +1253,7 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 /* Icoon plus tekst als één regel, met de tekst optisch uitgelijnd. */
 .iconrow { display: inline-flex; align-items: center; gap: 7px; }
 
-/* Kop van een kaart die zelf een knop is: hele breedte, één regel. */
-.cardhead {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  min-height: 40px;
-  padding: 0 0 6px;
-  margin-bottom: 2px;
-  border: 0;
-  background: none;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
 .iconrow svg { flex-shrink: 0; }
-
-.tile {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-}
-.tile:hover { background: var(--surface-2); }
 
 .avatar {
   flex-shrink: 0;
@@ -1387,8 +1340,6 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
   justify-content: space-between;
 }
 
-.striped > *:nth-child(odd) { background: color-mix(in srgb, var(--surface-2) 55%, transparent); }
-
 .shopitem {
   display: flex;
   align-items: center;
@@ -1406,16 +1357,6 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 }
 .shopitem input[type='checkbox']:active { transform: scale(0.86); }
 .shopitem input[type='checkbox']:checked { animation: tik var(--dur) var(--ease); }
-
-.spinner {
-  width: 22px;
-  height: 22px;
-  border: 2px solid var(--line-strong);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
 
 .banner {
   padding: 11px 14px;

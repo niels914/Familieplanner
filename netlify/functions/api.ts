@@ -31,6 +31,7 @@ import {
 import { passwordMatches, hasValidSession } from '../lib/session';
 import { DEFAULT_SETTINGS, overwrite, read, readAll, update } from '../lib/store';
 import { publicKey, pushConfigured, sendToAll } from '../lib/push';
+import { saveEvent, saveTask } from '../../shared/rules';
 import { configuredFeeds, runAgendaSync } from '../lib/agenda';
 import { syncParro } from '../lib/parro';
 
@@ -156,49 +157,9 @@ async function handleEvents(req: Request, id?: string): Promise<Response> {
     if (!body.title?.trim()) return error('Geef het item een titel.');
     if (!body.date) return error('Geef een datum op.');
 
-    const saved = await update<CalendarEvent[]>('events', (events) => {
-      const now = nowIso();
-      const index = body.id ? events.findIndex((e) => e.id === body.id) : -1;
-
-      if (index >= 0) {
-        const current = events[index];
-        events[index] = {
-          ...current,
-          ...body,
-          // De koppeling met Parro of een agenda blijft eigendom van de sync, de reeks van de reeks.
-          source: current.source,
-          parroUid: current.parroUid,
-          agendaFeed: current.agendaFeed,
-          agendaUid: current.agendaUid,
-          series: current.series,
-          id: current.id,
-          bring: body.bring ?? current.bring,
-          createdAt: current.createdAt,
-          updatedAt: now,
-        } as CalendarEvent;
-      } else {
-        events.push({
-          id: body.id ?? newId(),
-          source: 'local',
-          title: body.title!.trim(),
-          date: body.date!,
-          endDate: body.endDate,
-          allDay: body.allDay ?? true,
-          time: body.time,
-          endTime: body.endTime,
-          person: body.person ?? 'gezin',
-          category: body.category ?? 'anders',
-          bring: body.bring ?? [],
-          notes: body.notes,
-          reminder: body.reminder ?? true,
-          sitter: body.sitter,
-          location: body.location,
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
-      return events;
-    });
+    const saved = await update<CalendarEvent[]>('events', (events) =>
+      saveEvent(events, body, { now: nowIso(), newId }),
+    );
     return json({ events: saved });
   }
 
@@ -523,43 +484,7 @@ async function handleTasks(req: Request, id?: string): Promise<Response> {
     if (!body.title?.trim()) return error('Geef de taak een titel.');
     if (body.owner && !TASK_OWNERS.includes(body.owner)) return error('Onbekende eigenaar.');
 
-    const saved = await update<Task[]>('tasks', (tasks) => {
-      const now = nowIso();
-      const index = body.id ? tasks.findIndex((t) => t.id === body.id) : -1;
-
-      if (index >= 0) {
-        const current = tasks[index];
-        const done = body.done ?? current.done;
-        tasks[index] = {
-          ...current,
-          ...body,
-          title: body.title!.trim(),
-          id: current.id,
-          done,
-          // Het moment van afronden alleen vastleggen bij de overgang.
-          doneAt: done ? (current.done ? current.doneAt : now) : undefined,
-          createdAt: current.createdAt,
-          updatedAt: now,
-        } as Task;
-      } else {
-        tasks.push({
-          id: body.id ?? newId(),
-          title: body.title!.trim(),
-          owner: body.owner ?? 'samen',
-          kid: body.kid,
-          due: body.due,
-          note: body.note,
-          decision: body.decision,
-          eventId: body.eventId,
-          signalKey: body.signalKey,
-          done: body.done ?? false,
-          doneAt: body.done ? now : undefined,
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
-      return tasks;
-    });
+    const saved = await update<Task[]>('tasks', (tasks) => saveTask(tasks, body, { now: nowIso(), newId }));
     return json({ tasks: saved });
   }
 

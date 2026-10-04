@@ -64,3 +64,18 @@ export function orderLocations(locations: Iterable<string>): string[] {
   const extra = [...seen].filter((l) => !DEFAULT_PACK_LOCATIONS.includes(l)).sort((a, b) => a.localeCompare(b, 'nl'));
   return [...known, ...extra];
 }
+
+/**
+ * Regel voor de avondherinnering als de reis morgen vertrekt, of null als er
+ * niets meer in te pakken valt. Noemt de eerste paar dingen, zodat je in de
+ * melding al ziet wat er nog mist.
+ */
+export function tripReminderLine(trip: Trip, maxNames = 4): string | null {
+  const open = trip.items.filter((i) => !i.packed);
+  if (open.length === 0) return null;
+  const names = open.slice(0, maxNames).map((i) => i.name.toLowerCase());
+  const more = open.length - names.length;
+  const list = names.join(', ') + (more > 0 ? ` en ${more} meer` : '');
+  const count = open.length === 1 ? '1 ding' : `${open.length} dingen`;
+  return `🧳 ${trip.name}: nog ${count} in te pakken\n   ${list}`;
+}

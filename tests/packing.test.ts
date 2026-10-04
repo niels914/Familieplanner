@@ -1,7 +1,7 @@
 /** Controleert hoe een paklijst uit de masterlijst wordt opgebouwd. */
-import { buildTripItems, orderLocations, scaleQty } from '../shared/packing';
+import { buildTripItems, orderLocations, scaleQty, tripReminderLine } from '../shared/packing';
 import { PACKLIST_SEED } from '../shared/packlist-seed';
-import { PACK_GROUPS, TRIP_KINDS, type PackItem } from '../shared/types';
+import { PACK_GROUPS, TRIP_KINDS, type PackItem, type Trip } from '../shared/types';
 import { check, report } from './helpers';
 
 check('zomervakantie houdt het standaardaantal', scaleQty(12, true, 14), 12);
@@ -59,5 +59,19 @@ check('een zomerkampeerlijst is groot', zomer.length > 150, true);
 check('een logeerweekend is een stuk kleiner', weekendje.length < zomer.length / 2, true);
 check('paspoorten staan op de zomerlijst', zomer.some((i) => i.name.toLowerCase() === 'paspoorten'), true);
 check('paspoorten niet binnen Nederland', weekendje.some((i) => i.name.toLowerCase() === 'paspoorten'), false);
+
+// Avondherinnering voor de dag van vertrek.
+const trip = (items: Trip['items']): Trip => ({
+  id: 't1', name: 'Kamperen zomer', kind: 'kamperen', startDate: '2026-07-18', nights: 14,
+  abroad: false, who: [...everyone], items, createdAt: '', updatedAt: '',
+});
+const line = (name: string, packed: boolean) => ({ id: name, name, group: 'tent' as const, qty: 1, packed });
+
+check('alles ingepakt: geen herinnering', tripReminderLine(trip([line('Tent', true)])), null);
+check('een ding mist', tripReminderLine(trip([line('Tent', true), line('Luchtbed', false)])),
+  '🧳 Kamperen zomer: nog 1 ding in te pakken\n   luchtbed');
+check('meerdere dingen, lijst wordt ingekort',
+  tripReminderLine(trip(['A', 'B', 'C', 'D', 'E', 'F'].map((n) => line(n, false))), 3),
+  '🧳 Kamperen zomer: nog 6 dingen in te pakken\n   a, b, c en 3 meer');
 
 report('paklijst');

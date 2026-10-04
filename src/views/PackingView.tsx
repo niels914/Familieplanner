@@ -19,10 +19,10 @@ import { PackItemForm, TripEditForm, TripForm, TripItemForm } from '../component
 
 const NO_PLACE = 'Nog geen plek';
 
-export function PackingView() {
+export function PackingView({ initialTripId = null }: { initialTripId?: string | null }) {
   const { trips } = useData();
   const [tab, setTab] = useState<'reizen' | 'master'>('reizen');
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(initialTripId);
 
   const trip = trips.find((t) => t.id === openId);
   if (trip) return <TripDetail trip={trip} onBack={() => setOpenId(null)} />;

@@ -77,15 +77,23 @@ function Shell({ onLogout }: { onLogout: () => void }) {
   const [view, setView] = useState<View>('vandaag');
   const [selected, setSelected] = useState(todayInNl());
   const [quickAdd, setQuickAdd] = useState(false);
+  const [openTripId, setOpenTripId] = useState<string | null>(null);
 
-  // Een melding kan een datum meegeven: /?date=2026-09-03
+  // Een melding kan een datum meegeven (/?date=2026-09-03) of een reis (/?trip=ID).
   useEffect(() => {
-    const param = new URLSearchParams(window.location.search).get('date');
-    if (param && /^\d{4}-\d{2}-\d{2}$/.test(param)) {
-      setSelected(param);
+    const params = new URLSearchParams(window.location.search);
+    const date = params.get('date');
+    const trip = params.get('trip');
+    if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      setSelected(date);
       setView('agenda');
-      window.history.replaceState({}, '', window.location.pathname);
+    } else if (trip) {
+      setOpenTripId(trip);
+      setView('paklijst');
+    } else {
+      return;
     }
+    window.history.replaceState({}, '', window.location.pathname);
   }, []);
 
   useEffect(() => {
@@ -131,7 +139,7 @@ function Shell({ onLogout }: { onLogout: () => void }) {
             {view === 'contacten' && <ContactsView />}
             {view === 'eten' && <FoodView />}
             {view === 'brengen' && <PickupView />}
-            {view === 'paklijst' && <PackingView />}
+            {view === 'paklijst' && <PackingView initialTripId={openTripId} />}
             {view === 'instellingen' && <SettingsView onLogout={onLogout} />}
             {view === 'meer' && <MoreView onNavigate={setView} />}
           </>

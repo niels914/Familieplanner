@@ -1,5 +1,6 @@
 import type { Config } from '@netlify/functions';
-import type { CalendarEvent, Settings } from '../../shared/types';
+import type { CalendarEvent, Settings, Trip } from '../../shared/types';
+import { tripReminderLine } from '../../shared/packing';
 import { PERSON_LABEL } from '../../shared/types';
 import { addDays, formatLong, hourInNl, todayInNl } from '../../shared/dates';
 import { DEFAULT_SETTINGS, read, update } from '../lib/store';
@@ -31,18 +32,24 @@ export default async function handler(): Promise<Response> {
     .filter((e) => coversDate(e, tomorrow))
     .sort(sortByTime);
 
-  if (relevant.length === 0) {
+  // Reizen die morgen vertrekken en nog niet helemaal ingepakt zijn.
+  const trips = (await read<Trip[]>('trips')).filter((t) => t.startDate === tomorrow);
+  const tripLines = trips.map((t) => tripReminderLine(t)).filter((l): l is string => l !== null);
+  const unpackedTrip = trips.find((t) => t.items.some((i) => !i.packed));
+
+  if (relevant.length === 0 && tripLines.length === 0) {
     await markSent(today);
     return result('Morgen staat er niets gepland; niets verstuurd.');
   }
 
-  const lines = relevant.map(describe);
+  const lines = [...relevant.map(describe), ...tripLines];
   const bringCount = relevant.reduce((n, e) => n + e.bring.filter((b) => !b.done).length, 0);
 
   const payload = {
     title: `Morgen — ${formatLong(tomorrow)}`,
     body: lines.join('\n') + (bringCount > 0 ? `\n\n${bringCount} ding(en) klaarzetten.` : ''),
-    url: `/?date=${tomorrow}`,
+    // Bij een reis die nog ingepakt moet worden opent de melding de paklijst.
+    url: unpackedTrip ? `/?trip=${unpackedTrip.id}` : `/?date=${tomorrow}`,
     tag: `dag-${tomorrow}`,
   };
 

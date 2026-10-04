@@ -136,7 +136,7 @@ Andere handige commando's:
 npm test           # parsers, reeksen, herinnering, opslag, het databaseschema en kleurcontrast
 npm run build      # typecheck + productiebuild
 npm run test:e2e   # browsertest op telefoonformaat (eerst bouwen; zie hieronder)
-npm run icons      # genereert de PWA-iconen opnieuw
+npm run icons      # maakt de PWA-iconen opnieuw (de vijf dieren; vraagt Playwright)
 npm run vapid      # maakt nieuwe push-sleutels
 ```
 

@@ -2,7 +2,7 @@
    Doet twee dingen: pushmeldingen tonen, en de app-schil beschikbaar houden
    als het netwerk even wegvalt. API-verzoeken worden nooit gecached. */
 
-const CACHE = 'familieplanner-v2';
+const CACHE = 'familieplanner-v3';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png'];
 
 self.addEventListener('install', (event) => {

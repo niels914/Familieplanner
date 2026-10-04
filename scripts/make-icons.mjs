@@ -1,158 +1,114 @@
 /**
- * Maakt de PWA-iconen zonder externe libraries: pixels rasteren en als PNG
- * wegschrijven. Eén keer draaien met `npm run icons`; de resultaten staan in
- * public/ en gaan mee in de repo.
+ * Maakt de PWA-iconen: de vijf dieren van het gezin op marineblauw. De dieren komen uit
+ * `src/components/Avatar.tsx`, zodat het icoon en de app nooit uit elkaar lopen. De pagina wordt
+ * met Chromium omgezet naar PNG; de resultaten staan in public/ en gaan mee in de repo.
+ *
+ *   npm run icons
+ *
+ * Playwright moet geïnstalleerd zijn (`npm i -g playwright`), net als voor `npm run test:e2e`.
  */
-import { deflateSync } from 'node:zlib';
-import { writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { build } from 'esbuild';
+import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', 'public');
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const OUT = join(ROOT, 'public');
+const NAVY = '#1E3A5F';
 
-const GREEN = [30, 58, 95]; // #1E3A5F, de hoofdkleur van de app
-const GREEN_DARK = [21, 41, 66];
-const CREAM = [244, 246, 248];
-const WHITE = [255, 255, 255];
-
-function canvas(size) {
-  const data = new Uint8Array(size * size * 4);
-  return {
-    size,
-    data,
-    set(x, y, [r, g, b], alpha = 1) {
-      if (x < 0 || y < 0 || x >= size || y >= size) return;
-      const i = (y * size + x) * 4;
-      const a = Math.max(0, Math.min(1, alpha));
-      data[i] = Math.round(data[i] * (1 - a) + r * a);
-      data[i + 1] = Math.round(data[i + 1] * (1 - a) + g * a);
-      data[i + 2] = Math.round(data[i + 2] * (1 - a) + b * a);
-      data[i + 3] = Math.round(data[i + 3] * (1 - a) + 255 * a);
-    },
-  };
-}
-
-function roundRect(c, x0, y0, x1, y1, radius, color) {
-  // Zonder straal is het een gewone rechthoek. De afronding hieronder zou bij
-  // straal 0 elke pixel als "buiten" zien en niets tekenen.
-  if (radius < 1) {
-    for (let y = Math.floor(y0); y < Math.ceil(y1); y++) {
-      for (let x = Math.floor(x0); x < Math.ceil(x1); x++) c.set(x, y, color);
-    }
-    return;
+// ---------------------------------------------------------------- playwright
+let chromium;
+try {
+  ({ chromium } = await import('playwright'));
+} catch {
+  const global = process.env.NODE_PATH?.split(':').find((p) => existsSync(join(p, 'playwright')));
+  if (!global) {
+    console.error('Playwright ontbreekt. Installeer met: npm i -g playwright');
+    process.exit(1);
   }
-  for (let y = Math.floor(y0); y < Math.ceil(y1); y++) {
-    for (let x = Math.floor(x0); x < Math.ceil(x1); x++) {
-      const dx = Math.max(x0 + radius - x, x - (x1 - radius), 0);
-      const dy = Math.max(y0 + radius - y, y - (y1 - radius), 0);
-      const dist = Math.hypot(dx, dy);
-      // Zachte rand van één pixel, zodat de hoeken niet kartelen.
-      const alpha = dist <= radius - 1 ? 1 : dist >= radius ? 0 : radius - dist;
-      if (alpha > 0) c.set(x, y, color, alpha);
-    }
-  }
+  ({ chromium } = await import(join(global, 'playwright', 'index.mjs')));
 }
 
-function circle(c, cx, cy, r, color) {
-  for (let y = Math.floor(cy - r - 1); y <= Math.ceil(cy + r + 1); y++) {
-    for (let x = Math.floor(cx - r - 1); x <= Math.ceil(cx + r + 1); x++) {
-      const d = Math.hypot(x + 0.5 - cx, y + 0.5 - cy);
-      const alpha = d <= r - 0.5 ? 1 : d >= r + 0.5 ? 0 : r + 0.5 - d;
-      if (alpha > 0) c.set(x, y, color, alpha);
-    }
-  }
+function browserPad() {
+  if (process.env.CHROMIUM_PATH) return process.env.CHROMIUM_PATH;
+  const root = process.env.PLAYWRIGHT_BROWSERS_PATH;
+  if (!root || !existsSync(root)) return undefined;
+  const map = readdirSync(root).find((d) => d.startsWith('chromium-'));
+  const pad = map && join(root, map, 'chrome-linux', 'chrome');
+  return pad && existsSync(pad) ? pad : undefined;
 }
 
-/** Een kalenderblad met twee ringen erboven en stipjes als dagen. */
-function draw(size, inset, maskable = false) {
-  const c = canvas(size);
-  const s = (v) => v * size;
+// ------------------------------------------------------- de dieren als svg
+const work = join(tmpdir(), 'familieplanner-icons');
+mkdirSync(work, { recursive: true });
+const bundle = join(work, 'avatars.cjs');
+await build({
+  stdin: {
+    contents: `
+      import { renderToStaticMarkup } from 'react-dom/server';
+      import { createElement } from 'react';
+      import { Avatar } from './src/components/Avatar';
+      export const avatar = (who, size) => renderToStaticMarkup(createElement(Avatar, { who, size }));
+    `,
+    resolveDir: ROOT,
+    loader: 'tsx',
+  },
+  bundle: true,
+  platform: 'node',
+  format: 'cjs',
+  outfile: bundle,
+  logLevel: 'error',
+});
+const { avatar } = createRequire(import.meta.url)(bundle);
+rmSync(work, { recursive: true, force: true });
 
-  // Een maskable icoon moet tot in de hoeken gevuld zijn: Android legt er zelf
-  // een masker overheen. Eigen ronde hoeken geven dan transparante punten.
-  roundRect(c, 0, 0, size, size, maskable ? 0 : s(0.22), GREEN);
-
-  const pad = inset;
-  const x0 = s(0.5 - pad / 2);
-  const x1 = s(0.5 + pad / 2);
-  const top = s(0.5 - pad / 2 + 0.04);
-  const bottom = s(0.5 + pad / 2);
-
-  // ringetjes
-  const ringY = top - s(0.035);
-  roundRect(c, s(0.5) - s(pad * 0.22), ringY - s(0.03), s(0.5) - s(pad * 0.22) + s(0.035), ringY + s(0.05), s(0.018), CREAM);
-  roundRect(c, s(0.5) + s(pad * 0.18), ringY - s(0.03), s(0.5) + s(pad * 0.18) + s(0.035), ringY + s(0.05), s(0.018), CREAM);
-
-  roundRect(c, x0, top, x1, bottom, s(0.055), CREAM);
-  roundRect(c, x0, top, x1, top + (bottom - top) * 0.24, s(0.055), GREEN_DARK);
-  // onderkant van de kopbalk recht afsnijden
-  roundRect(c, x0, top + (bottom - top) * 0.16, x1, top + (bottom - top) * 0.24, 0, GREEN_DARK);
-
-  const gridTop = top + (bottom - top) * 0.38;
-  const gridBottom = bottom - (bottom - top) * 0.10;
-  const cols = 3;
-  const rows = 2;
-  const dot = (x1 - x0) * 0.058;
-  for (let r = 0; r < rows; r++) {
-    for (let col = 0; col < cols; col++) {
-      const cx = x0 + ((x1 - x0) / (cols + 1)) * (col + 1);
-      const cy = gridTop + ((gridBottom - gridTop) / (rows + 1)) * (r + 1);
-      // Eén stip in het accent: de dag waarop er iets mee moet.
-      circle(c, cx, cy, dot, r === 0 && col === 2 ? [188, 60, 28] : GREEN);
-    }
-  }
-
-  return c;
-}
-
-function crc32(buf) {
-  let crc = 0xffffffff;
-  for (const byte of buf) {
-    crc ^= byte;
-    for (let i = 0; i < 8; i++) crc = crc & 1 ? (crc >>> 1) ^ 0xedb88320 : crc >>> 1;
-  }
-  return (crc ^ 0xffffffff) >>> 0;
-}
-
-function chunk(type, data) {
-  const length = Buffer.alloc(4);
-  length.writeUInt32BE(data.length);
-  const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
-  const crc = Buffer.alloc(4);
-  crc.writeUInt32BE(crc32(body));
-  return Buffer.concat([length, body, crc]);
-}
-
-function toPng(c) {
-  const { size, data } = c;
-  const raw = Buffer.alloc(size * (size * 4 + 1));
-  for (let y = 0; y < size; y++) {
-    raw[y * (size * 4 + 1)] = 0; // filter: none
-    Buffer.from(data.buffer, y * size * 4, size * 4).copy(raw, y * (size * 4 + 1) + 1);
-  }
-
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);
-  ihdr.writeUInt32BE(size, 4);
-  ihdr[8] = 8; // bitdiepte
-  ihdr[9] = 6; // RGBA
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(raw, { level: 9 })),
-    chunk('IEND', Buffer.alloc(0)),
-  ]);
-}
-
-const targets = [
-  ['icon-192.png', 192, 0.6, false],
-  ['icon-512.png', 512, 0.6, false],
-  // iOS rondt het beginschermicoon zelf af, dus ook hier geen eigen hoeken.
-  ['icon-180.png', 180, 0.6, true],
-  ['icon-512-maskable.png', 512, 0.44, true],
+// ------------------------------------------------------------ de opmaak
+/** Plek van elk dier op een vlak van 180 bij 180: [wie, formaat, links, boven]. */
+const PLAATS = [
+  ['niels', 72, 54, 14],
+  ['irene', 62, 16, 62],
+  ['matthijs', 62, 102, 62],
+  ['amelie', 54, 34, 112],
+  ['lotte', 54, 92, 112],
 ];
 
-for (const [name, size, inset, fullBleed] of targets) {
-  writeFileSync(join(OUT, name), toPng(draw(size, inset, fullBleed)));
-  console.log('geschreven:', name);
+/**
+ * @param schaal   hoe groot de groep is ten opzichte van het vlak (kleiner bij een maskable icoon,
+ *                 waar Android de randen zelf wegsnijdt)
+ * @param hoeken   eigen ronde hoeken; uit bij iOS (die rondt zelf af) en bij een maskable icoon
+ */
+function pagina(size, schaal, hoeken) {
+  const eenheid = size / 180;
+  const dieren = PLAATS.map(([wie, formaat, x, y]) => {
+    // De groep staat gecentreerd; schalen gaat vanuit het midden.
+    const cx = 90 + (x + formaat / 2 - 90) * schaal;
+    const cy = 90 + (y + formaat / 2 - 90) * schaal;
+    const d = formaat * schaal * eenheid;
+    return `<span style="position:absolute;left:${(cx * eenheid - d / 2).toFixed(2)}px;top:${(cy * eenheid - d / 2).toFixed(2)}px;width:${d.toFixed(2)}px;height:${d.toFixed(2)}px;border-radius:50%;box-shadow:0 0 0 ${(3 * eenheid * schaal).toFixed(2)}px ${NAVY}">${avatar(wie, Math.round(d))}</span>`;
+  }).join('');
+  return `<!doctype html><meta charset="utf-8"><style>
+    html,body{margin:0;background:transparent}
+    .i{position:relative;width:${size}px;height:${size}px;background:${NAVY};border-radius:${hoeken ? size * 0.22 : 0}px;overflow:hidden}
+    svg{display:block}
+  </style><div class="i">${dieren}</div>`;
 }
+
+const doelen = [
+  ['icon-192.png', 192, 1, true],
+  ['icon-512.png', 512, 1, true],
+  // iOS rondt het beginschermicoon zelf af, dus ook hier geen eigen hoeken.
+  ['icon-180.png', 180, 1, false],
+  ['icon-512-maskable.png', 512, 0.84, false],
+];
+
+const browser = await chromium.launch({ executablePath: browserPad() });
+for (const [naam, size, schaal, hoeken] of doelen) {
+  const page = await browser.newPage({ viewport: { width: size, height: size }, deviceScaleFactor: 1 });
+  await page.setContent(pagina(size, schaal, hoeken));
+  await page.screenshot({ path: join(OUT, naam), omitBackground: true, clip: { x: 0, y: 0, width: size, height: size } });
+  await page.close();
+  console.log('geschreven:', naam);
+}
+await browser.close();

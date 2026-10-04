@@ -1,5 +1,9 @@
 # Nog te doen
 
+## Bonnetjes en garantie
+
+Uitgewerkt plan: [bonnetjes-plan.md](bonnetjes-plan.md). Wacht op de keuzes in sectie 9 van dat plan.
+
 ## Agenda's van Irene en Niels koppelen
 
 **Gebouwd voor Niels (Gmail).** `netlify/lib/agenda.ts`, elk uur via

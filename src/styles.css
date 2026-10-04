@@ -653,7 +653,7 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 }
 
 /* Persoonsfilter als gekleurde initialen. Compact, en het leert meteen welke
-   kleur bij wie hoort — handig bij de stippen in de weekstrip. */
+   kleur bij wie hoort — handig bij de stippen in het maandraster. */
 .whofilter { display: flex; align-items: center; gap: 5px; }
 
 .who {
@@ -713,50 +713,6 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 .segmented button:disabled { opacity: 0.5; cursor: not-allowed; }
 .field > .segmented { align-self: flex-start; }
 
-/* ---------------------------------------------------------- weekstrip */
-.weekstrip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-
-.wsday {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  min-height: 68px;
-  padding: 8px 2px 7px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: var(--surface);
-  cursor: pointer;
-  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
-}
-.wsday--weekend { background: var(--surface-2); }
-.wsday__wd {
-  font-size: 0.64rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-}
-.wsday__num {
-  font-size: 1.05rem;
-  font-weight: 650;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-.wsday--today .wsday__num { color: var(--primary); font-weight: 750; }
-.wsday--selected {
-  background: var(--primary-soft);
-  border-color: var(--primary);
-  box-shadow: inset 0 0 0 1px var(--primary);
-}
-.wsday__dots { display: flex; gap: 3px; min-height: 6px; margin-top: 1px; }
-.wsday__bring { position: absolute; bottom: 3px; right: 4px; color: var(--warn); }
-
-/* Welke weergave zichtbaar is op een smal scherm. */
-.cal--week .cal__month { display: none; }
-.cal--maand .cal__week { display: none; }
-
 /* ------------------------------------------------------------- de dag */
 .daycol { margin-top: 20px; }
 .daycol__head {
@@ -786,7 +742,6 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
   color: var(--muted);
 }
 .cal__wkhead { font-weight: 700; text-transform: lowercase; letter-spacing: 0; }
-.cal__wk { font-size: 0.8em; font-weight: 500; text-transform: none; color: var(--muted); white-space: nowrap; }
 .cal__weekdays {
   margin-bottom: 4px;
   font-size: 0.7rem;
@@ -823,6 +778,55 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 .day__dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
 .day__pill,
 .day__more { display: none; }
+/* Op een telefoon is het maandraster rustig, zoals in de agenda van iOS: alleen
+   het dagcijfer met stipjes eronder, het weeknummer klein links, de gekozen dag
+   als gevulde cirkel. De items van die dag staan eronder. */
+@media (max-width: 559px) {
+  .cal__grid { gap: 0; }
+  .cal__weekdays { gap: 0; }
+  .cal__weekdays, .cal__grid { grid-template-columns: 1.5rem repeat(7, 1fr); }
+  .cal__wknum {
+    align-items: flex-start;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    font-size: 0.66rem;
+    font-weight: 600;
+  }
+  .day {
+    min-height: 56px;
+    padding: 6px 0 4px;
+    align-items: center;
+    gap: 2px;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+  }
+  .day--weekend { background: transparent; }
+  .day--today, .day--selected { box-shadow: none; outline: 0; }
+  /* Dagen van een andere maand blijven leeg, de lijn loopt gewoon door. */
+  .day--outside { opacity: 1; pointer-events: none; }
+  .day--outside > * { visibility: hidden; }
+  .day__num {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+  .day--weekend .day__num { color: var(--muted); }
+  .day--today .day__num { color: var(--primary); font-weight: 750; }
+  .day--selected .day__num { background: var(--primary); color: var(--primary-ink); }
+  .day__dots { flex-wrap: nowrap; justify-content: center; margin-top: 0; min-height: 6px; }
+  .day__dots .dot:nth-child(n + 4) { display: none; }
+  .day .day__bring { top: 2px; right: 1px; }
+}
+
 @media (min-width: 560px) {
   .day__dots { display: none; }
   .day__pill { display: block; }
@@ -881,12 +885,6 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
     max-height: calc(100vh - 52px);
     overflow-y: auto;
   }
-  /* Naast elkaar is de weekstrip overbodig, en de keuze week/maand ook. */
-  .cal--week .cal__month,
-  .cal--maand .cal__month { display: block; }
-  .cal--week .cal__week,
-  .cal--maand .cal__week { display: none; }
-  .cal__modes { display: none; }
   .cal__title { text-align: left; }
 }
 

@@ -5,7 +5,6 @@ import {
   addDays,
   formatLong,
   isoWeek,
-  isoWeekday,
   monthName,
   parseYmd,
   startOfWeek,
@@ -13,7 +12,6 @@ import {
   weekdayShort,
 } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
-import { useIsWide } from '../lib/useIsWide';
 import { birthdaysOnDate, coversDate, eventsOnDate, pickupForDate } from '../lib/events';
 import { EventForm } from '../components/EventForm';
 import { Timeline } from '../components/Timeline';
@@ -27,10 +25,6 @@ import { useRegel } from '../lib/useRegel';
 type Filter = 'alles' | PersonId;
 const FILTERS: Filter[] = ['alles', 'matthijs', 'amelie', 'lotte', 'gezin'];
 
-/** Op een telefoon kies je tussen de week (met daglijst) en het maandoverzicht.
- *  Op een breed scherm staan het maandraster en de dag naast elkaar. */
-type Mode = 'week' | 'maand';
-
 export function CalendarView({
   selected,
   onSelect,
@@ -42,16 +36,11 @@ export function CalendarView({
   const { saveEvent } = useStore();
   const regel = useRegel();
 
-  /** De dag waaruit de zichtbare week en maand volgen. */
+  /** De dag waaruit de zichtbare maand volgt. */
   const [anchor, setAnchor] = useState(selected);
-  const [mode, setMode] = useState<Mode>('week');
   const [filter, setFilter] = useState<Filter>('alles');
   const [editing, setEditing] = useState<CalendarEvent | null>(null);
   const [creating, setCreating] = useState(false);
-
-  const isWide = useIsWide();
-  // Naast elkaar staat het maandraster altijd, dus bladeren gaat daar per maand.
-  const view: Mode = isWide ? 'maand' : mode;
 
   const today = todayInNl();
 
@@ -60,11 +49,6 @@ export function CalendarView({
     [events, filter],
   );
 
-  const weekStart = startOfWeek(anchor);
-  const weekDays = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
-    [weekStart],
-  );
   const monthDays = useMemo(() => buildMonthGrid(anchor.slice(0, 7)), [anchor]);
 
   const dayEvents = eventsOnDate(visible, selected);
@@ -75,11 +59,6 @@ export function CalendarView({
   /** Bladeren neemt de selectie mee, zodat de daglijst altijd een dag toont
    *  die ook in beeld staat. */
   const shift = (delta: number) => {
-    if (view === 'week') {
-      setAnchor(addDays(anchor, delta * 7));
-      onSelect(addDays(selected, delta * 7));
-      return;
-    }
     const [y, m] = anchor.split('-').map(Number);
     const eerste = new Date(y, m - 1 + delta, 1);
     const jaar = eerste.getFullYear();
@@ -93,10 +72,7 @@ export function CalendarView({
   };
 
   // Zit vandaag al in beeld, dan hoeft de knop er niet te staan.
-  const vandaagInBeeld =
-    view === 'week'
-      ? today >= weekStart && today <= addDays(weekStart, 6)
-      : today.slice(0, 7) === anchor.slice(0, 7);
+  const vandaagInBeeld = today.slice(0, 7) === anchor.slice(0, 7);
 
   const goToday = () => {
     setAnchor(today);
@@ -110,7 +86,7 @@ export function CalendarView({
     }).catch(() => {});
   };
 
-  // Vegen over de weekstrip bladert een week vooruit of terug.
+  // Vegen over het maandraster bladert een maand vooruit of terug.
   const touch = useRef<{ x: number; y: number } | null>(null);
   const onTouchStart = (e: React.TouchEvent) => {
     touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -136,24 +112,21 @@ export function CalendarView({
   };
 
   return (
-    <div className={`page cal cal--${mode}`}>
+    <div className="page cal">
       <div className="cal__top">
         <div className="cal__head">
           <button
             className="btn btn--sm btn--ghost"
             onClick={() => shift(-1)}
-            aria-label={view === 'week' ? 'Vorige week' : 'Vorige maand'}
+            aria-label="Vorige maand"
           >
             <Icon name="chevron-links" size={18} />
           </button>
-          <h1 className="cal__title display grow">
-            {titleFor(view, anchor, weekStart)}
-            {view === 'week' && <span className="cal__wk"> · week {isoWeek(weekStart)}</span>}
-          </h1>
+          <h1 className="cal__title display grow">{titleFor(anchor)}</h1>
           <button
             className="btn btn--sm btn--ghost"
             onClick={() => shift(1)}
-            aria-label={view === 'week' ? 'Volgende week' : 'Volgende maand'}
+            aria-label="Volgende maand"
           >
             <Icon name="chevron-rechts" size={18} />
           </button>
@@ -166,13 +139,6 @@ export function CalendarView({
         </div>
 
         <div className="cal__controls">
-          <div className="segmented cal__modes" role="group" aria-label="Weergave">
-            {(['week', 'maand'] as Mode[]).map((m) => (
-              <button key={m} aria-pressed={mode === m} onClick={() => setMode(m)}>
-                {m === 'week' ? 'Week' : 'Maand'}
-              </button>
-            ))}
-          </div>
           {/* Gekleurde initialen: compact, en meteen de legenda bij de stippen. */}
           <div className="whofilter" role="group" aria-label="Filter op persoon">
             {FILTERS.map((f) => (
@@ -190,46 +156,8 @@ export function CalendarView({
           </div>
         </div>
 
-        {/* ------------------------------------------------------ weekstrip */}
-        <div className="cal__week" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-          <div className="weekstrip">
-            {weekDays.map((date) => {
-              const items = visible.filter((e) => coversDate(e, date));
-              const classes = [
-                'wsday',
-                isoWeekday(date) > 5 && 'wsday--weekend',
-                date === today && 'wsday--today',
-                date === selected && 'wsday--selected',
-              ]
-                .filter(Boolean)
-                .join(' ');
-
-              return (
-                <button
-                  key={date}
-                  className={classes}
-                  aria-current={date === selected}
-                  onClick={() => onSelect(date)}
-                  onKeyDown={(e) => onDayKeyDown(e, date)}
-                >
-                  <span className="wsday__wd">{weekdayShort(isoWeekday(date) - 1)}</span>
-                  <span className="wsday__num">{Number(date.slice(8))}</span>
-                  <span className="wsday__dots">
-                    {items.slice(0, 4).map((e) => (
-                      <span key={e.id} className={`dot dot--${e.person}`} />
-                    ))}
-                  </span>
-                  {items.some((e) => e.bring.some((b) => !b.done)) && (
-                    <Icon name="rugzak" size={11} className="wsday__bring" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* --------------------------------------------------- maandoverzicht */}
-        <div className="cal__month">
+        <div className="cal__month" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
           <div className="cal__weekdays">
             <div className="cal__wkhead" title="Weeknummer">wk</div>
             {[0, 1, 2, 3, 4, 5, 6].map((i) => (
@@ -261,8 +189,13 @@ export function CalendarView({
                 )}
                 <button
                   className={classes}
-                  onClick={() => onSelect(date)}
+                  onClick={() => {
+                    onSelect(date);
+                    if (!inMonth) setAnchor(date);
+                  }}
                   onKeyDown={(e) => onDayKeyDown(e, date)}
+                  aria-current={date === selected}
+                  aria-label={formatLong(date)}
                 >
                   <span className="day__num">{Number(date.slice(8))}</span>
                   {items.some((e) => e.bring.some((b) => !b.done)) && (
@@ -328,17 +261,10 @@ export function CalendarView({
   );
 }
 
-/** "Augustus 2026", of "aug — sep 2026" als een week twee maanden raakt. */
-function titleFor(mode: Mode, anchor: string, weekStart: string): string {
-  if (mode === 'maand') {
-    const [y, m] = anchor.split('-').map(Number);
-    return `${monthName(m - 1)} ${y}`;
-  }
-  const weekEnd = addDays(weekStart, 6);
-  const [sy, sm] = weekStart.split('-').map(Number);
-  const [ey, em] = weekEnd.split('-').map(Number);
-  if (sm === em) return `${monthName(sm - 1)} ${sy}`;
-  return `${monthName(sm - 1).slice(0, 3)} — ${monthName(em - 1).slice(0, 3)} ${ey}`;
+/** "Oktober 2026" */
+function titleFor(anchor: string): string {
+  const [y, m] = anchor.split('-').map(Number);
+  return `${monthName(m - 1)} ${y}`;
 }
 
 /** Zes weken vanaf de maandag voor de eerste van de maand. */

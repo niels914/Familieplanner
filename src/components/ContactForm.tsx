@@ -2,7 +2,22 @@ import { useState } from 'react';
 import type { ChildId, Contact, Parent, ParentRole } from '../../shared/types';
 import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { Modal } from './Modal';
+import { MoreOptions } from './MoreOptions';
+import { ChipPicker, type ChipOption } from './ChipPicker';
 import { useStore } from '../lib/store';
+import { Icon } from './Icon';
+
+const SOORT_OPTIES: ChipOption<Contact['kind']>[] = [
+  { value: 'klasgenoot', label: 'Klasgenootje', icon: 'rugzak' },
+  { value: 'oppas', label: 'Oppas', icon: 'oppas' },
+  { value: 'overig', label: 'Overig', icon: 'contacten' },
+];
+
+const KIND_OPTIES: ChipOption<ChildId>[] = CHILDREN.map((c) => ({
+  value: c,
+  label: PERSON_LABEL[c],
+  modifier: c,
+}));
 
 const ROLES: ParentRole[] = ['moeder', 'vader', 'verzorger'];
 
@@ -58,7 +73,6 @@ export function ContactForm({
 
   const remove = async () => {
     if (!initial) return;
-    if (!confirm(`${initial.name} verwijderen?`)) return;
     setBusy(true);
     try {
       await deleteContact(initial.id);
@@ -69,6 +83,21 @@ export function ContactForm({
   };
 
   const isClassmate = draft.kind === 'klasgenoot';
+
+  // Groep, adres, verjaardag en notitie staan achter "Meer opties", tenzij er al iets in staat.
+  const [meerOpen, setMeerOpen] = useState(() =>
+    Boolean(initial && (initial.group || initial.address || initial.notes || (initial.kind === 'overig' && initial.birthday))),
+  );
+  const meerVoorbeeld =
+    [
+      isClassmate && draft.group ? draft.group : null,
+      isClassmate && draft.address ? 'adres' : null,
+      draft.kind === 'overig' && draft.birthday ? 'verjaardag' : null,
+      draft.notes ? 'notitie' : null,
+    ]
+      .filter(Boolean)
+      .join(' · ') ||
+    (isClassmate ? 'Groep, adres, notitie' : draft.kind === 'overig' ? 'Verjaardag, notitie' : 'Notitie');
 
   return (
     <Modal
@@ -88,19 +117,12 @@ export function ContactForm({
       }
     >
       <div className="stack">
-        <div className="field">
-          <label htmlFor="ct-kind">Soort contact</label>
-          <select
-            id="ct-kind"
-            className="select"
-            value={draft.kind ?? 'klasgenoot'}
-            onChange={(e) => set('kind', e.target.value as Contact['kind'])}
-          >
-            <option value="klasgenoot">Klasgenootje</option>
-            <option value="oppas">Oppas</option>
-            <option value="overig">Overig</option>
-          </select>
-        </div>
+        <ChipPicker
+          label="Soort contact"
+          value={draft.kind ?? 'klasgenoot'}
+          options={SOORT_OPTIES}
+          onChange={(v) => set('kind', v)}
+        />
 
         <div className="field">
           <label htmlFor="ct-name">{isClassmate ? 'Naam van het klasgenootje' : 'Naam'}</label>
@@ -113,33 +135,12 @@ export function ContactForm({
         </div>
 
         {isClassmate && (
-          <div className="field-row">
-            <div className="field">
-              <label htmlFor="ct-child">Klasgenootje van</label>
-              <select
-                id="ct-child"
-                className="select"
-                value={draft.childOf ?? 'matthijs'}
-                onChange={(e) => set('childOf', e.target.value as ChildId)}
-              >
-                {CHILDREN.map((c) => (
-                  <option key={c} value={c}>
-                    {PERSON_LABEL[c]}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="field">
-              <label htmlFor="ct-group">Groep / klas</label>
-              <input
-                id="ct-group"
-                className="input"
-                placeholder="Bijv. groep 1/2A"
-                value={draft.group ?? ''}
-                onChange={(e) => set('group', e.target.value)}
-              />
-            </div>
-          </div>
+          <ChipPicker
+            label="Klasgenootje van"
+            value={draft.childOf ?? 'matthijs'}
+            options={KIND_OPTIES}
+            onChange={(v) => set('childOf', v)}
+          />
         )}
 
         {draft.kind === 'oppas' && (
@@ -182,28 +183,6 @@ export function ContactForm({
           </div>
         )}
 
-        <div className="field-row">
-          <div className="field">
-            <label htmlFor="ct-bday">Verjaardag</label>
-            <input
-              id="ct-bday"
-              className="input"
-              type="date"
-              value={draft.birthday ?? ''}
-              onChange={(e) => set('birthday', e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="ct-gift">Cadeau-idee</label>
-            <input
-              id="ct-gift"
-              className="input"
-              value={draft.giftIdeas ?? ''}
-              onChange={(e) => set('giftIdeas', e.target.value)}
-            />
-          </div>
-        </div>
-
         {isClassmate && (
           <div className="field">
             <label>Ouders</label>
@@ -245,7 +224,7 @@ export function ContactForm({
                         set('parents', (draft.parents ?? []).filter((x) => x.id !== p.id))
                       }
                     >
-                      ✕
+                      <Icon name="kruis" size={16} />
                     </button>
                   </div>
                   <input
@@ -264,16 +243,57 @@ export function ContactForm({
           </div>
         )}
 
-        <div className="field">
-          <label htmlFor="ct-notes">Notitie</label>
-          <textarea
-            id="ct-notes"
-            className="textarea"
-            placeholder="Bijv. allergieën, adres, wie waar woont"
-            value={draft.notes ?? ''}
-            onChange={(e) => set('notes', e.target.value)}
-          />
-        </div>
+        <MoreOptions open={meerOpen} onToggle={() => setMeerOpen((o) => !o)} preview={meerVoorbeeld}>
+          {isClassmate && (
+            <>
+              <div className="field">
+                <label htmlFor="ct-group">Groep / klas</label>
+                <input
+                  id="ct-group"
+                  className="input"
+                  placeholder="Bijv. groep 1/2A"
+                  value={draft.group ?? ''}
+                  onChange={(e) => set('group', e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="ct-address">Adres</label>
+                <input
+                  id="ct-address"
+                  className="input"
+                  autoComplete="off"
+                  placeholder="Straat en huisnummer"
+                  value={draft.address ?? ''}
+                  onChange={(e) => set('address', e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
+          {draft.kind === 'overig' && (
+            <div className="field">
+              <label htmlFor="ct-bday">Verjaardag</label>
+              <input
+                id="ct-bday"
+                className="input"
+                type="date"
+                value={draft.birthday ?? ''}
+                onChange={(e) => set('birthday', e.target.value)}
+              />
+            </div>
+          )}
+
+          <div className="field">
+            <label htmlFor="ct-notes">Notitie</label>
+            <textarea
+              id="ct-notes"
+              className="textarea"
+              placeholder="Bijv. allergieën, wie waar woont"
+              value={draft.notes ?? ''}
+              onChange={(e) => set('notes', e.target.value)}
+            />
+          </div>
+        </MoreOptions>
       </div>
     </Modal>
   );

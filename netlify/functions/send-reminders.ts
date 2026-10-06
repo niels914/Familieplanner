@@ -1,8 +1,9 @@
 import type { Config } from '@netlify/functions';
-import type { CalendarEvent, Settings, Trip } from '../../shared/types';
+import type { CalendarEvent, Receipt, Settings, Trip } from '../../shared/types';
+import { addDays, hourInNl, todayInNl } from '../../shared/dates';
 import { tripReminderLine } from '../../shared/packing';
-import { PERSON_LABEL } from '../../shared/types';
-import { addDays, formatLong, hourInNl, todayInNl } from '../../shared/dates';
+import { alertLine, dueReminders } from '../../shared/warranty';
+import { bouwHerinnering } from '../lib/reminder';
 import { DEFAULT_SETTINGS, read, update } from '../lib/store';
 import { pushConfigured, sendToAll } from '../lib/push';
 
@@ -27,60 +28,39 @@ export default async function handler(): Promise<Response> {
 
   const tomorrow = addDays(today, 1);
   const events = await read<CalendarEvent[]>('events');
-  const relevant = events
-    .filter((e) => e.reminder !== false)
-    .filter((e) => coversDate(e, tomorrow))
-    .sort(sortByTime);
-
+  // Garanties en retourtermijnen die bijna aflopen, elk hoogstens één keer.
+  const receipts = await read<Receipt[]>('receipts');
+  const due = dueReminders(receipts, today);
   // Reizen die morgen vertrekken en nog niet helemaal ingepakt zijn.
   const trips = (await read<Trip[]>('trips')).filter((t) => t.startDate === tomorrow);
   const tripLines = trips.map((t) => tripReminderLine(t)).filter((l): l is string => l !== null);
   const unpackedTrip = trips.find((t) => t.items.some((i) => !i.packed));
+  const reis = unpackedTrip ? { id: unpackedTrip.id, regels: tripLines } : undefined;
 
-  if (relevant.length === 0 && tripLines.length === 0) {
+  const payload = bouwHerinnering(events, tomorrow, due.map(alertLine), reis);
+  if (!payload) {
     await markSent(today);
-    return result('Morgen staat er niets gepland; niets verstuurd.');
+    return result('Morgen staat er niets gepland en niets loopt af; niets verstuurd.');
   }
-
-  const lines = [...relevant.map(describe), ...tripLines];
-  const bringCount = relevant.reduce((n, e) => n + e.bring.filter((b) => !b.done).length, 0);
-
-  const payload = {
-    title: `Morgen — ${formatLong(tomorrow)}`,
-    body: lines.join('\n') + (bringCount > 0 ? `\n\n${bringCount} ding(en) klaarzetten.` : ''),
-    // Bij een reis die nog ingepakt moet worden opent de melding de paklijst.
-    url: unpackedTrip ? `/?trip=${unpackedTrip.id}` : `/?date=${tomorrow}`,
-    tag: `dag-${tomorrow}`,
-  };
 
   const sent = await sendToAll(payload);
   await markSent(today);
 
+  // Onthouden wat er verstuurd is, zodat dezelfde garantie niet elke avond terugkomt.
+  if (due.length > 0) {
+    await update<Receipt[]>('receipts', (list) =>
+      list.map((r) => {
+        const mine = due.filter((a) => a.id === r.id);
+        if (mine.length === 0) return r;
+        const reminded = { ...r.reminded };
+        for (const a of mine) reminded[a.kind === 'warranty' ? 'warranty' : 'return'] = today;
+        return { ...r, reminded };
+      }),
+    );
+  }
+
   console.log('[herinnering]', payload.title, `naar ${sent.sent} toestel(len)`);
   return result(`Verstuurd naar ${sent.sent} toestel(len).`);
-}
-
-function coversDate(e: CalendarEvent, date: string): boolean {
-  if (!e.endDate) return e.date === date;
-  return e.date <= date && date <= e.endDate;
-}
-
-function sortByTime(a: CalendarEvent, b: CalendarEvent): number {
-  if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
-  return (a.time ?? '').localeCompare(b.time ?? '');
-}
-
-function describe(e: CalendarEvent): string {
-  const who = e.person === 'gezin' ? '' : `${PERSON_LABEL[e.person]}: `;
-  const when = e.allDay ? '' : `${e.time} `;
-  let line = `• ${when}${who}${e.title}`;
-
-  if (e.sitter) {
-    line += ` (oppas ${e.sitter.name}, ${e.sitter.start}–${e.sitter.end})`;
-  }
-  const bring = e.bring.filter((b) => !b.done).map((b) => b.text);
-  if (bring.length > 0) line += `\n   meenemen: ${bring.join(', ')}`;
-  return line;
 }
 
 async function markSent(today: string): Promise<void> {

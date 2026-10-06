@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useRef, useState } from 'react';
 import type { CalendarEvent, PersonId } from '../../shared/types';
 import { PERSON_LABEL } from '../../shared/types';
 import {
   addDays,
   formatLong,
+  isoWeek,
   monthName,
   parseYmd,
   startOfWeek,
@@ -11,12 +12,19 @@ import {
   weekdayShort,
 } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
-import { birthdaysOnDate, coversDate, eventsOnDate, pickupForDate } from '../lib/events';
-import { EventRow } from '../components/EventRow';
+import { birthdaysOnDate, coversDate, eventsOnDate } from '../lib/events';
 import { EventForm } from '../components/EventForm';
+import { Timeline } from '../components/Timeline';
+import { DayFacts } from '../components/DayFacts';
+import { Avatar } from '../components/Avatar';
+import { Icon } from '../components/Icon';
+import { EmptyState } from '../components/EmptyState';
+import { GezinButton } from '../components/PageHead';
+import { SignalBanner } from '../components/SignalBanner';
+import { useRegel } from '../lib/useRegel';
 
 type Filter = 'alles' | PersonId;
-const FILTERS: Filter[] = ['alles', 'matthijs', 'amelie', 'lotte', 'gezin'];
+const FILTERS: Filter[] = ['alles', 'matthijs', 'amelie', 'lotte', 'niels', 'irene', 'gezin'];
 
 export function CalendarView({
   selected,
@@ -25,9 +33,12 @@ export function CalendarView({
   selected: string;
   onSelect: (date: string) => void;
 }) {
-  const { events, contacts, pickupRules, pickupOverrides } = useData();
+  const { events, contacts, meals } = useData();
   const { saveEvent } = useStore();
-  const [cursor, setCursor] = useState(() => selected.slice(0, 7));
+  const regel = useRegel();
+
+  /** De dag waaruit de zichtbare maand volgt. */
+  const [anchor, setAnchor] = useState(selected);
   const [filter, setFilter] = useState<Filter>('alles');
   const [editing, setEditing] = useState<CalendarEvent | null>(null);
   const [creating, setCreating] = useState(false);
@@ -39,168 +50,227 @@ export function CalendarView({
     [events, filter],
   );
 
-  const days = useMemo(() => buildMonthGrid(cursor), [cursor]);
+  const monthDays = useMemo(() => buildMonthGrid(anchor.slice(0, 7)), [anchor]);
+
   const dayEvents = eventsOnDate(visible, selected);
   const birthdays = birthdaysOnDate(contacts, selected);
-  const pickups = pickupForDate(selected, pickupRules, pickupOverrides);
+  const dinner = meals.find((m) => m.date === selected);
 
-  const shiftMonth = (delta: number) => {
-    const [y, m] = cursor.split('-').map(Number);
-    const d = new Date(y, m - 1 + delta, 1);
-    setCursor(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  /** Bladeren neemt de selectie mee, zodat de daglijst altijd een dag toont
+   *  die ook in beeld staat. */
+  const shift = (delta: number) => {
+    const [y, m] = anchor.split('-').map(Number);
+    const eerste = new Date(y, m - 1 + delta, 1);
+    const jaar = eerste.getFullYear();
+    const maand = eerste.getMonth() + 1;
+    setAnchor(`${jaar}-${String(maand).padStart(2, '0')}-01`);
+
+    // Zelfde dag van de maand, ingekort als die maand korter is (31 → 30).
+    const laatste = new Date(jaar, maand, 0).getDate();
+    const dag = Math.min(Number(selected.slice(8)), laatste);
+    onSelect(`${jaar}-${String(maand).padStart(2, '0')}-${String(dag).padStart(2, '0')}`);
+  };
+
+  // Zit vandaag al in beeld, dan hoeft de knop er niet te staan.
+  const vandaagInBeeld = today.slice(0, 7) === anchor.slice(0, 7);
+
+  const goToday = () => {
+    setAnchor(today);
+    onSelect(today);
   };
 
   const toggleBring = (event: CalendarEvent, itemId: string) => {
     void saveEvent({
       ...event,
       bring: event.bring.map((b) => (b.id === itemId ? { ...b, done: !b.done } : b)),
-    });
+    }).catch(() => {});
   };
 
-  const [year, month] = cursor.split('-').map(Number);
+  // Vegen over het maandraster bladert een maand vooruit of terug.
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!touch.current) return;
+    const dx = e.changedTouches[0].clientX - touch.current.x;
+    const dy = e.changedTouches[0].clientY - touch.current.y;
+    touch.current = null;
+    if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      shift(dx < 0 ? 1 : -1);
+    }
+  };
+
+  // Met de pijltjestoetsen door de dagen, zoals in elke agenda.
+  const onDayKeyDown = (e: React.KeyboardEvent, date: string) => {
+    const step = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+    if (step === 0) return;
+    e.preventDefault();
+    const next = addDays(date, step);
+    onSelect(next);
+    setAnchor(next);
+  };
 
   return (
-    <div className="page">
-      <div className="cal__head">
-        <div className="cal__title">
-          {monthName(month - 1)} {year}
-        </div>
-        <div className="row">
-          <button className="btn btn--sm btn--ghost" onClick={() => shiftMonth(-1)} aria-label="Vorige maand">
-            ‹
-          </button>
+    <div className="page cal">
+      <div className="cal__top">
+        <div className="cal__head">
           <button
-            className="btn btn--sm"
-            onClick={() => {
-              setCursor(today.slice(0, 7));
-              onSelect(today);
-            }}
+            className="btn btn--sm btn--ghost"
+            onClick={() => shift(-1)}
+            aria-label="Vorige maand"
           >
-            Vandaag
+            <Icon name="chevron-links" size={18} />
           </button>
-          <button className="btn btn--sm btn--ghost" onClick={() => shiftMonth(1)} aria-label="Volgende maand">
-            ›
-          </button>
-        </div>
-      </div>
-
-      <div className="filters">
-        {FILTERS.map((f) => (
+          <h1 className="cal__title display grow">{titleFor(anchor)}</h1>
           <button
-            key={f}
-            className="filter"
-            aria-pressed={filter === f}
-            onClick={() => setFilter(f)}
+            className="btn btn--sm btn--ghost"
+            onClick={() => shift(1)}
+            aria-label="Volgende maand"
           >
-            {f === 'alles' ? 'Alles' : PERSON_LABEL[f]}
+            <Icon name="chevron-rechts" size={18} />
           </button>
-        ))}
-      </div>
-
-      <div className="cal__weekdays">
-        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i}>{weekdayShort(i)}</div>
-        ))}
-      </div>
-
-      <div className="cal__grid">
-        {days.map((date) => {
-          const inMonth = date.slice(0, 7) === cursor;
-          const items = visible.filter((e) => coversDate(e, date));
-          const weekday = parseYmd(date).getDay();
-          const hasBring = items.some((e) => e.bring.some((b) => !b.done));
-          const classes = [
-            'day',
-            !inMonth && 'day--outside',
-            (weekday === 0 || weekday === 6) && 'day--weekend',
-            date === today && 'day--today',
-            date === selected && 'day--selected',
-          ]
-            .filter(Boolean)
-            .join(' ');
-
-          return (
-            <button key={date} className={classes} onClick={() => onSelect(date)}>
-              <span className="day__num">{Number(date.slice(8))}</span>
-              {hasBring && <span className="day__bring">🎒</span>}
-              {items.length > 0 && (
-                <span className="day__dots">
-                  {items.slice(0, 5).map((e) => (
-                    <span key={e.id} className={`dot dot--${e.person}`} />
-                  ))}
-                </span>
-              )}
-              {items.slice(0, 2).map((e) => (
-                <span key={e.id} className={`day__pill day__pill--${e.person}`}>
-                  {e.allDay ? '' : `${e.time} `}
-                  {e.title}
-                </span>
-              ))}
-              {items.length > 2 && (
-                <span className="tiny muted day__more">+{items.length - 2} meer</span>
-              )}
+          {!vandaagInBeeld && (
+            <button className="btn btn--sm" onClick={goToday}>
+              Vandaag
             </button>
-          );
-        })}
-      </div>
+          )}
+          <GezinButton />
+        </div>
 
-      <div className="row row--between" style={{ marginTop: 20, marginBottom: 10 }}>
-        <h2 className="cap">{formatLong(selected)}</h2>
-        <button className="btn btn--sm" onClick={() => setCreating(true)}>
-          + Item
-        </button>
-      </div>
-
-      <div className="stack stack--sm">
-        {pickups.length > 0 && (
-          <div className="card card--pad small">
-            {pickups.map((p) => (
-              <div key={p.child} className="row row--between">
-                <span>
-                  <span className={`chip chip--${p.child}`}>{PERSON_LABEL[p.child]}</span>{' '}
-                  {p.isOverride && <span className="chip chip--warn">afwijking</span>}
-                </span>
-                <span className="muted">
-                  brengen: {p.dropoff || '—'} · halen: {p.pickup || '—'}
-                </span>
-              </div>
+        <div className="cal__controls">
+          {/* Gekleurde initialen: compact, en meteen de legenda bij de stippen. */}
+          <div className="whofilter" role="group" aria-label="Filter op persoon">
+            {FILTERS.map((f) => (
+              <button
+                key={f}
+                className={`who ${f === 'alles' ? 'who--alles' : 'who--avatar'}`}
+                aria-pressed={filter === f}
+                aria-label={f === 'alles' ? 'Alles' : PERSON_LABEL[f]}
+                title={f === 'alles' ? 'Alles' : PERSON_LABEL[f]}
+                onClick={() => setFilter(f)}
+              >
+                {f === 'alles' ? 'Alles' : <Avatar who={f} size={28} />}
+              </button>
             ))}
           </div>
+        </div>
+
+        {/* --------------------------------------------------- maandoverzicht */}
+        <div className="cal__month" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+          <div className="cal__weekdays">
+            <div className="cal__wkhead" title="Weeknummer">wk</div>
+            {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i}>{weekdayShort(i)}</div>
+            ))}
+          </div>
+
+          <div className="cal__grid">
+            {monthDays.map((date, index) => {
+              const inMonth = date.slice(0, 7) === anchor.slice(0, 7);
+              const items = visible.filter((e) => coversDate(e, date));
+              const weekday = parseYmd(date).getDay();
+              const classes = [
+                'day',
+                !inMonth && 'day--outside',
+                (weekday === 0 || weekday === 6) && 'day--weekend',
+                date === today && 'day--today',
+                date === selected && 'day--selected',
+              ]
+                .filter(Boolean)
+                .join(' ');
+
+              return (
+                <Fragment key={date}>
+                {index % 7 === 0 && (
+                  <div className="cal__wknum" aria-label={`Week ${isoWeek(date)}`}>
+                    {isoWeek(date)}
+                  </div>
+                )}
+                <button
+                  className={classes}
+                  onClick={() => {
+                    onSelect(date);
+                    if (!inMonth) setAnchor(date);
+                  }}
+                  onKeyDown={(e) => onDayKeyDown(e, date)}
+                  aria-current={date === selected}
+                  aria-label={formatLong(date)}
+                >
+                  <span className="day__num">{Number(date.slice(8))}</span>
+                  {items.some((e) => e.bring.some((b) => !b.done)) && (
+                    <Icon name="rugzak" size={12} className="day__bring" />
+                  )}
+                  {items.length > 0 && (
+                    <span className="day__dots">
+                      {items.slice(0, 5).map((e) => (
+                        <span key={e.id} className={`dot dot--${e.person}`} />
+                      ))}
+                    </span>
+                  )}
+                  {items.slice(0, 2).map((e) => (
+                    <span key={e.id} className={`day__pill day__pill--${e.person}`}>
+                      {e.title}
+                    </span>
+                  ))}
+                  {items.length > 2 && (
+                    <span className="tiny muted day__more">+{items.length - 2} meer</span>
+                  )}
+                </button>
+                </Fragment>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ------------------------------------------------------------- de dag */}
+      <div className="daycol">
+        <div className="daycol__head">
+          <h2 className="cap display">{formatLong(selected)}</h2>
+          <button className="btn btn--sm" onClick={() => setCreating(true)}>
+            <Icon name="plus" size={16} /> Item
+          </button>
+        </div>
+
+        {regel.open.map((i) =>
+          i.kind === 'signal' && i.signal.date === selected ? (
+            <SignalBanner key={i.signal.key} signal={i.signal} />
+          ) : null,
         )}
 
+        {/* Breng en haal staat bij Gezin; hier alleen wat we eten. */}
+        <DayFacts pickups={[]} dish={dinner?.dish} />
+
         {birthdays.map((c) => (
-          <div key={c.id} className="card card--pad small">
-            🎂 <strong>{c.name}</strong> is jarig
-            {c.giftIdeas && <span className="muted"> · cadeau-idee: {c.giftIdeas}</span>}
-          </div>
+          <p key={c.id} className="banner banner--info iconrow">
+            <Icon name="taart" size={17} /> {c.name} is jarig
+            {c.giftIdeas && ` · cadeau-idee: ${c.giftIdeas}`}
+          </p>
         ))}
 
-        {dayEvents.length === 0 && birthdays.length === 0 ? (
-          <div className="empty">Niets gepland op deze dag.</div>
+        {dayEvents.length === 0 ? (
+          <EmptyState icon="kalender" title="Niets gepland op deze dag." />
         ) : (
-          dayEvents.map((e) => (
-            <EventRow
-              key={e.id}
-              event={e}
-              onClick={() => setEditing(e)}
-              onToggleBring={(itemId) => toggleBring(e, itemId)}
-            />
-          ))
+          <Timeline events={dayEvents} onOpen={setEditing} onToggleBring={toggleBring} />
         )}
       </div>
 
-      {editing && (
-        <EventForm initial={editing} date={selected} onClose={() => setEditing(null)} />
-      )}
+      {editing && <EventForm initial={editing} date={selected} onClose={() => setEditing(null)} />}
       {creating && <EventForm date={selected} onClose={() => setCreating(false)} />}
     </div>
   );
 }
 
+/** "Oktober 2026" */
+function titleFor(anchor: string): string {
+  const [y, m] = anchor.split('-').map(Number);
+  return `${monthName(m - 1)} ${y}`;
+}
+
 /** Zes weken vanaf de maandag voor de eerste van de maand. */
 function buildMonthGrid(cursor: string): string[] {
-  const first = `${cursor}-01`;
-  const start = startOfWeek(first);
+  const start = startOfWeek(`${cursor}-01`);
   const days: string[] = [];
   for (let i = 0; i < 42; i++) days.push(addDays(start, i));
 

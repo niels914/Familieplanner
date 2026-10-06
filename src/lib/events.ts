@@ -11,7 +11,7 @@ export function eventsOnDate(events: CalendarEvent[], date: string): CalendarEve
   return events.filter((e) => coversDate(e, date)).sort(byTime);
 }
 
-export function byTime(a: CalendarEvent, b: CalendarEvent): number {
+function byTime(a: CalendarEvent, b: CalendarEvent): number {
   if (a.allDay !== b.allDay) return a.allDay ? -1 : 1;
   const t = (a.time ?? '').localeCompare(b.time ?? '');
   return t !== 0 ? t : a.title.localeCompare(b.title);
@@ -83,16 +83,9 @@ export function pickupForDate(
   return out;
 }
 
-/** Verjaardagen uit het contactenboek als agenda-items voor een datum. */
+/** Verjaardagen uit het contactenboek als agenda-items voor een datum.
+ *  Alleen bij overige contacten; bij klasgenootjes en oppassen houden we ze niet bij. */
 export function birthdaysOnDate(contacts: Contact[], date: string): Contact[] {
   const mmdd = date.slice(5);
-  return contacts.filter((c) => c.birthday && c.birthday.slice(-5) === mmdd);
-}
-
-export function ageOn(birthday: string, date: string): number | null {
-  if (birthday.length < 10) return null;
-  const birthYear = Number(birthday.slice(0, 4));
-  if (!birthYear) return null;
-  const year = Number(date.slice(0, 4));
-  return year - birthYear;
+  return contacts.filter((c) => c.kind === 'overig' && c.birthday && c.birthday.slice(-5) === mmdd);
 }

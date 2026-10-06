@@ -1,4 +1,11 @@
-import { getStore, type Store } from '@netlify/blobs';
+/**
+ * Opslag van alle gegevens, in Supabase (Postgres) in een EU-regio.
+ *
+ * De rest van de app kent alleen `read`, `update`, `overwrite` en `readAll`.
+ * De logica staat in kv.ts, de Supabase-aanroepen in supabase-backend.ts, en
+ * het tabelontwerp in supabase/schema.sql.
+ */
+
 import type {
   AppData,
   CalendarEvent,
@@ -8,16 +15,17 @@ import type {
   PickupOverride,
   PickupRule,
   PushSubscriptionRecord,
+  Receipt,
+  Decisions,
   Settings,
   ShoppingItem,
   Trip,
+  Task,
 } from '../../shared/types';
+import { createKv } from './kv';
+import { supabaseBackend, type SupabaseLike } from './supabase-backend';
+import { serviceClient } from './supabase-client';
 
-const STORE_NAME = 'familieplanner';
-
-/** Elke collectie is één JSON-document. De dataset van één gezin is klein genoeg
- *  om in zijn geheel te lezen en te schrijven; schrijven gaat met een etag-check
- *  zodat gelijktijdige wijzigingen van twee telefoons elkaar niet overschrijven. */
 export type Collection =
   | 'events'
   | 'contacts'
@@ -28,6 +36,9 @@ export type Collection =
   | 'packItems'
   | 'trips'
   | 'settings'
+  | 'tasks'
+  | 'decisions'
+  | 'receipts'
   | 'pushSubs';
 
 export const DEFAULT_SETTINGS: Settings = { reminderHour: 19 };
@@ -42,60 +53,41 @@ const EMPTY: Record<Collection, unknown> = {
   packItems: [] as PackItem[],
   trips: [] as Trip[],
   settings: DEFAULT_SETTINGS,
+  tasks: [] as Task[],
+  decisions: {} as Decisions,
+  receipts: [] as Receipt[],
   pushSubs: [] as PushSubscriptionRecord[],
 };
 
-let cached: Store | null = null;
-
-function store(): Store {
-  if (!cached) cached = getStore({ name: STORE_NAME, consistency: 'strong' });
-  return cached;
+function maakClient(): SupabaseLike {
+  return serviceClient() as unknown as SupabaseLike;
 }
 
-export async function read<T>(collection: Collection): Promise<T> {
-  const res = await store().getWithMetadata(collection, { type: 'json' });
-  if (!res || res.data === null || res.data === undefined) {
-    return structuredClone(EMPTY[collection]) as T;
+let kv: ReturnType<typeof createKv<Collection>> | null = null;
+
+/** Pas bij het eerste gebruik aanmaken, zodat een ontbrekende variabele een
+ *  duidelijke melding geeft in plaats van de hele functie te laten crashen. */
+function opslag() {
+  if (!kv) {
+    kv = createKv<Collection>({
+      backend: supabaseBackend(maakClient()),
+      empty: EMPTY,
+    });
   }
-  return res.data as T;
+  return kv;
 }
 
-/**
- * Lees-wijzig-schrijf voor een collectie.
- *
- * Netlify Blobs kent (nog) geen voorwaardelijk schrijven, dus we lossen
- * gelijktijdige wijzigingen op door de bewerking als *operatie* te behandelen:
- * na het schrijven lezen we terug, en als er iets anders staat dan wij
- * schreven, was iemand ons voor en passen we onze operatie opnieuw toe op hun
- * versie. Beide wijzigingen blijven zo behouden.
- */
-export async function update<T>(
-  collection: Collection,
-  mutate: (current: T) => T,
-): Promise<T> {
-  let attempt = 0;
-  let written = mutate(await read<T>(collection));
-  await store().setJSON(collection, written);
+export const read = <T>(collection: Collection): Promise<T> => opslag().read<T>(collection);
 
-  while (attempt < 4) {
-    const readBack = await read<T>(collection);
-    if (JSON.stringify(readBack) === JSON.stringify(written)) return written;
-    // Iemand schreef tussendoor: onze operatie opnieuw toepassen op hun versie.
-    written = mutate(readBack);
-    await store().setJSON(collection, written);
-    attempt++;
-    await new Promise((r) => setTimeout(r, 50 * attempt));
-  }
-  return written;
-}
+export const update = <T>(collection: Collection, mutate: (current: T) => T): Promise<T> =>
+  opslag().update<T>(collection, mutate);
 
-export async function overwrite<T>(collection: Collection, value: T): Promise<void> {
-  await store().setJSON(collection, value);
-}
+export const overwrite = <T>(collection: Collection, value: T): Promise<void> =>
+  opslag().overwrite<T>(collection, value);
 
 /** Alles in één keer, voor het openen van de app. */
 export async function readAll(): Promise<AppData> {
-  const [events, contacts, pickupRules, pickupOverrides, shopping, meals, packItems, trips, settings] =
+  const [events, contacts, pickupRules, pickupOverrides, shopping, meals, packItems, trips, settings, tasks, decisions] =
     await Promise.all([
       read<CalendarEvent[]>('events'),
       read<Contact[]>('contacts'),
@@ -106,6 +98,8 @@ export async function readAll(): Promise<AppData> {
       read<PackItem[]>('packItems'),
       read<Trip[]>('trips'),
       read<Settings>('settings'),
+      read<Task[]>('tasks'),
+      read<Decisions>('decisions'),
     ]);
   return {
     events,
@@ -117,5 +111,7 @@ export async function readAll(): Promise<AppData> {
     packItems,
     trips,
     settings: { ...DEFAULT_SETTINGS, ...settings },
+    tasks,
+    decisions,
   };
 }

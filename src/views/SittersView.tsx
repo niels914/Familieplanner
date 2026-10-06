@@ -3,7 +3,10 @@ import type { CalendarEvent } from '../../shared/types';
 import { formatLong, todayInNl } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
 import { byDate, euro, sitterCost, sitterHours } from '../lib/events';
+import { sitterKey, sitterLabel, sitterOptions } from '../lib/oppas';
 import { EventForm } from '../components/EventForm';
+import { EmptyState } from '../components/EmptyState';
+import { Icon } from '../components/Icon';
 
 type Period = 'komend' | 'maand' | 'vorige' | 'alles';
 
@@ -14,7 +17,7 @@ const PERIOD_LABEL: Record<Period, string> = {
   alles: 'Alles',
 };
 
-export function SittersView() {
+export function SittersView({ embedded = false }: { embedded?: boolean }) {
   const { events, contacts } = useData();
   const { saveEvent } = useStore();
   const [period, setPeriod] = useState<Period>('komend');
@@ -35,21 +38,16 @@ export function SittersView() {
     [events],
   );
 
-  const names = useMemo(() => {
-    const set = new Set<string>();
-    for (const e of all) if (e.sitter?.name) set.add(e.sitter.name);
-    for (const c of contacts) if (c.kind === 'oppas') set.add(c.name);
-    return [...set].sort((a, b) => a.localeCompare(b, 'nl'));
-  }, [all, contacts]);
+  const options = useMemo(() => sitterOptions(all, contacts), [all, contacts]);
 
   const list = useMemo(() => {
     let filtered = all;
     if (period === 'komend') filtered = filtered.filter((e) => e.date >= today);
     else if (period === 'maand') filtered = filtered.filter((e) => e.date.startsWith(month));
     else if (period === 'vorige') filtered = filtered.filter((e) => e.date.startsWith(previousMonth));
-    if (who !== 'alle') filtered = filtered.filter((e) => e.sitter?.name === who);
+    if (who !== 'alle') filtered = filtered.filter((e) => sitterKey(e, contacts) === who);
     return period === 'komend' ? filtered : [...filtered].reverse();
-  }, [all, period, who, today, month, previousMonth]);
+  }, [all, contacts, period, who, today, month, previousMonth]);
 
   const totals = useMemo(() => {
     let hours = 0;
@@ -64,62 +62,123 @@ export function SittersView() {
     return { hours, cost, unpaid };
   }, [list]);
 
+  const perOppas = useMemo(() => {
+    const op = new Map<string, { naam: string; aantal: number; uren: number; bedrag: number; open: number }>();
+    for (const e of list) {
+      const sleutel = sitterKey(e, contacts);
+      const rij = op.get(sleutel) ?? { naam: sitterLabel(e, contacts), aantal: 0, uren: 0, bedrag: 0, open: 0 };
+      const kosten = sitterCost(e);
+      rij.aantal++;
+      rij.uren += sitterHours(e.sitter!.start, e.sitter!.end);
+      rij.bedrag += kosten;
+      if (!e.sitter!.paid) rij.open += kosten;
+      op.set(sleutel, rij);
+    }
+    return [...op.values()].sort((a, b) => b.bedrag - a.bedrag);
+  }, [list, contacts]);
+
   const togglePaid = (e: CalendarEvent) => {
     void saveEvent({ ...e, sitter: { ...e.sitter!, paid: !e.sitter!.paid } });
   };
 
   return (
-    <div className="page">
+    <div className={`page ${embedded ? 'page--embedded' : ''}`}>
       <div className="page__head">
         <div>
           <h1>Oppas</h1>
-          <div className="page__sub">Alle oppasmomenten, uren en wat er nog openstaat.</div>
+          <div className="page__sub">Uren en wat er openstaat.</div>
         </div>
         <button className="btn btn--primary btn--sm" onClick={() => setCreating(true)}>
           + Moment
         </button>
       </div>
 
-      <div className="filters">
-        {(Object.keys(PERIOD_LABEL) as Period[]).map((p) => (
-          <button key={p} className="filter" aria-pressed={period === p} onClick={() => setPeriod(p)}>
-            {PERIOD_LABEL[p]}
-          </button>
-        ))}
-      </div>
-
-      {names.length > 0 && (
+      {/* Eén regel: de periode en de oppas als keuzelijsten, in plaats van twee rijen knoppen. */}
+      <div className="filterbar">
         <select
           className="select"
-          value={who}
-          onChange={(e) => setWho(e.target.value)}
-          style={{ marginBottom: 14 }}
+          aria-label="Periode"
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as Period)}
         >
-          <option value="alle">Alle oppassen</option>
-          {names.map((n) => (
-            <option key={n} value={n}>
-              {n}
+          {(Object.keys(PERIOD_LABEL) as Period[]).map((p) => (
+            <option key={p} value={p}>
+              {PERIOD_LABEL[p]}
             </option>
           ))}
         </select>
-      )}
+        {options.length > 0 && (
+          <select className="select" aria-label="Oppas" value={who} onChange={(e) => setWho(e.target.value)}>
+            <option value="alle">Alle oppassen</option>
+            {options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       {list.length > 0 && (
-        <div className="total" style={{ marginBottom: 14 }}>
-          <div>
-            <div className="tiny">
-              {list.length} moment{list.length === 1 ? '' : 'en'} ·{' '}
-              {totals.hours.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} uur
-            </div>
-            {totals.unpaid > 0 && <div className="tiny">nog te betalen: {euro(totals.unpaid)}</div>}
+        <div className="totals">
+          <div className="totals__cell">
+            <div className="totals__label">Momenten</div>
+            <div className="totals__value">{list.length}</div>
           </div>
-          <div className="total__amount">{euro(totals.cost)}</div>
+          <div className="totals__cell">
+            <div className="totals__label">Uren</div>
+            <div className="totals__value">
+              {totals.hours.toLocaleString('nl-NL', { maximumFractionDigits: 1 })}
+            </div>
+          </div>
+          <div className="totals__cell">
+            <div className="totals__label">Totaal</div>
+            <div className="totals__value">{euro(totals.cost)}</div>
+          </div>
+          {totals.unpaid > 0 && (
+            <div className="totals__open">
+              Nog te betalen <strong>{euro(totals.unpaid)}</strong>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bij "alle oppassen" wil je vooral weten wie je nog moet betalen. */}
+      {who === 'alle' && perOppas.length > 1 && (
+        <div className="stack stack--sm" style={{ marginBottom: 14 }}>
+          {perOppas.map((p) => (
+            <div key={p.naam} className="row row--between small">
+              <strong>{p.naam}</strong>
+              <span className="muted">
+                {p.aantal} × · {p.uren.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} uur ·{' '}
+                {euro(p.bedrag)}
+                {p.open > 0 && <span className="chip chip--warn">{euro(p.open)} open</span>}
+              </span>
+            </div>
+          ))}
         </div>
       )}
 
       <div className="list">
         {list.length === 0 ? (
-          <div className="empty">Geen oppasmomenten in deze periode.</div>
+          <EmptyState
+            icon="oppas"
+            title={
+              all.length === 0 ? 'Nog geen oppasmomenten.' : 'Geen oppasmomenten in deze periode.'
+            }
+            hint={
+              all.length === 0
+                ? 'Leg het eerste vast, dan houdt de app de uren en wat je moet betalen bij.'
+                : undefined
+            }
+            action={
+              all.length === 0 ? (
+                <button className="btn btn--primary btn--sm" onClick={() => setCreating(true)}>
+                  <Icon name="plus" size={16} /> Oppasmoment toevoegen
+                </button>
+              ) : undefined
+            }
+          />
         ) : (
           list.map((e) => {
             const hours = sitterHours(e.sitter!.start, e.sitter!.end);
@@ -131,7 +190,7 @@ export function SittersView() {
                     style={{ all: 'unset', cursor: 'pointer', flex: 1, minWidth: 0 }}
                     onClick={() => setEditing(e)}
                   >
-                    <strong>{e.sitter!.name || 'Oppas'}</strong>
+                    <strong>{sitterLabel(e, contacts) === 'Zonder naam' ? 'Oppas' : sitterLabel(e, contacts)}</strong>
                     <div className="small muted cap">
                       {formatLong(e.date)} · {e.sitter!.start}–{e.sitter!.end} ·{' '}
                       {hours.toLocaleString('nl-NL', { maximumFractionDigits: 1 })} uur
@@ -143,11 +202,18 @@ export function SittersView() {
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <div style={{ fontWeight: 700 }}>{euro(sitterCost(e))}</div>
                     <button
-                      className={`chip ${e.sitter!.paid ? 'chip--gezin' : 'chip--warn'}`}
-                      style={{ border: 0, cursor: 'pointer', marginTop: 4 }}
+                      className={`chip chip--knop ${e.sitter!.paid ? 'chip--gezin' : 'chip--warn'}`}
+                      aria-pressed={e.sitter!.paid}
+                      aria-label={e.sitter!.paid ? 'Betaald, tik om als open te markeren' : 'Open, tik om als betaald te markeren'}
                       onClick={() => togglePaid(e)}
                     >
-                      {e.sitter!.paid ? '✓ betaald' : 'open'}
+                      {e.sitter!.paid ? (
+                        <>
+                          <Icon name="vinkje" size={13} /> betaald
+                        </>
+                      ) : (
+                        'open'
+                      )}
                     </button>
                   </div>
                 </div>

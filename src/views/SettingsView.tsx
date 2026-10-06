@@ -1,6 +1,8 @@
+import { DEFAULT_HOME_TIME } from '../../shared/signals';
 import { useEffect, useState } from 'react';
 import type { ChildId } from '../../shared/types';
 import { CHILDREN, PERSON_LABEL } from '../../shared/types';
+import { TimeField } from '../components/TimeField';
 import { useData, useStore } from '../lib/store';
 import { api } from '../lib/api';
 import {
@@ -13,8 +15,9 @@ import {
 } from '../lib/push';
 
 export function SettingsView({ onLogout }: { onLogout: () => void }) {
-  const { settings, push, parroConfigured } = useData();
-  const { saveSettings, syncParro, setNotice } = useStore();
+  const { settings, push, parroConfigured, agendaFeeds: gekoppeld } = useData();
+  const agendaFeeds = gekoppeld ?? [];
+  const { saveSettings, syncParro, syncAgenda, setNotice } = useStore();
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -52,6 +55,17 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
     }
   };
 
+  const syncAgendas = async () => {
+    setBusy(true);
+    try {
+      setNotice(await syncAgenda());
+    } catch (err) {
+      setNotice((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const logout = async () => {
     await api.post('logout');
     onLogout();
@@ -64,7 +78,6 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
       <div className="page__head">
         <div>
           <h1>Instellingen</h1>
-          <div className="page__sub">Meldingen, schoolagenda en oppasinformatie.</div>
         </div>
       </div>
 
@@ -73,7 +86,7 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
         <div className="card card--pad stack stack--sm">
           <strong>Herinneringen</strong>
           <p className="small muted">
-            Elke avond één bericht met alles van morgen, inclusief wat er mee moet.
+            Elke avond een bericht met alles van morgen.
           </p>
 
           {!push.configured && (
@@ -128,13 +141,37 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
               className="btn btn--sm"
               disabled={busy}
               onClick={async () => {
-                const r = await api.post<{ sent: number }>('push/test');
-                setNotice(`Testbericht naar ${r.sent} toestel(len) gestuurd.`);
+                const sub = await currentSubscription();
+                const r = await api.post<{ sent: number }>('push/test', { endpoint: sub?.endpoint });
+                setNotice(
+                  r.sent > 0
+                    ? 'Testbericht naar deze telefoon gestuurd.'
+                    : 'Dit toestel is niet aangemeld; zet meldingen opnieuw aan.',
+                );
               }}
             >
               Stuur een testbericht
             </button>
           )}
+        </div>
+
+        {/* ------------------------------------------------ thuiskomst */}
+        <div className="card card--pad stack stack--sm">
+          <strong>Normale thuiskomst</strong>
+          <p className="small muted">
+            Wanneer jullie doordeweeks meestal thuis zijn. Daarmee zien we wanneer jullie allebei weg zijn.
+          </p>
+          <div className="field">
+            <label htmlFor="home-time">Thuis om</label>
+            <TimeField
+              id="home-time"
+              label="Thuis om"
+              value={settings.homeTime ?? DEFAULT_HOME_TIME}
+              onChange={(v) => {
+                if (v) void saveSettings({ homeTime: v }).catch(() => {});
+              }}
+            />
+          </div>
         </div>
 
         {/* -------------------------------------------------------- parro */}
@@ -143,8 +180,7 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
           {parroConfigured ? (
             <>
               <p className="small muted">
-                De agenda wordt elke drie uur automatisch opgehaald. Items uit Parro herken je
-                aan het label; je meeneem-lijstjes blijven bij een synchronisatie staan.
+                Elke drie uur opgehaald. Je meeneem-lijstjes blijven staan.
               </p>
               <div className="small muted">
                 {settings.parroLastSync
@@ -179,11 +215,46 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
           </div>
         </div>
 
+        {/* ------------------------------------------------- agenda's */}
+        <div className="card card--pad stack stack--sm">
+          <strong>Agenda's (Gmail)</strong>
+          {agendaFeeds.length > 0 ? (
+            <>
+              <p className="small muted">
+                Elk uur opgehaald, alleen lezen. Wijzigen doe je in Google Agenda. Je meeneem-lijstjes
+                en notities blijven staan.
+              </p>
+              {agendaFeeds.map((f) => {
+                const last = settings.agendaSync?.[f.id];
+                return (
+                  <div key={f.id} className="small muted">
+                    <b>{f.label}</b>
+                    {': '}
+                    {!last
+                      ? 'nog niet gesynchroniseerd.'
+                      : last.ok
+                        ? `${new Date(last.at).toLocaleString('nl-NL')}, ${last.count} afspraken.`
+                        : `mislukt op ${new Date(last.at).toLocaleString('nl-NL')}. ${last.message}`}
+                  </div>
+                );
+              })}
+              <button className="btn btn--sm" onClick={syncAgendas} disabled={busy}>
+                {busy ? 'Bezig…' : 'Nu ophalen'}
+              </button>
+            </>
+          ) : (
+            <div className="banner">
+              Er is nog geen agenda gekoppeld. Zet de geheime iCal-link in Netlify als{' '}
+              <code>NIELS_ICS_URL</code> (Google Agenda) of <code>IRENE_ICS_URL</code> (Outlook of Hotmail).
+            </div>
+          )}
+        </div>
+
         {/* ------------------------------------------------ oppasbriefing */}
         <div className="card card--pad stack stack--sm">
           <strong>Informatie voor de oppas</strong>
           <p className="small muted">
-            Bedtijden, allergieën, noodnummers — staat klaar als je het snel moet doorgeven.
+            Bedtijden, allergieën, noodnummers.
           </p>
           <textarea
             className="textarea"

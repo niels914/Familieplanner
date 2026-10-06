@@ -16,6 +16,7 @@ import { diffDays, formatLong, todayInNl } from '../../shared/dates';
 import { orderLocations, progress } from '../../shared/packing';
 import { useData, useStore } from '../lib/store';
 import { PackItemForm, TripEditForm, TripForm, TripItemForm } from '../components/PackForms';
+import { PageHead } from '../components/PageHead';
 
 const NO_PLACE = 'Nog geen plek';
 
@@ -29,12 +30,7 @@ export function PackingView({ initialTripId = null }: { initialTripId?: string |
 
   return (
     <div className="page">
-      <div className="page__head">
-        <div>
-          <h1>Paklijst</h1>
-          <div className="page__sub">Wat er mee moet op vakantie, per reis en per persoon.</div>
-        </div>
-      </div>
+      <PageHead title="Paklijst" sub="Wat er mee moet op vakantie, per reis en per persoon." />
 
       <div className="filters">
         <button className="filter" aria-pressed={tab === 'reizen'} onClick={() => setTab('reizen')}>
@@ -188,25 +184,25 @@ function TripDetail({ trip, onBack }: { trip: Trip; onBack: () => void }) {
 
   return (
     <div className="page">
-      <div className="page__head">
-        <div className="row" style={{ alignItems: 'flex-start' }}>
-          <button className="btn btn--ghost btn--sm" onClick={onBack} aria-label="Terug naar alle reizen">
-            ‹
+      <button className="btn btn--ghost btn--sm" onClick={onBack} style={{ marginLeft: -8 }}>
+        ‹ Alle reizen
+      </button>
+      <PageHead
+        title={trip.name}
+        sub={
+          <>
+            <span className="cap">{formatLong(trip.startDate)}</span> · {trip.nights}{' '}
+            {trip.nights === 1 ? 'nacht' : 'nachten'}
+            {days > 0 && ` · nog ${days} ${days === 1 ? 'dag' : 'dagen'}`}
+            {trip.abroad && ' · buitenland'}
+          </>
+        }
+        actions={
+          <button className="btn btn--sm" onClick={() => setEditingTrip(true)}>
+            Bewerken
           </button>
-          <div>
-            <h1>{trip.name}</h1>
-            <div className="page__sub">
-              <span className="cap">{formatLong(trip.startDate)}</span> · {trip.nights}{' '}
-              {trip.nights === 1 ? 'nacht' : 'nachten'}
-              {days > 0 && ` · nog ${days} ${days === 1 ? 'dag' : 'dagen'}`}
-              {trip.abroad && ' · buitenland'}
-            </div>
-          </div>
-        </div>
-        <button className="btn btn--sm" onClick={() => setEditingTrip(true)}>
-          Bewerken
-        </button>
-      </div>
+        }
+      />
 
       <div className="card card--pad stack stack--sm" style={{ marginBottom: 12 }}>
         <div className="row row--between">

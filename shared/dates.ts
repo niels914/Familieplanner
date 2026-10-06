@@ -37,6 +37,16 @@ export function startOfWeek(s: string): string {
   return addDays(s, -(isoWeekday(s) - 1));
 }
 
+/** Weeknummer volgens ISO 8601, zoals in Nederland gebruikt: de week begint op
+ *  maandag en week 1 is de week met de eerste donderdag van het jaar. */
+export function isoWeek(s: string): number {
+  const d = parseYmd(s);
+  // Naar de donderdag van deze week; die bepaalt in welk jaar de week valt.
+  d.setDate(d.getDate() + 4 - isoWeekday(s));
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil(((d.getTime() - jan1.getTime()) / 86400000 + 1) / 7);
+}
+
 /** Vandaag in Europe/Amsterdam, ongeacht de tijdzone van de server. */
 export function todayInNl(now: Date = new Date()): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -68,9 +78,12 @@ export function formatLong(s: string): string {
   return `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 
+/** De gebruikelijke korte maandnamen. Gewoon de eerste drie letters geeft "maa" voor maart. */
+const MONTHS_SHORT = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
 export function formatShort(s: string): string {
   const d = parseYmd(s);
-  return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`;
+  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`;
 }
 
 export function monthName(month: number): string {
@@ -79,15 +92,4 @@ export function monthName(month: number): string {
 
 export function weekdayShort(index: number): string {
   return ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'][index];
-}
-
-/** 'Morgen', 'Over 3 dagen', 'Vandaag', ... */
-export function relativeLabel(date: string, today: string): string {
-  const d = diffDays(today, date);
-  if (d === 0) return 'Vandaag';
-  if (d === 1) return 'Morgen';
-  if (d === -1) return 'Gisteren';
-  if (d > 1 && d < 7) return `Over ${d} dagen`;
-  if (d < -1 && d > -7) return `${Math.abs(d)} dagen geleden`;
-  return formatLong(date);
 }

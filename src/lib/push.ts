@@ -22,7 +22,9 @@ export function isStandalone(): boolean {
 }
 
 export function isIos(): boolean {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (/iphone|ipad|ipod/i.test(navigator.userAgent)) return true;
+  // iPadOS doet zich voor als Mac, maar een Mac heeft geen aanraakscherm.
+  return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
 }
 
 export async function currentSubscription(): Promise<PushSubscription | null> {

@@ -3,7 +3,11 @@ import type { ChildId, Contact } from '../../shared/types';
 import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { useData } from '../lib/store';
 import { euro, initials } from '../lib/events';
+import { whatsappLink } from '../../shared/phone';
 import { ContactForm } from '../components/ContactForm';
+import { Avatar } from '../components/Avatar';
+import { Icon } from '../components/Icon';
+import { EmptyState } from '../components/EmptyState';
 
 type Filter = 'alle' | ChildId | 'oppas' | 'overig';
 
@@ -16,7 +20,7 @@ const FILTER_LABEL: Record<Filter, string> = {
   overig: 'Overig',
 };
 
-export function ContactsView() {
+export function ContactsView({ embedded = false }: { embedded?: boolean }) {
   const { contacts } = useData();
   const [filter, setFilter] = useState<Filter>('alle');
   const [query, setQuery] = useState('');
@@ -40,35 +44,56 @@ export function ContactsView() {
     if (!available.includes(filter)) setFilter('alle');
   }, [available, filter]);
 
-  const list = useMemo(() => {
+  /** Gegroepeerd per klas, zodat je bij "wie is de moeder van..." meteen in
+   *  de goede klas kijkt in plaats van door één lange lijst te scrollen. */
+  const groepen = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return contacts
-      .filter((c) => {
-        if (filter === 'oppas') return c.kind === 'oppas';
-        if (filter === 'overig') return c.kind === 'overig';
-        if (filter === 'matthijs') return c.kind === 'klasgenoot' && c.childOf === 'matthijs';
-        if (filter === 'amelie') return c.kind === 'klasgenoot' && c.childOf === 'amelie';
-        return true;
-      })
-      .filter((c) => {
-        if (!q) return true;
-        const haystack = [
-          c.name,
-          c.group,
-          c.notes,
-          c.phone,
-          ...c.parents.flatMap((p) => [p.name, p.phone, p.email]),
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase();
-        return haystack.includes(q);
-      })
+
+    const matchtFilter = (c: Contact) => {
+      if (filter === 'alle') return true;
+      if (filter === 'oppas') return c.kind === 'oppas';
+      if (filter === 'overig') return c.kind === 'overig';
+      return c.kind === 'klasgenoot' && c.childOf === filter;
+    };
+
+    const matchtZoek = (c: Contact) => {
+      if (!q) return true;
+      return [c.name, c.group, c.address, c.notes, c.phone, ...c.parents.flatMap((p) => [p.name, p.phone, p.email])]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(q);
+    };
+
+    const zichtbaar = contacts
+      .filter(matchtFilter)
+      .filter(matchtZoek)
       .sort((a, b) => a.name.localeCompare(b.name, 'nl'));
+
+    const uit: Array<{ key: string; label: string; items: Contact[] }> = [];
+    const voegToe = (key: string, label: string, items: Contact[]) => {
+      if (items.length > 0) uit.push({ key, label, items });
+    };
+
+    for (const child of CHILDREN) {
+      voegToe(
+        child,
+        `Klas ${PERSON_LABEL[child]}`,
+        zichtbaar.filter((c) => c.kind === 'klasgenoot' && c.childOf === child),
+      );
+    }
+    voegToe(
+      'zonderklas',
+      'Klasgenootjes zonder klas',
+      zichtbaar.filter((c) => c.kind === 'klasgenoot' && !c.childOf),
+    );
+    voegToe('oppas', 'Oppas', zichtbaar.filter((c) => c.kind === 'oppas'));
+    voegToe('overig', 'Overig', zichtbaar.filter((c) => c.kind === 'overig'));
+    return uit;
   }, [contacts, filter, query]);
 
   return (
-    <div className="page">
+    <div className={`page ${embedded ? 'page--embedded' : ''}`}>
       <div className="page__head">
         <div>
           <h1>Contacten</h1>
@@ -83,31 +108,67 @@ export function ContactsView() {
 
       <input
         className="input"
-        placeholder="Zoek op naam, ouder of telefoonnummer"
+        placeholder="Zoek op naam, ouder, adres, nummer"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         style={{ marginBottom: 12 }}
       />
 
-      <div className="filters">
-        {available.map((f) => (
-          <button key={f} className="filter" aria-pressed={filter === f} onClick={() => setFilter(f)}>
-            {FILTER_LABEL[f]}
-          </button>
-        ))}
-      </div>
+      {/* Alleen "Alle" is geen keuze: dan geen filterrij. */}
+      {available.length > 1 && (
+        <div className="picks" style={{ marginBottom: 6 }} role="group" aria-label="Filter">
+          {available.map((f) => (
+            <button key={f} className="pick" aria-pressed={filter === f} onClick={() => setFilter(f)}>
+              {FILTER_LABEL[f]}
+            </button>
+          ))}
+        </div>
+      )}
 
-      <div className="list">
-        {list.length === 0 ? (
-          <div className="empty">
-            {contacts.length === 0
-              ? 'Nog geen contacten. Voeg het eerste klasgenootje toe.'
-              : 'Niets gevonden.'}
-          </div>
+      {groepen.length === 0 ? (
+        contacts.length === 0 ? (
+          <EmptyState
+            icon="contacten"
+            title="Nog geen contacten."
+            hint="Zet het eerste klasgenootje erin, met de telefoonnummers van de ouders."
+            action={
+              <button className="btn btn--primary btn--sm" onClick={() => setCreating(true)}>
+                <Icon name="plus" size={16} /> Contact toevoegen
+              </button>
+            }
+          />
         ) : (
-          list.map((c) => <ContactTile key={c.id} contact={c} onEdit={() => setEditing(c)} />)
-        )}
-      </div>
+          <EmptyState
+            icon="zoeken"
+            title={query ? `Niets gevonden voor ‘${query.trim()}’.` : 'Niets gevonden.'}
+            action={
+              <button
+                className="btn btn--sm"
+                onClick={() => {
+                  setQuery('');
+                  setFilter('alle');
+                }}
+              >
+                Alles tonen
+              </button>
+            }
+          />
+        )
+      ) : (
+        groepen.map((groep) => (
+          <section key={groep.key}>
+            <h2 className="grouphead">
+              {groep.label}
+              <span className="grouphead__count">{groep.items.length}</span>
+            </h2>
+            <div className="list">
+              {groep.items.map((c) => (
+                <ContactTile key={c.id} contact={c} onEdit={() => setEditing(c)} />
+              ))}
+            </div>
+          </section>
+        ))
+      )}
 
       {editing && <ContactForm initial={editing} onClose={() => setEditing(null)} />}
       {creating && <ContactForm onClose={() => setCreating(false)} />}
@@ -119,11 +180,12 @@ function ContactTile({ contact, onEdit }: { contact: Contact; onEdit: () => void
   const avatarClass =
     contact.kind === 'oppas' ? 'avatar--oppas' : contact.childOf ? `avatar--${contact.childOf}` : '';
 
+  // Bij een ouder staat de naam boven het nummer; het eigen nummer hoort bij de kop van de kaart.
   const phones = [
-    ...(contact.phone ? [{ name: contact.name, phone: contact.phone }] : []),
+    ...(contact.phone ? [{ name: contact.name, label: undefined, phone: contact.phone }] : []),
     ...contact.parents
       .filter((p) => p.phone)
-      .map((p) => ({ name: `${p.name} (${p.role})`, phone: p.phone! })),
+      .map((p) => ({ name: p.name, label: `${p.name} (${p.role})`, phone: p.phone! })),
   ];
 
   return (
@@ -133,14 +195,26 @@ function ContactTile({ contact, onEdit }: { contact: Contact; onEdit: () => void
         <div className="grow">
           <div className="row row--between">
             <strong>{contact.name}</strong>
-            <button className="btn btn--ghost btn--sm" onClick={onEdit}>
-              Bewerken
+            <button
+              className="btn btn--ghost btn--sm"
+              onClick={onEdit}
+              aria-label={`${contact.name} bewerken`}
+            >
+              <Icon name="potlood" size={16} />
             </button>
           </div>
           <div className="small muted">
             {contact.kind === 'klasgenoot' && (
               <>
-                Klasgenootje van {contact.childOf ? PERSON_LABEL[contact.childOf] : '—'}
+                Klasgenootje van{' '}
+                {contact.childOf ? (
+                  <>
+                    <Avatar who={contact.childOf} size={16} className="event__who" />
+                    {PERSON_LABEL[contact.childOf]}
+                  </>
+                ) : (
+                  '—'
+                )}
                 {contact.group && ` · ${contact.group}`}
               </>
             )}
@@ -148,16 +222,43 @@ function ContactTile({ contact, onEdit }: { contact: Contact; onEdit: () => void
               <>Oppas{contact.sitterRate ? ` · ${euro(contact.sitterRate)} per uur` : ''}</>
             )}
             {contact.kind === 'overig' && 'Overig contact'}
-            {contact.birthday && ` · jarig ${contact.birthday.slice(8)}-${contact.birthday.slice(5, 7)}`}
+            {contact.kind === 'overig' && contact.birthday && ` · jarig ${contact.birthday.slice(8)}-${contact.birthday.slice(5, 7)}`}
           </div>
 
           {phones.length > 0 && (
-            <div className="row row--wrap" style={{ marginTop: 8 }}>
-              {phones.map((p) => (
-                <a key={p.phone} className="phone" href={`tel:${p.phone.replace(/\s/g, '')}`}>
-                  📞 {p.name}: {p.phone}
-                </a>
-              ))}
+            <div className="stack stack--sm" style={{ marginTop: 8 }}>
+              {phones.map((p) => {
+                const wa = whatsappLink(p.phone);
+                return (
+                  <div key={p.phone} className="phonegroup">
+                    {p.label && <div className="small muted">{p.label}</div>}
+                    <div className="phonerow">
+                      <a className="phone" href={`tel:${p.phone.replace(/\s/g, '')}`} aria-label={`Bel ${p.name}`}>
+                        <Icon name="telefoon" size={16} />
+                        {p.phone}
+                      </a>
+                      {wa && (
+                        <a
+                          className="phone phone--wa"
+                          href={wa}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${p.name} in WhatsApp openen`}
+                        >
+                          <Icon name="bericht" size={16} />
+                          WhatsApp
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {contact.address && (
+            <div className="iconrow small" style={{ marginTop: 8 }}>
+              <Icon name="speld" size={15} /> {contact.address}
             </div>
           )}
 

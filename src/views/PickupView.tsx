@@ -4,6 +4,8 @@ import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { addDays, formatLong, isoWeekday, todayInNl } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
 import { pickupForDate } from '../lib/events';
+import { Avatar } from '../components/Avatar';
+import { Icon } from '../components/Icon';
 
 const WEEKDAYS: Weekday[] = [1, 2, 3, 4, 5];
 const WEEKDAY_LABEL: Record<Weekday, string> = { 1: 'ma', 2: 'di', 3: 'wo', 4: 'do', 5: 'vr' };
@@ -46,7 +48,7 @@ export function PickupView() {
       <div className="page__head">
         <div>
           <h1>Breng & haal</h1>
-          <div className="page__sub">Wie brengt, wie haalt — en de afwijkingen daarop.</div>
+          <div className="page__sub">Wie brengt en wie haalt.</div>
         </div>
       </div>
 
@@ -56,16 +58,12 @@ export function PickupView() {
         ))}
       </datalist>
 
-      <div className="filters">
-        <button className="filter" aria-pressed={tab === 'schema'} onClick={() => setTab('schema')}>
-          Vast weekschema
+      <div className="segmented" role="group" aria-label="Weergave" style={{ marginBottom: 14 }}>
+        <button aria-pressed={tab === 'schema'} onClick={() => setTab('schema')}>
+          Vast schema
         </button>
-        <button
-          className="filter"
-          aria-pressed={tab === 'afwijkingen'}
-          onClick={() => setTab('afwijkingen')}
-        >
-          Komende twee weken
+        <button aria-pressed={tab === 'afwijkingen'} onClick={() => setTab('afwijkingen')}>
+          Twee weken
         </button>
       </div>
 
@@ -110,8 +108,7 @@ export function PickupView() {
             </div>
           ))}
           <p className="small muted">
-            Wijzigingen worden opgeslagen zodra je uit een veld klikt. Laat een veld leeg als er
-            die dag niets geregeld hoeft te worden.
+            Leeg laten kan. Wijzigingen worden meteen bewaard.
           </p>
         </div>
       ) : (
@@ -133,7 +130,9 @@ export function PickupView() {
                   );
                   return (
                     <div key={child} className="weekgrid__row" style={{ gridTemplateColumns: '78px 1fr 1fr 32px' }}>
-                      <span className={`chip chip--${child}`}>{PERSON_LABEL[child]}</span>
+                      <span className={`chip chip--${child}`}>
+                        <Avatar who={child} size={18} /> {PERSON_LABEL[child]}
+                      </span>
                       <input
                         className="input"
                         list="wie-suggesties"
@@ -170,9 +169,9 @@ export function PickupView() {
                         <button
                           className="btn btn--ghost btn--sm"
                           title="Terug naar het vaste schema"
-                          onClick={() => void deletePickupOverride(override.id)}
+                          onClick={() => void deletePickupOverride(override.id).catch(() => {})}
                         >
-                          ↺
+                          <Icon name="terugdraaien" size={16} />
                         </button>
                       ) : (
                         <span />

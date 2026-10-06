@@ -7,3 +7,5 @@ dist
 .DS_Store
 __pycache__/
 *.pyc
+tests/.api-bundel.mjs
+tests/.build/

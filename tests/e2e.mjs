@@ -49,7 +49,7 @@ function browserPad() {
   return pad && existsSync(pad) ? pad : undefined;
 }
 
-const server = spawn('node', ['tests/mock-server.mjs'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT) }, stdio: 'ignore' });
+const server = spawn('node', ['tests/mock-server.mjs'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT), NIELS_WERK_ICS_URL: 'https://werk.example.invalid/agenda.ics' }, stdio: 'ignore' });
 const stop = () => server.kill();
 process.on('exit', stop);
 
@@ -606,6 +606,21 @@ await sectie('Bonnetjes: garantie bij Regelen', async () => {
   await rust(p, 400);
   ok('Geen klachten haalt het van de lijst', (await p.locator('.actrow', { hasText: 'Garantie Airfryer' }).count()) === 0);
   ok('en onthoudt dat op de server', await tot(p, (d) => !d.receiptAlerts.some((a) => a.id === 'bijna')));
+  await context.close();
+});
+
+// ============================================================================
+await sectie('Werkagenda: instellingen', async () => {
+  const { context, page: p } = await toestel();
+  await open(p);
+  await p.locator('.gezinbtn').first().tap();
+  await rust(p);
+  await p.locator('.rowlink', { hasText: 'Instellingen' }).tap();
+  await p.waitForSelector('#werk-reis');
+  ok('de werkagenda heeft een eigen blok met de standaardwaarden', (await p.locator('#werk-reis').inputValue()) === '45' && (await p.locator('#werk-vroeg-uur, [aria-label="Vroeg weg voor, uur"]').first().inputValue()) === '08');
+  await p.locator('#werk-reis').selectOption('60');
+  const bewaard = await tot(p, (d) => d.settings.werk?.travelMin === 60 && d.settings.werk?.earlyBefore === '08:00');
+  ok('een andere reistijd wordt bewaard, met de rest erbij', bewaard);
   await context.close();
 });
 

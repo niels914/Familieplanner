@@ -1,6 +1,6 @@
 # Werkagenda van Niels: vroeg weg, laat thuis
 
-Status: plan, nog niets gebouwd. Eerst de keuzes in sectie 7.
+Status: fase 1 en 2 gebouwd, met de afwijkingen onderaan (sectie 9). Fase 3 volgt na gebruik.
 
 ## 1. Waar het om gaat
 
@@ -128,3 +128,17 @@ vanaf 07:15 weg". Dat is precies het moment waar een signaal waarde heeft.
 | **3. Slimmer** | Conflict met breng en haal bij Regelen, reistijd per plaats leren |
 
 Mijn advies: fase 1 en 2 samen. Zonder reistijd mist het precies de afspraken waar het om gaat.
+
+## 9. Gebouwd, en wat anders is dan hierboven
+
+- De bron heet `NIELS_WERK_ICS_URL` (zo staat hij in Netlify). Alle keuzes uit sectie 7 volgden het
+  voorstel: hele dagen worden overgeslagen, de beschrijving komt niet mee, 45 minuten schatting.
+- **Een online afspraak aan de rand is geen "weg".** Een Teams-gesprek om 07:30 komt wel in de
+  agenda (titel, tijd), maar geeft geen *Niels weg*-item: je zit dan thuis. Alleen afspraken met
+  reistijd (een rt-blok of een fysieke locatie) maken een weg-item. Dit wijkt af van het voorbeeld
+  in sectie 6.
+- Afspraken over meerdere dagen worden net als hele dagen overgeslagen.
+- Een rt-blok zonder afspraak ernaast, aan de rand van de dag, komt binnen met de titel zoals hij is.
+- De instellingen gelden bij de eerstvolgende sync (elk uur, of *Nu ophalen*).
+- Nog niet gebouwd (fase 3): het conflict met Breng en haal bij Regelen, en reistijd per plaats leren.
+

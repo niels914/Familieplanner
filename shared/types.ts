@@ -22,12 +22,13 @@ export type Category =
   | 'anders';
 
 /** Welke persoonlijke agenda's we kunnen koppelen. */
-export type AgendaFeedId = 'niels' | 'irene';
+export type AgendaFeedId = 'niels' | 'irene' | 'werk';
 
 /** Hoe een gekoppelde agenda in de lijst heet. */
 export const AGENDA_FEED_LABEL: Record<AgendaFeedId, string> = {
   niels: 'Gmail',
   irene: 'Agenda',
+  werk: 'Werk',
 };
 
 export interface BringItem {
@@ -313,6 +314,8 @@ export interface Settings {
   shoppingOften?: Often;
   /** Wanneer je normaal thuis bent, 'HH:MM'. Daarvan telt "later thuis" tot het opgegeven tijdstip. */
   homeTime?: string;
+  /** Wat uit de werkagenda van Niels in de app komt; zie `shared/werkagenda.ts`. */
+  werk?: { earlyBefore?: string; lateAfter?: string; morningUntil?: string; travelMin?: number };
 }
 
 export interface AppData {

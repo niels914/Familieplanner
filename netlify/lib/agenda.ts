@@ -13,7 +13,9 @@
 import type { AgendaFeedId, AgendaSyncState, CalendarEvent, PersonId, Settings } from '../../shared/types';
 import { addDays, todayInNl } from '../../shared/dates';
 import { parseIcs } from './ics';
-import { DEFAULT_SETTINGS, update } from './store';
+import { DEFAULT_HOME_TIME } from '../../shared/signals';
+import { planWerk, werkSettings, type WerkOutput } from '../../shared/werkagenda';
+import { DEFAULT_SETTINGS, read, update } from './store';
 
 export interface Feed {
   id: AgendaFeedId;
@@ -25,6 +27,8 @@ export interface Feed {
 export const FEEDS: Feed[] = [
   { id: 'niels', envVar: 'NIELS_ICS_URL', person: 'niels', label: 'Gmail van Niels' },
   { id: 'irene', envVar: 'IRENE_ICS_URL', person: 'irene', label: 'Outlook van Irene' },
+  // De werkagenda komt niet helemaal binnen: alleen de randen van de dag (zie shared/werkagenda.ts).
+  { id: 'werk', envVar: 'NIELS_WERK_ICS_URL', person: 'niels', label: 'Werkagenda van Niels' },
 ];
 
 export const configuredFeeds = (): Feed[] => FEEDS.filter((f) => Boolean(process.env[f.envVar]));
@@ -123,6 +127,13 @@ export async function syncFeed(feed: Feed): Promise<FeedResult> {
   const until = addDays(today, DAYS_AHEAD);
   const parsed = parseIcs(text, { from, until, stableRecurringUids: true, untitled: '(zonder titel)' });
 
+  // Een werkagenda gaat eerst door het filter: alleen de randen van de dag blijven over.
+  let items: WerkOutput[] = parsed;
+  if (feed.id === 'werk') {
+    const settings = await read<Settings>('settings');
+    items = planWerk(parsed, werkSettings(settings.werk), settings.homeTime ?? DEFAULT_HOME_TIME).items;
+  }
+
   let added = 0;
   let updated = 0;
   let removed = 0;
@@ -138,7 +149,7 @@ export async function syncFeed(feed: Feed): Promise<FeedResult> {
     const seen = new Set<string>();
     const now = new Date().toISOString();
 
-    for (const ics of parsed) {
+    for (const ics of items) {
       seen.add(ics.uid);
       const existing = byUid.get(ics.uid);
       const description = cleanDescription(ics.description);
@@ -173,13 +184,13 @@ export async function syncFeed(feed: Feed): Promise<FeedResult> {
           time: ics.time,
           endTime: ics.endTime,
           person: feed.person,
-          category: 'afspraak',
+          category: ics.category ?? 'afspraak',
           bring: [],
           notes: description,
           syncedNotes: description,
           // Een werkafspraak hoort niet in de avondmelding voor het hele gezin;
-          // dat staat per item aan te zetten.
-          reminder: false,
+          // dat staat per item aan te zetten. Een weg-item voor het ochtend- of avondritme wel.
+          reminder: ics.reminder ?? false,
           location: ics.location,
           createdAt: now,
           updatedAt: now,
@@ -204,11 +215,14 @@ export async function syncFeed(feed: Feed): Promise<FeedResult> {
   return {
     feed: feed.id,
     ok: true,
-    message: `${feed.label}: ${added} nieuw, ${updated} bijgewerkt, ${removed} verwijderd.`,
+    message:
+      feed.id === 'werk'
+        ? `${feed.label}: ${parsed.length} afspraken gelezen, ${items.length} overgenomen (${added} nieuw, ${updated} bijgewerkt, ${removed} verwijderd).`
+        : `${feed.label}: ${added} nieuw, ${updated} bijgewerkt, ${removed} verwijderd.`,
     added,
     updated,
     removed,
-    total: parsed.length,
+    total: items.length,
   };
 }
 

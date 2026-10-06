@@ -159,4 +159,74 @@ check(
 check('een streepje in gewone tekst blijft', cleanDescription('Niels - Irene\n--\nOk'), 'Niels - Irene\n--\nOk');
 check('alleen een lijn is niets', cleanDescription('__________'), undefined);
 
+// ------------------------------------------------------------------ werkagenda
+const WERK_LINK = 'https://outlook.office365.com/owa/calendar/geheim/reachcalendar.ics';
+process.env.NIELS_WERK_ICS_URL = WERK_LINK;
+const werkFeed = FEEDS.find((f) => f.id === 'werk')!;
+const lokaal = (uid: string, summary: string, n: number, van: string, tot: string, extra: string[] = []) => [
+  'BEGIN:VEVENT',
+  `UID:${uid}`,
+  `DTSTART;TZID=W. Europe Standard Time:${dag(n)}T${van.replace(':', '')}00`,
+  `DTEND;TZID=W. Europe Standard Time:${dag(n)}T${tot.replace(':', '')}00`,
+  `SUMMARY:${summary}`,
+  ...extra,
+  'END:VEVENT',
+];
+const werkItems = async () => (await read<CalendarEvent[]>('events')).filter((e) => e.agendaFeed === 'werk');
+const werkTitels = async () => (await werkItems()).map((e) => e.title).sort();
+
+feedMet(
+  agenda(
+    lokaal('w1', 'Overleg Den Haag', 3, '09:00', '10:00', ['LOCATION:Den Haag', 'DESCRIPTION:Vertrouwelijke tekst']),
+    lokaal('w2', 'rt', 3, '07:30', '09:00'),
+    lokaal('w3', 'Afdelingsoverleg', 3, '11:00', '12:00'),
+    lokaal('w4', 'Vroege call', 4, '07:30', '08:30', ['LOCATION:Microsoft Teams Meeting']),
+    lokaal('w5', 'Strategiesessie', 5, '13:00', '16:00'),
+  ),
+);
+r = await syncFeed(werkFeed);
+check('werkagenda: alleen de randen komen binnen', [r.ok, await werkTitels()], [true, ['Niels weg om 07:30', 'Overleg Den Haag', 'Vroege call']]);
+check('de melding zegt hoeveel er gelezen en overgenomen is', r.message.includes('5 afspraken gelezen, 3 overgenomen'), true);
+const denHaag = (await werkItems()).find((e) => e.title === 'Overleg Den Haag');
+check('titel letterlijk, op naam van Niels, locatie erbij', [denHaag?.person, denHaag?.location, denHaag?.agendaFeed, denHaag?.category], ['niels', 'Den Haag', 'werk', 'afspraak']);
+check('de beschrijving van een werkafspraak komt niet binnen', (denHaag?.notes ?? '').includes('Vertrouwelijke'), false);
+check('wel de reistijd, uit de agenda of geschat', denHaag?.notes, 'Reistijd heen: 1 u 30 min (uit je agenda)\nReistijd terug: 45 min (geschat)');
+const weg = (await werkItems()).find((e) => e.title === 'Niels weg om 07:30');
+check('het weg-item is van het soort weg, met herinnering', [weg?.category, weg?.reminder, weg?.time, weg?.endTime], ['weg', true, '07:30', '08:30']);
+check('een gewone werkafspraak komt niet in de avondmelding', denHaag?.reminder, false);
+check('het middagoverleg staat nergens in de opslag', JSON.stringify(await read<CalendarEvent[]>('events')).includes('Afdelingsoverleg'), false);
+
+r = await syncFeed(werkFeed);
+check('nogmaals ophalen verandert niets', [r.added, r.updated, r.removed], [0, 0, 0]);
+
+// Verplaatst naar het midden van de dag: weg uit de app, ook het weg-item.
+feedMet(
+  agenda(
+    lokaal('w1', 'Overleg Den Haag', 3, '12:00', '13:00', ['LOCATION:Den Haag']),
+    lokaal('w4', 'Vroege call', 4, '07:30', '08:30', ['LOCATION:Microsoft Teams Meeting']),
+  ),
+);
+r = await syncFeed(werkFeed);
+check('verplaatst naar 12:00: afspraak en weg-item verdwijnen', await werkTitels(), ['Vroege call']);
+
+// Alleen middagafspraken: het filter maakt alles leeg, maar de feed zelf is niet leeg.
+feedMet(agenda(lokaal('w9', 'Overleg', 3, '10:00', '11:00')));
+r = await syncFeed(werkFeed);
+check('een feed met alleen middagafspraken ruimt de randen wel op', [r.ok, await werkTitels()], [true, []]);
+feedMet(agenda());
+r = await syncFeed(werkFeed);
+check('een echt lege feed ruimt niets op', r.removed, 0);
+
+// De eigen instellingen gelden.
+await update<Settings>('settings', (s) => ({ ...s, werk: { earlyBefore: '07:00', travelMin: 60 } }));
+feedMet(agenda(lokaal('w6', 'Kennismaking', 3, '07:45', '09:00', ['LOCATION:Amersfoort'])));
+r = await syncFeed(werkFeed);
+check('instelling: vroeg is nu voor 07:00, reistijd 60 min', await werkTitels(), ['Kennismaking', 'Niels weg om 06:45']);
+feedMet(agenda(lokaal('w6', 'Kennismaking', 3, '07:45', '09:00')));
+await syncFeed(werkFeed);
+
+antwoord = () => new Response('niet gevonden', { status: 404 });
+r = await syncFeed(werkFeed);
+check('werkagenda 404: geen link in de melding', [r.ok, r.message.includes('reachcalendar')], [false, false]);
+
 report('agenda');

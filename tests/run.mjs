@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const files = [
   'tests/ics.test.ts',
   'tests/agenda.test.ts',
+  'tests/werkagenda.test.ts',
   'tests/dates.test.ts',
   'tests/phone.test.ts',
   'tests/prep.test.ts',

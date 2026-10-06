@@ -1,4 +1,5 @@
 import { DEFAULT_HOME_TIME } from '../../shared/signals';
+import { werkSettings, type WerkSettings } from '../../shared/werkagenda';
 import { useEffect, useState } from 'react';
 import type { ChildId } from '../../shared/types';
 import { CHILDREN, PERSON_LABEL } from '../../shared/types';
@@ -217,7 +218,7 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
 
         {/* ------------------------------------------------- agenda's */}
         <div className="card card--pad stack stack--sm">
-          <strong>Agenda's (Gmail)</strong>
+          <strong>Agenda's</strong>
           {agendaFeeds.length > 0 ? (
             <>
               <p className="small muted">
@@ -245,10 +246,59 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
           ) : (
             <div className="banner">
               Er is nog geen agenda gekoppeld. Zet de geheime iCal-link in Netlify als{' '}
-              <code>NIELS_ICS_URL</code> (Google Agenda) of <code>IRENE_ICS_URL</code> (Outlook of Hotmail).
+              <code>NIELS_ICS_URL</code> (Google Agenda), <code>IRENE_ICS_URL</code> (Outlook of Hotmail) of{' '}
+              <code>NIELS_WERK_ICS_URL</code> (werkagenda).
             </div>
           )}
         </div>
+
+        {/* -------------------------------------------------- werkagenda */}
+        {agendaFeeds.some((f) => f.id === 'werk') && (
+          <div className="card card--pad stack stack--sm">
+            <strong>Werkagenda van Niels</strong>
+            <p className="small muted">
+              Alleen afspraken waarvoor Niels vroeg weg is of laat thuiskomt, reistijd meegerekend, komen in de
+              app. Een blok met als titel <b>rt</b> telt als reistijd. Een afspraak met een fysieke locatie
+              zonder rt-blok krijgt de standaard reistijd. Wijzigingen gelden bij de volgende keer ophalen.
+            </p>
+            {(() => {
+              const werk = werkSettings(settings.werk);
+              const zet = (patch: Partial<WerkSettings>) => void saveSettings({ werk: { ...werk, ...patch } }).catch(() => {});
+              return (
+                <>
+                  <div className="field">
+                    <label htmlFor="werk-vroeg">Vroeg weg is vertrekken voor</label>
+                    <TimeField id="werk-vroeg" label="Vroeg weg voor" value={werk.earlyBefore} onChange={(v) => v && zet({ earlyBefore: v })} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="werk-laat">Laat thuis is thuiskomen na</label>
+                    <TimeField id="werk-laat" label="Laat thuis na" value={werk.lateAfter} onChange={(v) => v && zet({ lateAfter: v })} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="werk-ochtend">Het ochtendritme loopt tot</label>
+                    <TimeField id="werk-ochtend" label="Ochtend tot" value={werk.morningUntil} onChange={(v) => v && zet({ morningUntil: v })} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="werk-reis">Standaard reistijd per kant</label>
+                    <select
+                      id="werk-reis"
+                      className="select"
+                      style={{ width: 150 }}
+                      value={werk.travelMin}
+                      onChange={(e) => zet({ travelMin: Number(e.target.value) })}
+                    >
+                      {[15, 30, 45, 60, 75, 90, 120].map((m) => (
+                        <option key={m} value={m}>
+                          {m} minuten
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
 
         {/* ------------------------------------------------ oppasbriefing */}
         <div className="card card--pad stack stack--sm">

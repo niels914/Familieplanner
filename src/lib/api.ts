@@ -37,7 +37,13 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
 
   const text = await res.text();
-  const data = text ? (JSON.parse(text) as unknown) : {};
+  let data: unknown = {};
+  try {
+    data = text ? (JSON.parse(text) as unknown) : {};
+  } catch {
+    // Geen json, bijvoorbeeld de foutpagina van Netlify bij een time-out.
+    if (res.ok) throw new ApiError('Het antwoord van de server was onleesbaar.', res.status);
+  }
 
   if (!res.ok) {
     const message =

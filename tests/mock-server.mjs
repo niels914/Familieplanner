@@ -39,6 +39,31 @@ if (!process.env.VAPID_PUBLIC_KEY) {
 }
 globalThis.__FP_SEED__ = voorbeeldData();
 
+// Uitlezen: de dienst van Anthropic wordt nagemaakt, zodat er geen sleutel en geen verbinding nodig is.
+// De antwoorden hangen af van de tekst, zodat de tests verschillende voorstellen kunnen kiezen.
+process.env.ANTHROPIC_API_KEY ??= 'sk-ant-alleen-lokaal';
+const echteFetch = globalThis.fetch;
+globalThis.fetch = async (url, init) => {
+  if (!String(url).startsWith('https://api.anthropic.com/')) return echteFetch(url, init);
+  const body = JSON.parse(String(init?.body ?? '{}'));
+  const invoer = (body.messages?.[0]?.content ?? []).map((b) => b.text ?? '').join(' ');
+  const heeftFoto = (body.messages?.[0]?.content ?? []).some((b) => b.type === 'image');
+  const dag = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  let input = { afspraken: [], taken: [], bonnetjes: [] };
+  if (/kapot/i.test(invoer)) return new Response('{"error":{"message":"boem"}}', { status: 500 });
+  if (/zwem/i.test(invoer)) {
+    input = {
+      afspraken: [{ titel: 'Zwemles', datum: dag(9), tijd: '16:15', eindtijd: '17:00', locatie: 'Zwembad De Kuil', wie: ['matthijs'], soort: 'sport', meenemen: ['Zwembroek', 'Handdoek'], herhaling: { elke_weken: 1, tot: dag(9 + 63) } }],
+      taken: [{ titel: 'Diploma-formulier inleveren', uiterlijk: dag(5), kind: 'matthijs' }],
+      bonnetjes: [],
+      opmerking: 'Het examen staat niet in de mail.',
+    };
+  } else if (heeftFoto) {
+    input = { afspraken: [], taken: [], bonnetjes: [{ product: 'Wasmachine', winkel: 'Coolblue', datum: dag(-2), bedrag_euro: 549.5, garantie_maanden: 24 }] };
+  }
+  return new Response(JSON.stringify({ content: [{ type: 'tool_use', name: 'voorstellen', input }] }), { status: 200 });
+};
+
 // De API bundelen, met netlify/lib/store vervangen door de geheugenversie.
 const bundel = await build({
   entryPoints: [join(ROOT, 'netlify/functions/api.ts')],

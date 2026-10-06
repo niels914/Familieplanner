@@ -16,7 +16,7 @@ import {
 } from '../lib/push';
 
 export function SettingsView({ onLogout }: { onLogout: () => void }) {
-  const { settings, push, parroConfigured, agendaFeeds: gekoppeld } = useData();
+  const { settings, push, parroConfigured, readConfigured, agendaFeeds: gekoppeld } = useData();
   const agendaFeeds = gekoppeld ?? [];
   const { saveSettings, syncParro, syncAgenda, setNotice } = useStore();
   const [subscribed, setSubscribed] = useState<boolean | null>(null);
@@ -173,6 +173,21 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
               }}
             />
           </div>
+        </div>
+
+        {/* -------------------------------------------------------- uitlezen */}
+        <div className="card card--pad stack stack--sm">
+          <strong>Uitlezen uit foto of tekst</strong>
+          {readConfigured ? (
+            <p className="small muted">
+              Staat aan. Bij Nieuw kies je <em>Uitlezen uit foto of tekst</em>. Alleen wat je daar kiest of plakt gaat naar
+              Anthropic (Claude), en de planner bewaart het niet. Hoogstens 40 keer per dag.
+            </p>
+          ) : (
+            <div className="banner">
+              De omgevingsvariabele <code>ANTHROPIC_API_KEY</code> is nog niet ingesteld in Netlify.
+            </div>
+          )}
         </div>
 
         {/* -------------------------------------------------------- parro */}

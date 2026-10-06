@@ -6,8 +6,7 @@ Fase 1 en 2 zijn gebouwd; zie [bonnetjes-plan.md](bonnetjes-plan.md) (de keuzes 
 
 **Wensenlijst voor later** (bewust niet in deze versie):
 
-- *Gegevens uit de foto laten lezen door AI* (winkel, datum, bedrag, product). De foto gaat dan
-  naar een externe dienst, dus alleen na een tik per bonnetje en na een keuze welke dienst.
+- *Gegevens uit de foto laten lezen door AI*: gebouwd als *Uitlezen uit foto of tekst* (bij Nieuw). Een foto van een bon geeft een voorstel voor het bonnetje.
 - *Bonnetjes uit e-mail*: een eigen adres waarnaar je Coolblue- of Bol-mails doorstuurt. Vraagt om
   een extra dienst. Voor nu is een schermafbeelding prima.
 - *Alles downloaden als back-up* (een zip met foto's en een lijst).
@@ -72,3 +71,15 @@ moet de gezinsplanning weten voordat het een verrassing wordt.
 - Vanaf wanneer telt het als "vroeg weg" of "laat thuis"? Bijvoorbeeld voor 07:30
   weg of na 18:30 thuis, in te stellen.
 - Afspraken zonder locatie of met een videolink negeren.
+
+## Uitlezen uit foto of tekst: verder
+
+Gebouwd: foto's (hoogstens drie) of geplakte tekst naar voorstellen voor afspraken (ook een
+wekelijkse reeks), taken en bonnetjes. Zie `shared/lezen.ts` en `netlify/lib/lezen.ts`.
+
+- *Pdf's uitlezen* (kaartjes en facturen komen vaak als pdf). Nu: maak er een schermafbeelding van.
+- *Delen naar de planner vanuit de iPhone* (deelmenu of Opdrachten) in plaats van eerst een
+  schermafbeelding kiezen.
+- *Doorsturen van mail naar een eigen adres*: bewust niet gekozen; het plakveld en de foto dekken het.
+- *Time-out*: een uitleesverzoek mag bij Netlify niet te lang duren. Gebeurt het toch, zet dan
+  `ANTHROPIC_MODEL` op een snellere modelnaam (zie README).

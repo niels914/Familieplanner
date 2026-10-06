@@ -314,6 +314,8 @@ export interface Settings {
   parroEventCount?: number;
   /** Laatste sync per gekoppelde persoonlijke agenda. */
   agendaSync?: Partial<Record<AgendaFeedId, AgendaSyncState>>;
+  /** Hoe vaak vandaag een foto of tekst is uitgelezen; een rem op de kosten. */
+  readUsage?: { date: string; count: number };
   lastReminderDate?: string;
   /** Aan welk kind Parro-items gekoppeld worden. */
   parroPerson?: ChildId;

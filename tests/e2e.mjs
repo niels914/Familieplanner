@@ -729,6 +729,81 @@ await sectie('Meeneem-suggesties uit een Parro-bericht', async () => {
 });
 
 // ============================================================================
+await sectie('Uitlezen uit foto of tekst', async () => {
+  const { context, page: p } = await toestel();
+  await open(p);
+
+  // De ingang staat bij Nieuw, en alleen als de sleutel is ingesteld (de testserver doet dat).
+  await p.locator('.tabbar__add').tap();
+  await p.waitForSelector('#nieuw-tekst');
+  await p.getByRole('button', { name: 'Uitlezen uit foto of tekst' }).tap();
+  await p.waitForSelector('#lees-tekst');
+  ok('"Lees uit" is uit zolang er niets is gekozen', await p.getByRole('button', { name: 'Lees uit' }).isDisabled());
+  ok('de privacy-regel staat erbij', (await p.locator('.lees__privacy').innerText()).includes('Anthropic'));
+
+  // Een mail als tekst.
+  await p.locator('#lees-tekst').fill('Mail van het zwembad: de zwemles is elke dinsdag om 16:15.');
+  await p.getByRole('button', { name: 'Lees uit' }).tap();
+  await p.waitForSelector('.lees__card');
+  const kaarten = await p.locator('.lees__card strong').allInnerTexts();
+  ok('een afspraak en een taak als voorstel', JSON.stringify(kaarten) === '["Zwemles","Diploma-formulier inleveren"]', JSON.stringify(kaarten));
+  ok('de toelichting van het model staat erbij', (await p.locator('.signalnote').innerText()).includes('Het examen staat niet in de mail'));
+  ok('de reeks staat op de kaart', (await p.locator('.lees__card').first().innerText()).includes('Elke week'));
+  ok('niets is bewaard voordat jij het doet', !(await data(p)).events.some((e) => e.bring.some((b) => b.text === 'Zwembroek')));
+
+  // De taak: wie, en direct op Regelen.
+  await p.locator('.lees__card', { hasText: 'Diploma-formulier' }).getByRole('button', { name: 'Irene' }).tap();
+  await p.locator('.lees__card', { hasText: 'Diploma-formulier' }).getByRole('button', { name: 'Zet op Regelen' }).tap();
+  ok('de taak staat bij Regelen met Irene en Matthijs', await tot(p, (d) => d.tasks.some((t) => t.title === 'Diploma-formulier inleveren' && t.owner === 'irene' && t.kid === 'matthijs')));
+  await rust(p);
+  ok('de kaart zegt "Bewaard"', (await p.locator('.lees__card', { hasText: 'Diploma-formulier' }).innerText()).includes('Bewaard'));
+
+  // De afspraak: het gewone formulier, vooraf ingevuld, met de reeks.
+  await p.locator('.lees__card', { hasText: 'Zwemles' }).getByRole('button', { name: 'Bekijken en bewaren' }).tap();
+  await p.waitForSelector('#ev-title');
+  ok('titel en tijd zijn ingevuld', (await p.locator('#ev-title').inputValue()) === 'Zwemles');
+  ok('"Elke week" staat al aan', (await p.getByRole('button', { name: 'Elke week' }).getAttribute('aria-pressed')) === 'true');
+  ok('meenemen is overgenomen', (await p.locator('.bringrow, .chip', { hasText: 'Zwembroek' }).count()) > 0 || (await p.locator('body').innerText()).includes('Zwembroek'));
+  await p.getByRole('button', { name: /keer inplannen/ }).tap();
+  ok('de hele reeks is ingepland, voor Matthijs, als sport', await tot(p, (d) => d.events.filter((e) => e.title === 'Zwemles' && e.person === 'matthijs' && e.category === 'sport' && e.time === '16:15' && e.bring.some((b) => b.text === 'Zwembroek')).length >= 9));
+  await rust(p);
+  ok('terug in de lijst staat de afspraak als bewaard', (await p.locator('.lees__card', { hasText: 'Zwemles' }).innerText()).includes('Bewaard'));
+
+  // Een foto van een bon.
+  await p.getByRole('button', { name: 'Opnieuw' }).tap();
+  await p.waitForSelector('#lees-tekst');
+  ok('"Opnieuw" bewaart wat je al had ingevoerd', (await p.locator('#lees-tekst').inputValue()).includes('zwembad'));
+  await p.locator('#lees-tekst').fill('');
+  await p.locator('.modal input[type=file]').setInputFiles({ name: 'bon.png', mimeType: 'image/png', buffer: pngBuffer(900, 1200) });
+  await p.waitForSelector('.modal .filetile img');
+  await p.getByRole('button', { name: 'Lees uit' }).tap();
+  await p.waitForSelector('.lees__card');
+  ok('de foto geeft een bonnetje als voorstel', (await p.locator('.lees__card').first().innerText()).includes('Wasmachine'));
+  await p.getByRole('button', { name: 'Bekijken en bewaren' }).tap();
+  await p.waitForSelector('.modal');
+  ok('het bonnetje is ingevuld en heeft de foto erbij', (await p.locator('.modal input[value="Wasmachine"]').count()) === 1 && (await p.locator('.modal .filetile img').count()) === 1);
+  await p.getByRole('button', { name: 'Opslaan', exact: true }).tap();
+  const bonnen = async () => (await (await p.request.get(`${B}/api/receipts`)).json()).receipts;
+  const einde = Date.now() + 6000;
+  let wasmachine;
+  while (Date.now() < einde && !wasmachine) {
+    wasmachine = (await bonnen()).find((r) => r.title === 'Wasmachine');
+    if (!wasmachine) await p.waitForTimeout(150);
+  }
+  ok('bonnetje bewaard met bedrag, garantie en foto', Boolean(wasmachine) && wasmachine.amountCents === 54950 && wasmachine.warrantyMonths === 24 && wasmachine.store === 'Coolblue' && wasmachine.files.length === 1);
+
+  // Een fout van de dienst geeft een rustige melding, geen kapot scherm.
+  await p.getByRole('button', { name: 'Opnieuw' }).tap();
+  await p.waitForSelector('#lees-tekst');
+  await p.locator('#lees-tekst').fill('dit is kapot');
+  await p.getByRole('button', { name: 'Lees uit' }).tap();
+  await p.waitForSelector('.bon__problem');
+  ok('een fout bij de dienst wordt gemeld', (await p.locator('.bon__problem').innerText()).includes('De uitleesdienst gaf een fout (500).'));
+  ok('en je kunt het opnieuw proberen', await p.getByRole('button', { name: 'Lees uit' }).isEnabled());
+  await context.close();
+});
+
+// ============================================================================
 kop('Geen fouten in de console');
 ok('geen scriptfouten tijdens deze hele test', consoleFouten.length === 0, consoleFouten.slice(0, 3).join(' | '));
 

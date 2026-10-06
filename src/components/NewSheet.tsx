@@ -20,6 +20,7 @@ import { peopleOf, togglePerson } from '../../shared/people';
 import { EventForm } from './EventForm';
 import { Icon } from './Icon';
 import { Modal } from './Modal';
+import { ReadSheet } from './ReadSheet';
 
 const EXAMPLES_EVENT = [
   'Matthijs vrijdag gymtas mee',
@@ -70,7 +71,7 @@ export function NewSheet({
   date: string;
   onClose: () => void;
 }) {
-  const { settings } = useData();
+  const { settings, readConfigured } = useData();
   const { saveEvent, saveTask, setNotice } = useStore();
   const homeTime = settings.homeTime ?? DEFAULT_HOME_TIME;
 
@@ -81,6 +82,7 @@ export function NewSheet({
   const [whoTask, setWhoTask] = useState<TaskOwner | null>(null);
   const [duePick, setDuePick] = useState<DuePick | null>(null);
   const [detailed, setDetailed] = useState<Partial<CalendarEvent> | null>(null);
+  const [reading, setReading] = useState(false);
 
   const today = todayInNl();
   const parsed = useMemo<QuickResult | null>(
@@ -150,6 +152,8 @@ export function NewSheet({
     setNotice('Staat bij Regelen.');
     onClose();
   };
+
+  if (reading) return <ReadSheet onClose={onClose} />;
 
   if (detailed) {
     return <EventForm initial={detailed as CalendarEvent} date={detailed.date ?? date} onClose={onClose} expanded />;
@@ -237,6 +241,12 @@ export function NewSheet({
             }}
           />
         </div>
+
+        {readConfigured && !parsed && (
+          <button type="button" className="btn btn--sm btn--ghost iconrow lees__ingang" onClick={() => setReading(true)}>
+            <Icon name="camera" size={16} /> Uitlezen uit foto of tekst
+          </button>
+        )}
 
         {mode === 'agenda' ? (
           <>

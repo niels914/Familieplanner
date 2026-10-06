@@ -36,6 +36,8 @@ import { clearCache, readCache, writeCache } from './cache';
 export interface DataResponse extends AppData {
   push: { configured: boolean; publicKey: string };
   parroConfigured: boolean;
+  /** Staat ANTHROPIC_API_KEY in Netlify? Zo niet, dan is Uitlezen er niet. */
+  readConfigured?: boolean;
   /** Gekoppelde persoonlijke agenda's (Gmail), voor de instellingen. */
   agendaFeeds: { id: AgendaFeedId; label: string }[];
   /** Garanties en retourtermijnen die bijna aflopen. Komt mee met het openen van de app. */
@@ -722,7 +724,7 @@ export function useStore(): StoreValue {
 }
 
 /** Handige, altijd-gevulde weergave van de data. */
-export function useData(): AppData & Pick<DataResponse, 'push' | 'parroConfigured' | 'agendaFeeds' | 'receiptAlerts' | 'receipts'> {
+export function useData(): AppData & Pick<DataResponse, 'push' | 'parroConfigured' | 'readConfigured' | 'agendaFeeds' | 'receiptAlerts' | 'receipts'> {
   const { data } = useStore();
   return (
     data ?? {
@@ -737,6 +739,7 @@ export function useData(): AppData & Pick<DataResponse, 'push' | 'parroConfigure
       decisions: {},
       push: { configured: false, publicKey: '' },
       parroConfigured: false,
+      readConfigured: false,
       agendaFeeds: [],
       receiptAlerts: [],
     }

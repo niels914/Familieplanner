@@ -40,6 +40,7 @@ import { configuredFeeds, runAgendaSync } from '../lib/agenda';
 import { getFile, putFile } from '../lib/files';
 import { MAX_FILE_BYTES, contentTypeFor, looksLikeFile, receiptFilePath } from '../lib/receipt-files';
 import { syncParro } from '../lib/parro';
+import { ReadError, countUse, readConfigured, readWithModel, type ReadInput } from '../lib/lezen';
 
 export const config = { path: '/api/*' };
 
@@ -117,6 +118,9 @@ export default async function handler(req: Request): Promise<Response> {
       case 'receipts':
         return await handleReceipts(req, id, action, extra);
 
+      case 'read':
+        return await handleRead(req);
+
       case 'parro':
         if (req.method !== 'POST') return error('Alleen POST.', 405);
         return json(await runParroSync());
@@ -147,6 +151,7 @@ async function handleData(req: Request): Promise<Response> {
     ...(await readAll()),
     push: { configured: pushConfigured(), publicKey: publicKey() },
     parroConfigured: Boolean(process.env.PARRO_ICS_URL),
+    readConfigured: readConfigured(),
     // Alleen wat aandacht vraagt; de bonnetjes zelf worden pas opgehaald op hun eigen scherm.
     receiptAlerts: alertsFor(await read<Receipt[]>('receipts'), todayInNl()),
     agendaFeeds: configuredFeeds().map((f) => ({ id: f.id, label: f.label })),
@@ -191,6 +196,36 @@ async function handleRestore(req: Request): Promise<Response> {
     restoreItems(list, items as Array<{ id: string }>),
   );
   return json({ [collection]: saved });
+}
+
+// -------------------------------------------------------------- uitlezen
+
+/**
+ * Een foto of tekst laten uitlezen tot voorstellen. Er wordt niets bewaard behalve een
+ * teller per dag, als rem op de kosten. De voorstellen worden pas iets als iemand ze
+ * in de app overneemt.
+ *   POST /read   { text?: string, images?: string[] }  (jpeg als base64)
+ */
+async function handleRead(req: Request): Promise<Response> {
+  if (req.method !== 'POST') return error('Alleen POST.', 405);
+  if (!readConfigured()) return error('Uitlezen staat nog niet aan: ANTHROPIC_API_KEY ontbreekt in Netlify.', 503);
+  const body = await readBody<ReadInput>(req);
+  const today = todayInNl();
+
+  try {
+    // Eerst tellen: een mislukte poging kost ook, want de dienst rekent af zodra hij start.
+    let allowed = true;
+    await update<Settings>('settings', (current) => {
+      const next = countUse(current.readUsage, today);
+      allowed = next !== null;
+      return next ? { ...DEFAULT_SETTINGS, ...current, readUsage: next } : current;
+    });
+    if (!allowed) return error('Vandaag is het maximum aantal keer uitlezen bereikt. Morgen kan het weer.', 429);
+    return json(await readWithModel(body, today));
+  } catch (err) {
+    if (err instanceof ReadError) return error(err.message, err.status);
+    throw err;
+  }
 }
 
 // -------------------------------------------------------------- bonnetjes

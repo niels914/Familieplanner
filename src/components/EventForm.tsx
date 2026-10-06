@@ -64,12 +64,18 @@ export function EventForm({
   date,
   onClose,
   expanded = false,
+  repeat,
+  onSaved,
 }: {
   initial?: CalendarEvent;
   date: string;
   onClose: () => void;
   /** Alle opties meteen open, bijvoorbeeld na "Alle opties" bij Nieuw. */
   expanded?: boolean;
+  /** Een nieuw item dat al herhaalt, bijvoorbeeld een zwemles uit een uitgelezen mail. */
+  repeat?: { interval: 1 | 2; until: string };
+  /** Na het opslaan, vóór het sluiten. Niet bij annuleren of verwijderen. */
+  onSaved?: () => void;
 }) {
   const {
     saveEvent,
@@ -87,8 +93,8 @@ export function EventForm({
 
   // Reeksen: bij een nieuw item kiezen of het herhaalt, bij een bestaande keer
   // of een wijziging alleen voor deze keer geldt of ook voor de volgende.
-  const [herhaal, setHerhaal] = useState<0 | 1 | 2>(0);
-  const [tot, setTot] = useState(() => addDays(initial?.date ?? date, 7 * 13));
+  const [herhaal, setHerhaal] = useState<0 | 1 | 2>(repeat?.interval ?? 0);
+  const [tot, setTot] = useState(() => repeat?.until ?? addDays(initial?.date ?? date, 7 * 13));
   const [bereik, setBereik] = useState<'deze' | 'volgende'>('deze');
   const [verwijderKeuze, setVerwijderKeuze] = useState(false);
   // De minder gebruikte velden staan dicht, tenzij er al iets in staat.
@@ -192,6 +198,7 @@ export function EventForm({
           setNotice(`Opgeslagen. Allebei weg ${spanLabel(warnings[0].window)} staat nu bij Regelen.`);
         }
       }
+      onSaved?.();
       onClose();
     } catch {
       // Foutmelding komt uit de store.

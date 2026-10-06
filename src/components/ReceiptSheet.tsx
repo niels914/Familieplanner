@@ -55,31 +55,38 @@ const herinneringKeuze = (remind?: boolean): Herinnering => (remind === undefine
 export function ReceiptSheet({
   receipt,
   initial,
+  prefill,
+  onSaved,
   onClose,
 }: {
   receipt?: Receipt;
   /** De foto waarmee een nieuw bonnetje begint. */
   initial?: PreparedFile;
+  /** Vooraf ingevulde gegevens voor een nieuw bonnetje, bijvoorbeeld uit een uitgelezen foto. */
+  prefill?: Partial<Receipt>;
+  /** Na het opslaan, vóór het sluiten. */
+  onSaved?: () => void;
   onClose: () => void;
 }) {
   const { saveReceipt, deleteReceipt, uploadReceiptFile } = useStore();
   const today = todayInNl();
   const id = useRef(receipt?.id ?? crypto.randomUUID()).current;
   const fileInput = useRef<HTMLInputElement>(null);
+  const base = receipt ?? prefill;
 
-  const [title, setTitle] = useState(receipt?.title ?? '');
-  const [store, setStore] = useState(receipt?.store ?? '');
-  const [purchaseDate, setPurchaseDate] = useState(receipt?.purchaseDate ?? today);
-  const [amount, setAmount] = useState(receipt?.amountCents !== undefined ? bedrag(receipt.amountCents) : '');
-  const [person, setPerson] = useState<PersonId>(receipt?.person ?? 'gezin');
-  const [garantie, setGarantie] = useState<Garantie>(garantieKeuze(receipt?.warrantyMonths, receipt?.warrantyUntil));
-  const [maanden, setMaanden] = useState(receipt?.warrantyMonths ? String(receipt.warrantyMonths) : '');
-  const [warrantyUntil, setWarrantyUntil] = useState(receipt?.warrantyUntil ?? '');
-  const [returnUntil, setReturnUntil] = useState(receipt?.returnUntil ?? '');
-  const [serial, setSerial] = useState(receipt?.serial ?? '');
-  const [notes, setNotes] = useState(receipt?.notes ?? '');
-  const [herinnering, setHerinnering] = useState<Herinnering>(herinneringKeuze(receipt?.remind));
-  const [meerOpen, setMeerOpen] = useState(Boolean(receipt?.serial || receipt?.returnUntil || receipt?.notes || receipt?.remind !== undefined));
+  const [title, setTitle] = useState(base?.title ?? '');
+  const [store, setStore] = useState(base?.store ?? '');
+  const [purchaseDate, setPurchaseDate] = useState(base?.purchaseDate ?? today);
+  const [amount, setAmount] = useState(base?.amountCents !== undefined ? bedrag(base.amountCents) : '');
+  const [person, setPerson] = useState<PersonId>(base?.person ?? 'gezin');
+  const [garantie, setGarantie] = useState<Garantie>(garantieKeuze(base?.warrantyMonths, base?.warrantyUntil));
+  const [maanden, setMaanden] = useState(base?.warrantyMonths ? String(base.warrantyMonths) : '');
+  const [warrantyUntil, setWarrantyUntil] = useState(base?.warrantyUntil ?? '');
+  const [returnUntil, setReturnUntil] = useState(base?.returnUntil ?? '');
+  const [serial, setSerial] = useState(base?.serial ?? '');
+  const [notes, setNotes] = useState(base?.notes ?? '');
+  const [herinnering, setHerinnering] = useState<Herinnering>(herinneringKeuze(base?.remind));
+  const [meerOpen, setMeerOpen] = useState(Boolean(base?.serial || base?.returnUntil || base?.notes || base?.remind !== undefined));
 
   const [files, setFiles] = useState<ReceiptFile[]>(receipt?.files ?? []);
   const [pending, setPending] = useState<PreparedFile[]>(initial ? [initial] : []);
@@ -144,6 +151,7 @@ export function ReceiptSheet({
         remind: herinnering === 'auto' ? null : herinnering === 'aan',
         files: [...files, ...uploaded],
       });
+      onSaved?.();
       onClose();
     } catch (err) {
       setProblem((err as Error).message);

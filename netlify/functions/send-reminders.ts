@@ -1,6 +1,8 @@
 import type { Config } from '@netlify/functions';
-import type { CalendarEvent, Receipt, Settings } from '../../shared/types';
+import type { CalendarEvent, Contact, Receipt, Settings } from '../../shared/types';
 import { addDays, hourInNl, todayInNl } from '../../shared/dates';
+import { feestdagenOp, feestdagNamen } from '../../shared/feestdagen';
+import { dueGiftReminders, giftLine } from '../../shared/verjaardagen';
 import { alertLine, dueReminders } from '../../shared/warranty';
 import { bouwHerinnering } from '../lib/reminder';
 import { DEFAULT_SETTINGS, read, update } from '../lib/store';
@@ -30,7 +32,14 @@ export default async function handler(): Promise<Response> {
   // Garanties en retourtermijnen die bijna aflopen, elk hoogstens één keer.
   const receipts = await read<Receipt[]>('receipts');
   const due = dueReminders(receipts, today);
-  const payload = bouwHerinnering(events, tomorrow, due.map(alertLine));
+  // Een verjaardag binnen drie weken waar nog geen cadeau-herinnering voor is geweest.
+  const contacts = await read<Contact[]>('contacts');
+  const gifts = dueGiftReminders(contacts, today);
+  const feestdagen = feestdagenOp(tomorrow);
+  const payload = bouwHerinnering(events, tomorrow, due.map(alertLine), {
+    feestdag: feestdagen.length > 0 ? feestdagNamen(feestdagen) : undefined,
+    cadeauRegels: gifts.map(giftLine),
+  });
 
   if (!payload) {
     await markSent(today);
@@ -41,7 +50,8 @@ export default async function handler(): Promise<Response> {
   await markSent(today);
 
   // Onthouden wat er verstuurd is, zodat dezelfde garantie niet elke avond terugkomt.
-  if (due.length > 0) {
+  // Kwam het bij niemand aan (geen toestel aangemeld), dan blijft het staan voor een volgende keer.
+  if (sent.sent > 0 && due.length > 0) {
     await update<Receipt[]>('receipts', (list) =>
       list.map((r) => {
         const mine = due.filter((a) => a.id === r.id);
@@ -49,6 +59,15 @@ export default async function handler(): Promise<Response> {
         const reminded = { ...r.reminded };
         for (const a of mine) reminded[a.kind === 'warranty' ? 'warranty' : 'return'] = today;
         return { ...r, reminded };
+      }),
+    );
+  }
+
+  if (sent.sent > 0 && gifts.length > 0) {
+    await update<Contact[]>('contacts', (list) =>
+      list.map((c) => {
+        const g = gifts.find((x) => x.contact.id === c.id);
+        return g ? { ...c, giftRemindedFor: g.date } : c;
       }),
     );
   }

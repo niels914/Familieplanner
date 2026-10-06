@@ -148,7 +148,7 @@ export function NewSheet({
   };
 
   if (detailed) {
-    return <EventForm initial={detailed as CalendarEvent} date={detailed.date ?? date} onClose={onClose} />;
+    return <EventForm initial={detailed as CalendarEvent} date={detailed.date ?? date} onClose={onClose} expanded />;
   }
 
   const due = taskDraft ? dueInfo(taskDraft.due, today) : null;

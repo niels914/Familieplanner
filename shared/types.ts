@@ -17,6 +17,7 @@ export type Category =
   | 'afspraak'
   | 'verjaardag'
   | 'vrij'
+  | 'sport'
   /** Niels of Irene is niet thuis (of later thuis). Voedt de signalering. */
   | 'weg'
   | 'anders';
@@ -133,6 +134,8 @@ export interface Contact {
   /** 'YYYY-MM-DD' of '--MM-DD' als het jaar onbekend is. */
   birthday?: string;
   giftIdeas?: string;
+  /** De verjaardag ('YYYY-MM-DD') waar we al aan herinnerd hebben; alleen de server zet dit. */
+  giftRemindedFor?: string;
   parents: Parent[];
   /** Alleen bij kind 'oppas'. */
   sitterRate?: number;
@@ -347,6 +350,7 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   afspraak: 'Afspraak',
   verjaardag: 'Verjaardag',
   vrij: 'Vrij / vakantie',
+  sport: 'Sport',
   weg: 'Niet thuis',
   anders: 'Anders',
 };

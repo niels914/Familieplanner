@@ -59,6 +59,8 @@ const PAREN = [
   ['chip Niels en Irene', 'ouder', 'ouder-soft', 4.5],
   ['chip gezin', 'gezin', 'gezin-soft', 4.5],
   ['verwijderen', 'danger', 'surface', 4.5],
+  ['feestdag', 'feest', 'feest-soft', 4.5],
+  ['feestdag op de pagina', 'feest', 'bg', 4.5],
   ['stip Matthijs', 'matthijs', 'surface', 3],
   ['stip Amélie', 'amelie', 'surface', 3],
   ['stip Lotte', 'lotte', 'surface', 3],

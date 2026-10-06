@@ -30,7 +30,7 @@ const PERSON_OPTIONS: ChipOption<PersonId>[] = [
 ];
 
 const CATEGORY_OPTIONS: ChipOption<Category>[] = (
-  ['school', 'psz', 'opvang', 'oppas', 'weg', 'afspraak', 'verjaardag', 'vrij', 'anders'] as Category[]
+  ['school', 'psz', 'opvang', 'sport', 'oppas', 'weg', 'afspraak', 'verjaardag', 'vrij', 'anders'] as Category[]
 ).map((c) => ({ value: c, label: CATEGORY_LABEL[c], icon: CATEGORY_ICON[c] }));
 
 const STANDAARD_TIJDEN = ['08:30', '12:00', '15:00', '18:00'];
@@ -62,10 +62,13 @@ export function EventForm({
   initial,
   date,
   onClose,
+  expanded = false,
 }: {
   initial?: CalendarEvent;
   date: string;
   onClose: () => void;
+  /** Alle opties meteen open, bijvoorbeeld na "Alle opties" bij Nieuw. */
+  expanded?: boolean;
 }) {
   const {
     saveEvent,
@@ -89,6 +92,7 @@ export function EventForm({
   const [verwijderKeuze, setVerwijderKeuze] = useState(false);
   // De minder gebruikte velden staan dicht, tenzij er al iets in staat.
   const [meerOpen, setMeerOpen] = useState(() => {
+    if (expanded) return true;
     const d: Partial<CalendarEvent> = initial ?? {};
     if (d.source === 'parro' || d.source === 'agenda') return Boolean(d.notes);
     return Boolean((d.category && d.category !== 'anders') || d.notes || d.sitter || d.reminder === false);

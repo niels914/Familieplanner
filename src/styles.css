@@ -32,6 +32,10 @@
   --danger: #c2301f;
   --danger-soft: #f8e6e4;
 
+  /* Feestdagen en gezinsdagen: een warme, rustige kleur apart van de personen en van urgentie. */
+  --feest: #8a4f12;
+  --feest-soft: #f6e9d6;
+
   --radius: 8px;
   --radius-sm: 6px;
   /* Eén schaduw, alleen voor wat echt zweeft: knop, venster, melding. */
@@ -75,6 +79,9 @@
     --warn-soft: #413132;
     --danger: #f28b7e;
     --danger-soft: #3e3237;
+
+    --feest: #f0b36a;
+    --feest-soft: #3b3326;
 
     --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.55);
   }
@@ -780,6 +787,7 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
    daar tonen we gekleurde stipjes, vanaf een tablet de titels zelf. */
 .day__dots { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 2px; }
 .day__pill,
+.day__feest,
 .day__more { display: none; }
 /* Op een telefoon is het maandraster rustig, zoals in de agenda van iOS: alleen
    het dagcijfer met stipjes eronder, het weeknummer klein links, de gekozen dag
@@ -823,6 +831,8 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
     font-variant-numeric: tabular-nums;
   }
   .day--weekend .day__num { color: var(--muted); }
+  .day--feestdag .day__num { background: var(--feest-soft); color: var(--feest); font-weight: 700; }
+  .day--gezinsdag .day__num { background: color-mix(in srgb, var(--feest-soft) 55%, transparent); color: var(--feest); opacity: 1; }
   .day--today .day__num { color: var(--primary); font-weight: 750; }
   .day--selected .day__num { background: var(--primary); color: var(--primary-ink); }
   .day__dots { flex-wrap: nowrap; justify-content: center; margin-top: 0; min-height: 6px; }
@@ -833,6 +843,7 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 @media (min-width: 560px) {
   .day__dots { display: none; }
   .day__pill { display: block; }
+  .day__feest { display: block; }
   .day__more { display: block; }
 }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
@@ -858,6 +869,24 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
 .day__pill--lotte { background: var(--lotte-soft); color: var(--lotte); }
 .day__pill--gezin { background: var(--gezin-soft); color: var(--gezin); }
 .day__pill--niels, .day__pill--irene { background: var(--ouder-soft); color: var(--ouder); }
+
+.day__feest {
+  font-size: 0.66rem;
+  line-height: 1.25;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--feest-soft);
+  color: var(--feest);
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.day--gezinsdag .day__feest { background: color-mix(in srgb, var(--feest-soft) 55%, var(--bg)); font-weight: 500; }
+@media (min-width: 560px) {
+  .day--feestdag .day__num { color: var(--feest); }
+  .day--gezinsdag .day__num { color: var(--feest); opacity: 0.8; }
+}
 
 .day__bring {
   position: absolute;
@@ -1498,6 +1527,9 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
   font-weight: 550;
 }
 .banner--info { background: var(--primary-soft); color: var(--primary); }
+/* Een feestdag is warm en stevig; een gezinsdag (Moederdag, Sinterklaas) dezelfde kleur, maar zachter. */
+.banner--feestdag { background: var(--feest-soft); color: var(--feest); }
+.banner--gezinsdag { background: color-mix(in srgb, var(--feest-soft) 55%, var(--bg)); color: var(--feest); font-weight: 500; }
 
 /* =====================================================================
    Fase B: vijf knoppen, Regelen, signaleren

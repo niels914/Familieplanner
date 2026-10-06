@@ -23,6 +23,8 @@ export type IconName =
   | 'bericht'
   | 'bon'
   | 'camera'
+  | 'sport'
+  | 'feest'
   | 'zoeken'
   | 'plus'
   | 'vinkje'
@@ -147,6 +149,14 @@ const PATHS: Record<IconName, JSX.Element> = {
     <>
       <path d="M4 8.5h3l1.5-2h7L17 8.5h3V19H4Z" />
       <circle cx="12" cy="13.5" r="3.4" />
+    </>
+  ),
+  feest: <path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.7L12 16.5 6.9 19.2l1-5.7-4.1-4 5.7-.8Z" />,
+  sport: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 3v18M3 12h18" />
+      <path d="M5.6 5.6c2.4 2.4 2.4 10.4 0 12.8M18.4 5.6c-2.4 2.4-2.4 10.4 0 12.8" />
     </>
   ),
   zoeken: (

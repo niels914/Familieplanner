@@ -11,6 +11,8 @@ import { addDays, formatLong } from '../../shared/dates';
 import { toMin } from '../../shared/signals';
 import { useData, useStore } from '../lib/store';
 import { birthdaysOnDate, eventsOnDate, pickupForDate } from '../lib/events';
+import { ageTurning, turningLabel } from '../../shared/verjaardagen';
+import { feestdagenOp, feestdagNamen, isFeestdag } from '../../shared/feestdagen';
 import { GREETING, dayPart, nowInNl, useNow } from '../lib/dayPart';
 import { doneBring, openBring } from '../lib/prep';
 import { useNav } from '../lib/nav';
@@ -77,9 +79,20 @@ export function TodayView() {
     birthdaysOnDate(contacts, date).map((c) => (
       <p key={c.id} className="banner banner--info iconrow">
         <Icon name="taart" size={18} /> {c.name} is {date === today ? 'vandaag' : 'morgen'} jarig
+        {ageTurning(c.birthday, date) !== undefined && ` en ${turningLabel(ageTurning(c.birthday, date))}`}
         {c.parents.length > 0 && ` — ouders: ${c.parents.map((p) => p.name).join(', ')}`}
       </p>
     ));
+
+  const feestdagFor = (date: string) => {
+    const feest = feestdagenOp(date);
+    if (feest.length === 0) return null;
+    return (
+      <p className={`banner iconrow banner--${isFeestdag(feest) ? 'feestdag' : 'gezinsdag'}`}>
+        <Icon name="feest" size={18} /> {date === today ? 'Vandaag' : 'Morgen'}: {feestdagNamen(feest)}
+      </p>
+    );
+  };
 
   const signalsOn = (date: string) =>
     regel.open.flatMap((i) =>
@@ -120,6 +133,7 @@ export function TodayView() {
         {signalsOn(today)}
         <RegelRow />
         <DayFacts {...facts} />
+        {feestdagFor(today)}
         {birthdaysFor(today)}
         {timeline(todayEvents, { compact: true, empty: true })}
 
@@ -188,6 +202,7 @@ export function TodayView() {
         {signalsOn(today)}
         <RegelRow />
         <DayFacts {...facts} />
+        {feestdagFor(today)}
         {birthdaysFor(today)}
         {timeline(rest, { empty: true })}
 
@@ -224,6 +239,7 @@ export function TodayView() {
       {signalsOn(tomorrow)}
       <RegelRow />
       <DayFacts {...factsFor(tomorrow)} />
+      {feestdagFor(tomorrow)}
       {birthdaysFor(tomorrow)}
       {timeline(tomorrowEvents, { compact: true, empty: true })}
 

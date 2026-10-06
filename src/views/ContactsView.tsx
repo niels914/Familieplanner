@@ -4,6 +4,8 @@ import { CHILDREN, PERSON_LABEL } from '../../shared/types';
 import { useData } from '../lib/store';
 import { euro, initials } from '../lib/events';
 import { whatsappLink } from '../../shared/phone';
+import { formatShort, todayInNl } from '../../shared/dates';
+import { nextBirthday, turningLabel } from '../../shared/verjaardagen';
 import { ContactForm } from '../components/ContactForm';
 import { Avatar } from '../components/Avatar';
 import { Icon } from '../components/Icon';
@@ -176,6 +178,13 @@ export function ContactsView({ embedded = false }: { embedded?: boolean }) {
   );
 }
 
+/** "jarig 14 mrt · wordt 76": de eerstvolgende verjaardag, met de leeftijd als het jaar bekend is. */
+function verjaardagRegel(birthday: string): string {
+  const next = nextBirthday(birthday, todayInNl());
+  const wanneer = next.days === 0 ? 'vandaag jarig' : `jarig ${formatShort(next.date)}`;
+  return next.age !== undefined ? `${wanneer} · ${turningLabel(next.age)}` : wanneer;
+}
+
 function ContactTile({ contact, onEdit }: { contact: Contact; onEdit: () => void }) {
   const avatarClass =
     contact.kind === 'oppas' ? 'avatar--oppas' : contact.childOf ? `avatar--${contact.childOf}` : '';
@@ -222,7 +231,7 @@ function ContactTile({ contact, onEdit }: { contact: Contact; onEdit: () => void
               <>Oppas{contact.sitterRate ? ` · ${euro(contact.sitterRate)} per uur` : ''}</>
             )}
             {contact.kind === 'overig' && 'Overig contact'}
-            {contact.kind === 'overig' && contact.birthday && ` · jarig ${contact.birthday.slice(8)}-${contact.birthday.slice(5, 7)}`}
+            {contact.kind === 'overig' && contact.birthday && ` · ${verjaardagRegel(contact.birthday)}`}
           </div>
 
           {phones.length > 0 && (

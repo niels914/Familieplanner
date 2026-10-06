@@ -18,6 +18,7 @@ export const CATEGORY_ICON: Record<Category, IconName> = {
   afspraak: 'speld',
   verjaardag: 'taart',
   vrij: 'koffer',
+  sport: 'sport',
   weg: 'auto',
   anders: 'kalender',
 };

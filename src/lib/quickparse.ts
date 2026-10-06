@@ -62,6 +62,7 @@ const CATEGORIES: Array<[RegExp, Category]> = [
   [/\bvakantie\b|\bvrije? dag\b|\bstudiedag\b/i, 'vrij'],
   [/\bpeuterspeelzaal\b|\bpsz\b|\bpeuter\b/i, 'psz'],
   [/\bopvang\b|\bcr[èe]che\b|\bkinderdagverblijf\b|\bkdv\b/i, 'opvang'],
+  [/\bsport\b|\bvoetbal\b|\bhockey\b|\bzwem(les|men)\b|\bturnen\b|\bjudo\b|\btennis\b|\batletiek\b|\bballet\b|\bdansles\b|\bkorfbal\b|\bbasketbal\b/i, 'sport'],
   [/\bschool\b|\bgym\b|\bjuf\b|\bmeester\b|\bklas\b/i, 'school'],
 ];
 

@@ -13,6 +13,8 @@ import {
 } from '../../shared/dates';
 import { useData, useStore } from '../lib/store';
 import { birthdaysOnDate, coversDate, eventsOnDate } from '../lib/events';
+import { ageTurning, turningLabel } from '../../shared/verjaardagen';
+import { feestdagenOp, feestdagenTussen, feestdagNamen, isFeestdag } from '../../shared/feestdagen';
 import { EventForm } from '../components/EventForm';
 import { Timeline } from '../components/Timeline';
 import { DayFacts } from '../components/DayFacts';
@@ -51,9 +53,11 @@ export function CalendarView({
   );
 
   const monthDays = useMemo(() => buildMonthGrid(anchor.slice(0, 7)), [anchor]);
+  const feestdagen = useMemo(() => feestdagenTussen(monthDays[0], monthDays[monthDays.length - 1]), [monthDays]);
 
   const dayEvents = eventsOnDate(visible, selected);
   const birthdays = birthdaysOnDate(contacts, selected);
+  const feestdagenOpDag = feestdagenOp(selected);
   const dinner = meals.find((m) => m.date === selected);
 
   /** Bladeren neemt de selectie mee, zodat de daglijst altijd een dag toont
@@ -170,10 +174,12 @@ export function CalendarView({
               const inMonth = date.slice(0, 7) === anchor.slice(0, 7);
               const items = visible.filter((e) => coversDate(e, date));
               const weekday = parseYmd(date).getDay();
+              const feest = feestdagen.get(date);
               const classes = [
                 'day',
                 !inMonth && 'day--outside',
                 (weekday === 0 || weekday === 6) && 'day--weekend',
+                feest && (isFeestdag(feest) ? 'day--feestdag' : 'day--gezinsdag'),
                 date === today && 'day--today',
                 date === selected && 'day--selected',
               ]
@@ -195,7 +201,7 @@ export function CalendarView({
                   }}
                   onKeyDown={(e) => onDayKeyDown(e, date)}
                   aria-current={date === selected}
-                  aria-label={formatLong(date)}
+                  aria-label={feest ? `${formatLong(date)}, ${feestdagNamen(feest)}` : formatLong(date)}
                 >
                   <span className="day__num">{Number(date.slice(8))}</span>
                   {items.some((e) => e.bring.some((b) => !b.done)) && (
@@ -208,13 +214,14 @@ export function CalendarView({
                       ))}
                     </span>
                   )}
-                  {items.slice(0, 2).map((e) => (
+                  {feest && <span className="day__feest">{feestdagNamen(feest)}</span>}
+                  {items.slice(0, feest ? 1 : 2).map((e) => (
                     <span key={e.id} className={`day__pill day__pill--${e.person}`}>
                       {e.title}
                     </span>
                   ))}
-                  {items.length > 2 && (
-                    <span className="tiny muted day__more">+{items.length - 2} meer</span>
+                  {items.length > (feest ? 1 : 2) && (
+                    <span className="tiny muted day__more">+{items.length - (feest ? 1 : 2)} meer</span>
                   )}
                 </button>
                 </Fragment>
@@ -239,12 +246,20 @@ export function CalendarView({
           ) : null,
         )}
 
+        {feestdagenOpDag.length > 0 && (
+          <p className={`banner iconrow banner--${isFeestdag(feestdagenOpDag) ? 'feestdag' : 'gezinsdag'}`}>
+            <Icon name="feest" size={17} /> {feestdagNamen(feestdagenOpDag)}
+            {isFeestdag(feestdagenOpDag) && ' · feestdag'}
+          </p>
+        )}
+
         {/* Breng en haal staat bij Gezin; hier alleen wat we eten. */}
         <DayFacts pickups={[]} dish={dinner?.dish} />
 
         {birthdays.map((c) => (
           <p key={c.id} className="banner banner--info iconrow">
             <Icon name="taart" size={17} /> {c.name} is jarig
+            {ageTurning(c.birthday, selected) !== undefined && ` en ${turningLabel(ageTurning(c.birthday, selected))}`}
             {c.giftIdeas && ` · cadeau-idee: ${c.giftIdeas}`}
           </p>
         ))}

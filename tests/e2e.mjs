@@ -430,11 +430,16 @@ await sectie('Formulieren: Meer opties en oppasfilter', async () => {
   await p.getByRole('button', { name: 'Alle opties' }).tap();
   await p.waitForSelector('#ev-title');
   await rust(p);
-  ok('nieuw leeg item: Meer opties is dicht', (await p.locator('.more__toggle').getAttribute('aria-expanded')) === 'false');
-  ok('en laat zien wat erachter zit', (await p.locator('.more__preview').innerText()).includes('Soort'));
-  await p.locator('.more__toggle').tap();
-  await rust(p, 250);
-  ok('openen toont de soort', (await p.getByText('Peuterspeelzaal').count()) > 0);
+  ok('na "Alle opties" staan alle opties meteen open', (await p.locator('.more__toggle').getAttribute('aria-expanded')) === 'true');
+  ok('met de soorten zichtbaar, ook Sport', (await p.getByText('Peuterspeelzaal').count()) > 0 && (await p.locator('button.pick', { hasText: 'Sport' }).count()) === 1);
+  await p.keyboard.press('Escape');
+  await rust(p);
+
+  await open(p, `/?date=${morgen}`);
+  await p.getByRole('button', { name: 'Item', exact: false }).first().tap();
+  await p.waitForSelector('#ev-title');
+  await rust(p);
+  ok('een nieuw item rechtstreeks uit de agenda begint nog wel dicht', (await p.locator('.more__toggle').getAttribute('aria-expanded')) === 'false');
   await p.keyboard.press('Escape');
   await rust(p);
 
@@ -621,6 +626,27 @@ await sectie('Werkagenda: instellingen', async () => {
   await p.locator('#werk-reis').selectOption('60');
   const bewaard = await tot(p, (d) => d.settings.werk?.travelMin === 60 && d.settings.werk?.earlyBefore === '08:00');
   ok('een andere reistijd wordt bewaard, met de rest erbij', bewaard);
+  await context.close();
+});
+
+// ============================================================================
+await sectie('Feestdagen en verjaardagen', async () => {
+  const { context, page: p } = await toestel();
+  await open(p, '/?date=2026-12-25');
+  ok('Eerste Kerstdag staat bij de dag, als feestdag', (await p.locator('.banner--feestdag').first().innerText()).includes('Eerste Kerstdag'));
+  ok('in het maandoverzicht: kerstdagen als feestdag, kerstavond als gezinsdag', (await p.locator('.day--feestdag:not(.day--outside)').count()) === 2 && (await p.locator('.day--gezinsdag:not(.day--outside)').count()) === 3);
+  await open(p, '/?date=2026-12-24');
+  ok('Kerstavond is een zachtere gezinsdag', (await p.locator('.banner--gezinsdag').first().innerText()).includes('Kerstavond'));
+  await open(p, '/?date=2026-06-21');
+  ok('Vaderdag 2026 is op 21 juni', (await p.locator('.banner--gezinsdag').first().innerText()).includes('Vaderdag'));
+
+  // Een verjaardag met geboortejaar: hoe oud wordt iemand.
+  await p.request.post(`${B}/api/contacts`, { data: { name: 'Oma Test', kind: 'overig', birthday: `1952-${morgen.slice(5)}`, parents: [] } });
+  await open(p, `/?date=${morgen}`);
+  const jaren = Number(morgen.slice(0, 4)) - 1952;
+  ok(`bij de dag: Oma Test is jarig en wordt ${jaren}`, (await p.locator('.banner--info', { hasText: 'Oma Test' }).first().innerText()).includes(`wordt ${jaren}`));
+  await tab(p, 'Mensen');
+  ok('bij de contacten staat dezelfde leeftijd', (await p.locator('.card', { hasText: 'Oma Test' }).first().innerText()).includes(`wordt ${jaren}`));
   await context.close();
 });
 

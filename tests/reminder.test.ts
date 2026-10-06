@@ -72,4 +72,17 @@ check('met beide regels', alleen.body.split('\n').filter((r) => r.startsWith('�
 check('niets te melden en geen garantie: nog steeds geen melding', bouwHerinnering(events, '2026-10-14', []), null);
 check('zonder derde argument werkt het als altijd', bouwHerinnering(events, morgen)!.body.includes('Garantie'), false);
 
+// --- feestdagen en cadeaus
+const cadeau = ['Opa Henk wordt 76 op zaterdag 14 maart (over 3 weken). Idee: een boek.'];
+const geenAgenda = '2026-10-14';
+const feest = bouwHerinnering(events, geenAgenda, [], { feestdag: 'Koningsdag' })!;
+check('een feestdag morgen is een melding, ook zonder agenda', [feest.title, feest.body], ['Morgen — woensdag 14 oktober', 'Morgen is het Koningsdag.']);
+check('een feestdag staat boven de agenda', bouwHerinnering(events, morgen, [], { feestdag: 'Tweede Paasdag' })!.body.startsWith('Morgen is het Tweede Paasdag.\n\n'), true);
+const alleenCadeau = bouwHerinnering(events, geenAgenda, [], { cadeauRegels: cadeau })!;
+check('alleen een cadeau: eigen melding, opent Mensen', [alleenCadeau.title, alleenCadeau.url, alleenCadeau.body], ['Cadeau regelen', '/?view=mensen', 'Cadeau regelen:\n• Opa Henk wordt 76 op zaterdag 14 maart (over 3 weken). Idee: een boek.']);
+check('cadeau onder de agenda van morgen', bouwHerinnering(events, morgen, [], { cadeauRegels: cadeau })!.body.endsWith('\n\nCadeau regelen:\n• ' + cadeau[0]), true);
+const beide = bouwHerinnering(events, geenAgenda, regels, { cadeauRegels: cadeau })!;
+check('garantie en cadeau samen, zonder agenda', [beide.title, beide.body.includes('Garantie en retour:'), beide.body.includes('Cadeau regelen:')], ['Garantie en cadeau', true, true]);
+check('zonder extra verandert er niets', bouwHerinnering(events, morgen, [], {})!.body, bouwHerinnering(events, morgen)!.body);
+
 report('herinnering');

@@ -418,13 +418,16 @@ async function handleContacts(req: Request, id?: string): Promise<Response> {
       const index = body.id ? contacts.findIndex((c) => c.id === body.id) : -1;
 
       if (index >= 0) {
+        const before = contacts[index];
         contacts[index] = {
-          ...contacts[index],
+          ...before,
           ...body,
           parents,
-          id: contacts[index].id,
-          createdAt: contacts[index].createdAt,
+          id: before.id,
+          createdAt: before.createdAt,
           updatedAt: now,
+          // Dit houdt de server bij; een verjaardag die verandert begint opnieuw.
+          giftRemindedFor: !('birthday' in body) || body.birthday === before.birthday ? before.giftRemindedFor : undefined,
         } as Contact;
       } else {
         contacts.push({

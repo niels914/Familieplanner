@@ -92,4 +92,8 @@ check('tijdvak vóór een datum: titel is gewoon Niet thuis', r9.title, 'Niet th
 const r10 = quickParse('Niels niet thuis 8-10 19:30-11:00', vrijdag);
 check('een tijdvak dat op een datum lijkt (30-11) is geen datum', r10.date, '2026-10-08');
 
+check('sport herkend aan het woord', quickParse('Matthijs voetbal zaterdag 10:00', vrijdag).category, 'sport');
+check('zwemles is sport', quickParse('Amélie zwemles dinsdag 16:00', vrijdag).category, 'sport');
+check('gymtas blijft school', quickParse('Matthijs vrijdag gymtas mee', vrijdag).category, 'school');
+
 report('snelinvoer');

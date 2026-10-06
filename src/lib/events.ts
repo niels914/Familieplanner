@@ -1,6 +1,7 @@
-import type { ChildId, CalendarEvent, Contact, PickupOverride, PickupRule } from '../../shared/types';
+import type { ChildId, CalendarEvent, PickupOverride, PickupRule } from '../../shared/types';
 import { CHILDREN } from '../../shared/types';
 import { isoWeekday } from '../../shared/dates';
+import { birthdayContactsOn } from '../../shared/verjaardagen';
 
 export function coversDate(e: CalendarEvent, date: string): boolean {
   if (!e.endDate) return e.date === date;
@@ -85,7 +86,4 @@ export function pickupForDate(
 
 /** Verjaardagen uit het contactenboek als agenda-items voor een datum.
  *  Alleen bij overige contacten; bij klasgenootjes en oppassen houden we ze niet bij. */
-export function birthdaysOnDate(contacts: Contact[], date: string): Contact[] {
-  const mmdd = date.slice(5);
-  return contacts.filter((c) => c.kind === 'overig' && c.birthday && c.birthday.slice(-5) === mmdd);
-}
+export const birthdaysOnDate = birthdayContactsOn;

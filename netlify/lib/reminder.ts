@@ -48,36 +48,52 @@ function beschrijf(e: CalendarEvent): string {
   return regel;
 }
 
+/** Wat er naast de agenda van morgen nog in de melding kan. */
+export interface ExtraRegels {
+  /** De naam van een feestdag of gezinsdag morgen, zoals "Koningsdag". */
+  feestdag?: string;
+  /** Regels over verjaardagen waar je binnenkort een cadeau voor wilt hebben. */
+  cadeauRegels?: string[];
+}
+
 /**
  * Geeft null als er niets te melden is. `garantieRegels` zijn de losse regels over garanties en
- * retourtermijnen die bijna aflopen; die komen onder de agenda van morgen, of staan er alleen als
- * morgen niets gepland is.
+ * retourtermijnen die bijna aflopen; `extra` bevat een feestdag van morgen en de cadeau-regels.
+ * Die komen onder de agenda van morgen, of staan er alleen als morgen niets gepland is.
  */
 export function bouwHerinnering(
   events: CalendarEvent[],
   morgen: string,
   garantieRegels: string[] = [],
+  extra: ExtraRegels = {},
 ): Herinnering | null {
   const relevant = events
     .filter((e) => e.reminder !== false)
     .filter((e) => coversDate(e, morgen))
     .sort(sortByTime);
 
-  const garantie = garantieRegels.length > 0 ? `Garantie en retour:\n${garantieRegels.map((r) => `• ${r}`).join('\n')}` : '';
+  const lijst = (kop: string, regels: string[]) => (regels.length > 0 ? `${kop}\n${regels.map((r) => `• ${r}`).join('\n')}` : '');
+  const garantie = lijst('Garantie en retour:', garantieRegels);
+  const cadeau = lijst('Cadeau regelen:', extra.cadeauRegels ?? []);
+  const feest = extra.feestdag ? `Morgen is het ${extra.feestdag}.` : '';
 
-  if (relevant.length === 0) {
-    if (!garantie) return null;
-    return { title: 'Garantie en retour', body: garantie, url: '/?view=bonnetjes', tag: `garantie-${morgen}` };
+  if (relevant.length === 0 && !feest) {
+    if (!garantie && !cadeau) return null;
+    if (garantie && !cadeau) {
+      return { title: 'Garantie en retour', body: garantie, url: '/?view=bonnetjes', tag: `garantie-${morgen}` };
+    }
+    if (cadeau && !garantie) {
+      return { title: 'Cadeau regelen', body: cadeau, url: '/?view=mensen', tag: `cadeau-${morgen}` };
+    }
+    return { title: 'Garantie en cadeau', body: `${garantie}\n\n${cadeau}`, url: '/', tag: `regelen-${morgen}` };
   }
 
   const aantalMee = relevant.reduce((n, e) => n + e.bring.filter((b) => !b.done).length, 0);
+  const agenda = relevant.map(beschrijf).join('\n') + (aantalMee > 0 ? `\n\n${aantalMee} ding${aantalMee === 1 ? '' : 'en'} klaarzetten.` : '');
 
   return {
     title: `Morgen — ${formatLong(morgen)}`,
-    body:
-      relevant.map(beschrijf).join('\n') +
-      (aantalMee > 0 ? `\n\n${aantalMee} ding${aantalMee === 1 ? '' : 'en'} klaarzetten.` : '') +
-      (garantie ? `\n\n${garantie}` : ''),
+    body: [feest, agenda, garantie, cadeau].filter(Boolean).join('\n\n'),
     url: `/?date=${morgen}`,
     tag: `dag-${morgen}`,
   };

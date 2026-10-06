@@ -81,6 +81,8 @@ export interface CalendarEvent {
   time?: string;
   endTime?: string;
   person: PersonId;
+  /** Andere betrokkenen, bijvoorbeeld Irene bij een uitje van Niels. Zie `shared/people.ts`. */
+  others?: PersonId[];
   category: Category;
   bring: BringItem[];
   notes?: string;
@@ -104,6 +106,7 @@ export const SERIES_SHARED_FIELDS = [
   'endTime',
   'allDay',
   'person',
+  'others',
   'category',
   'reminder',
   'location',

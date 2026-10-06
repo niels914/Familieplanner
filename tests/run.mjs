@@ -9,6 +9,7 @@ const files = [
   'tests/agenda.test.ts',
   'tests/werkagenda.test.ts',
   'tests/feestdagen.test.ts',
+  'tests/people.test.ts',
   'tests/dates.test.ts',
   'tests/phone.test.ts',
   'tests/prep.test.ts',

@@ -5,7 +5,8 @@
  */
 
 import type { CalendarEvent, Category } from '../../shared/types';
-import { AGENDA_FEED_LABEL, CATEGORY_LABEL, PERSON_LABEL } from '../../shared/types';
+import { AGENDA_FEED_LABEL, CATEGORY_LABEL } from '../../shared/types';
+import { peopleNames, peopleOf } from '../../shared/people';
 import { Avatar } from './Avatar';
 import { Icon, type IconName } from './Icon';
 
@@ -44,8 +45,10 @@ export function EventBody({
         <span className="event__meta">
           {event.person !== 'gezin' && (
             <>
-              <Avatar who={event.person} size={16} className="event__who" />
-              {PERSON_LABEL[event.person]} ·{' '}
+              {peopleOf(event).map((p) => (
+                <Avatar key={p} who={p} size={16} className="event__who" />
+              ))}
+              {peopleNames(event)} ·{' '}
             </>
           )}
           {CATEGORY_LABEL[event.category]}

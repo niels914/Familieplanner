@@ -96,4 +96,13 @@ check('sport herkend aan het woord', quickParse('Matthijs voetbal zaterdag 10:00
 check('zwemles is sport', quickParse('Amélie zwemles dinsdag 16:00', vrijdag).category, 'sport');
 check('gymtas blijft school', quickParse('Matthijs vrijdag gymtas mee', vrijdag).category, 'school');
 
+const duo = quickParse('Niels en Irene uitje zaterdag 14:00', vrijdag);
+check('twee namen: de eerste en de ander', [duo.person, duo.others], ['niels', ['irene']]);
+check('en "en" blijft niet in de titel hangen', duo.title, 'Uitje');
+const drie = quickParse('Matthijs, Amélie en Lotte zwemles dinsdag', vrijdag);
+check('drie namen', [drie.person, drie.others], ['matthijs', ['amelie', 'lotte']]);
+check('met een ampersand', quickParse('Irene & Niels etentje vrijdag 19:00', vrijdag).others, ['niels']);
+check('één naam heeft geen anderen', quickParse('Matthijs vrijdag gymtas mee', vrijdag).others, []);
+check('een naam en een ander woord met "en" is geen tweede persoon', quickParse('Niels brood en kaas kopen', vrijdag).others, []);
+
 report('snelinvoer');

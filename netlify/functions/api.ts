@@ -16,7 +16,8 @@ import type {
   Task,
   SeriesSharedField,
 } from '../../shared/types';
-import { SERIES_SHARED_FIELDS } from '../../shared/types';
+import { SERIES_SHARED_FIELDS, type PersonId } from '../../shared/types';
+import { cleanOthers } from '../../shared/people';
 import { seriesDates } from '../../shared/series';
 import { addDays, todayInNl } from '../../shared/dates';
 import {
@@ -335,6 +336,7 @@ async function handleSeries(req: Request, seriesId: string | undefined, url: URL
           time: event.time,
           endTime: event.endTime,
           person: event.person ?? 'gezin',
+          others: cleanOthers(event.person ?? 'gezin', event.others),
           category: event.category ?? 'anders',
           // Het meeneem-lijstje van het formulier geldt voor elke keer, met
           // eigen id's zodat afvinken per keer werkt.
@@ -365,7 +367,13 @@ async function handleSeries(req: Request, seriesId: string | undefined, url: URL
     const saved = await update<CalendarEvent[]>('events', (events) =>
       events.map((e) =>
         e.series?.id === seriesId && e.date >= body.from
-          ? ({ ...e, ...patch, allDay: !('time' in patch ? patch.time : e.time), updatedAt: nowIso() } as CalendarEvent)
+          ? ({
+              ...e,
+              ...patch,
+              others: cleanOthers((patch.person as PersonId | undefined) ?? e.person, ('others' in patch ? patch.others : e.others) as PersonId[] | undefined),
+              allDay: !('time' in patch ? patch.time : e.time),
+              updatedAt: nowIso(),
+            } as CalendarEvent)
           : e,
       ),
     );

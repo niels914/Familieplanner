@@ -1948,3 +1948,4 @@ input[type='time']::-webkit-datetime-edit { padding: 0; }
   cursor: pointer;
 }
 .bon__done { align-self: flex-start; }
+.field__hint { font-weight: 500; opacity: 0.8; }

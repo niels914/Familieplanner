@@ -651,6 +651,53 @@ await sectie('Feestdagen en verjaardagen', async () => {
 });
 
 // ============================================================================
+await sectie('Een item voor meer dan één persoon', async () => {
+  const { context, page: p } = await toestel();
+  await open(p);
+
+  // Snelinvoer: twee namen in de tekst.
+  await p.locator('.tabbar__add').tap();
+  await p.waitForSelector('#nieuw-tekst');
+  await p.locator('#nieuw-tekst').fill('Niels en Irene uitje zaterdag 14:00');
+  await rust(p, 300);
+  ok('de snelinvoer ziet beide namen', (await p.locator('.card .chip--niels').count()) > 0 && (await p.locator('.card .chip--irene').count()) > 0);
+  await p.getByRole('button', { name: 'Zet in agenda' }).tap();
+  ok('opgeslagen met Niels als eerste en Irene erbij', await tot(p, (d) => d.events.some((e) => e.title === 'Uitje' && e.person === 'niels' && JSON.stringify(e.others) === '["irene"]')));
+  await rust(p);
+
+  // Het formulier: Voor wie is meerkeuze.
+  await open(p, `/?date=${morgen}`);
+  await p.getByRole('button', { name: 'Item', exact: false }).first().tap();
+  await p.waitForSelector('#ev-title');
+  await p.locator('#ev-title').fill('Etentje');
+  const wie = p.getByRole('group', { name: 'Voor wie' });
+  await wie.getByRole('button', { name: 'Niels' }).tap();
+  await wie.getByRole('button', { name: 'Irene' }).tap();
+  ok('beide staan aan', (await wie.getByRole('button', { name: 'Niels' }).getAttribute('aria-pressed')) === 'true' && (await wie.getByRole('button', { name: 'Irene' }).getAttribute('aria-pressed')) === 'true');
+  await wie.getByRole('button', { name: 'Gezin' }).tap();
+  ok('Gezin zet de rest uit', (await wie.getByRole('button', { name: 'Irene' }).getAttribute('aria-pressed')) === 'false');
+  await wie.getByRole('button', { name: 'Niels' }).tap();
+  await wie.getByRole('button', { name: 'Irene' }).tap();
+  await p.getByRole('button', { name: 'Opslaan', exact: true }).tap();
+  ok('het formulier bewaart ook beide', await tot(p, (d) => d.events.some((e) => e.title === 'Etentje' && e.person === 'niels' && JSON.stringify(e.others) === '["irene"]')));
+  await rust(p);
+  ok('in de agenda staat "Niels en Irene" bij het item', (await p.locator('.event__meta', { hasText: 'Niels en Irene' }).count()) > 0);
+
+  // Filter op Irene vindt het item ook.
+  await p.locator('[title="Irene"]').first().tap();
+  await rust(p);
+  ok('het filter Irene toont ook items van Niels waar Irene bij zit', (await p.locator('.event__title', { hasText: 'Etentje' }).count()) === 1);
+
+  // Terug naar één persoon.
+  await p.locator('.event__open', { hasText: 'Etentje' }).tap();
+  await p.waitForSelector('#ev-title');
+  await p.getByRole('group', { name: 'Voor wie' }).getByRole('button', { name: 'Irene' }).tap();
+  await p.getByRole('button', { name: 'Opslaan', exact: true }).tap();
+  ok('Irene weer weghalen wist het op de server', await tot(p, (d) => d.events.some((e) => e.title === 'Etentje' && e.person === 'niels' && !e.others)));
+  await context.close();
+});
+
+// ============================================================================
 kop('Geen fouten in de console');
 ok('geen scriptfouten tijdens deze hele test', consoleFouten.length === 0, consoleFouten.slice(0, 3).join(' | '));
 

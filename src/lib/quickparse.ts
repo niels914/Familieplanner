@@ -17,6 +17,8 @@ export interface QuickResult {
   endTime?: string;
   allDay: boolean;
   person: PersonId;
+  /** Meer namen genoemd, bijvoorbeeld "Niels en Irene": de tweede en volgende. */
+  others: PersonId[];
   category: Category;
   bring: string[];
   /** Wat de parser herkende, om aan de gebruiker te tonen. */
@@ -55,6 +57,10 @@ const PERSONS: Array<[RegExp, PersonId]> = [
   [/\birene\b/i, 'irene'],
   [/\bniels\b/i, 'niels'],
 ];
+
+const NAAM = '(?:matthijs|am[ée]lie|ameli|lotte|irene|niels)';
+/** Twee of meer namen aan elkaar: "Niels en Irene", "Niels & Irene", "Matthijs, Amélie en Lotte". */
+const NAMEN_LIJST = new RegExp(`\\b${NAAM}\\b(?:\\s*(?:,|&|en)\\s*${NAAM}\\b)+`, 'i');
 
 const CATEGORIES: Array<[RegExp, Category]> = [
   [/\boppas(sen)?\b/i, 'oppas'],
@@ -105,12 +111,26 @@ export function quickParse(input: string, today: string, options: QuickOptions =
 
   // --- wie ---
   let person: PersonId = 'gezin';
-  for (const [re, id] of PERSONS) {
-    if (re.test(rest)) {
-      person = id;
-      rest = rest.replace(re, ' ');
-      matched.push(id);
-      break;
+  let others: PersonId[] = [];
+  const meerdere = rest.match(NAMEN_LIJST);
+  if (meerdere) {
+    // "Niels en Irene", "Matthijs, Amélie en Lotte": de eerste genoemde is de eerste.
+    const genoemd = PERSONS.flatMap(([re, id]) => {
+      const at = meerdere[0].search(re);
+      return at >= 0 ? [{ id, at }] : [];
+    }).sort((a, b) => a.at - b.at);
+    person = genoemd[0].id;
+    others = genoemd.slice(1).map((g) => g.id);
+    rest = rest.replace(meerdere[0], ' ');
+    matched.push(...genoemd.map((g) => g.id));
+  } else {
+    for (const [re, id] of PERSONS) {
+      if (re.test(rest)) {
+        person = id;
+        rest = rest.replace(re, ' ');
+        matched.push(id);
+        break;
+      }
     }
   }
 
@@ -291,6 +311,7 @@ export function quickParse(input: string, today: string, options: QuickOptions =
     endTime,
     allDay: !time,
     person,
+    others,
     category,
     bring,
     matched,

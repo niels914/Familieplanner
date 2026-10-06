@@ -5,7 +5,7 @@
  */
 
 import type { CalendarEvent } from '../../shared/types';
-import { PERSON_LABEL } from '../../shared/types';
+import { peopleNames } from '../../shared/people';
 import { formatLong } from '../../shared/dates';
 
 export interface Herinnering {
@@ -34,7 +34,7 @@ function eigenNotitie(e: CalendarEvent): string | undefined {
 }
 
 function beschrijf(e: CalendarEvent): string {
-  const wie = e.person === 'gezin' ? '' : `${PERSON_LABEL[e.person]}: `;
+  const wie = e.person === 'gezin' ? '' : `${peopleNames(e)}: `;
   const wanneer = e.allDay ? '' : `${e.time} `;
   let regel = `• ${wanneer}${wie}${e.title}`;
 

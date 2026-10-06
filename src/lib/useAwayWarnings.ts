@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { CalendarEvent } from '../../shared/types';
 import { todayInNl } from '../../shared/dates';
 import { signalsForDraft, type Signal } from '../../shared/signals';
+import { peopleOf } from '../../shared/people';
 import { useData } from './store';
 
 export const DRAFT_ID = '__nieuw__';
@@ -15,7 +16,7 @@ export function useAwayWarnings(draft: Partial<CalendarEvent> | null): Signal[] 
 
   return useMemo(() => {
     if (!draft || draft.category !== 'weg' || !draft.date) return [];
-    if (draft.person !== 'niels' && draft.person !== 'irene') return [];
+    if (!peopleOf({ person: draft.person ?? 'gezin', others: draft.others }).some((p) => p === 'niels' || p === 'irene')) return [];
     const concept: CalendarEvent = {
       id: draft.id ?? DRAFT_ID,
       source: 'local',
@@ -25,7 +26,8 @@ export function useAwayWarnings(draft: Partial<CalendarEvent> | null): Signal[] 
       allDay: !draft.time,
       time: draft.time,
       endTime: draft.time ? draft.endTime : undefined,
-      person: draft.person,
+      person: draft.person ?? 'gezin',
+      others: draft.others,
       category: 'weg',
       bring: [],
       reminder: false,

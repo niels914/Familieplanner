@@ -15,7 +15,8 @@ import { useData, useStore } from '../lib/store';
 import type { NewMode } from '../lib/nav';
 import { useAwayWarnings } from '../lib/useAwayWarnings';
 import { Avatar } from './Avatar';
-import { ChipPicker, type ChipOption } from './ChipPicker';
+import { ChipMultiPicker, ChipPicker, type ChipOption } from './ChipPicker';
+import { peopleOf, togglePerson } from '../../shared/people';
 import { EventForm } from './EventForm';
 import { Icon } from './Icon';
 import { Modal } from './Modal';
@@ -75,7 +76,8 @@ export function NewSheet({
 
   const [mode, setMode] = useState<NewMode>(initialMode);
   const [text, setText] = useState(initialText);
-  const [whoEvent, setWhoEvent] = useState<PersonId | null>(null);
+  // Wat je zelf aantikt gaat voor op wat de snelinvoer uit de tekst haalde.
+  const [whoEvent, setWhoEvent] = useState<{ person: PersonId; others: PersonId[] } | null>(null);
   const [whoTask, setWhoTask] = useState<TaskOwner | null>(null);
   const [duePick, setDuePick] = useState<DuePick | null>(null);
   const [detailed, setDetailed] = useState<Partial<CalendarEvent> | null>(null);
@@ -87,7 +89,8 @@ export function NewSheet({
   );
 
   // ------------------------------------------------------------ agenda-item
-  const person = whoEvent ?? parsed?.person ?? 'gezin';
+  const selection = whoEvent ?? { person: parsed?.person ?? 'gezin', others: parsed?.others ?? [] };
+  const person = selection.person;
 
   const eventDraft = useMemo<Partial<CalendarEvent> | null>(() => {
     if (!parsed) return null;
@@ -98,15 +101,16 @@ export function NewSheet({
       endTime: parsed.endTime,
       allDay: parsed.allDay,
       person,
+      others: selection.others,
       category: parsed.category,
       // Een "niet thuis" hoort niet in de avondherinnering.
       reminder: parsed.category !== 'weg',
       bring: parsed.bring.map((t) => ({ id: crypto.randomUUID(), text: t, done: false })),
     };
-  }, [parsed, person]);
+  }, [parsed, person, selection.others]);
 
   const warnings = useAwayWarnings(eventDraft);
-  const awayNeedsParent = parsed?.category === 'weg' && person !== 'niels' && person !== 'irene';
+  const awayNeedsParent = parsed?.category === 'weg' && !peopleOf(selection).some((p) => p === 'niels' || p === 'irene');
 
   const saveAsEvent = () => {
     if (!eventDraft || awayNeedsParent) return;
@@ -239,9 +243,11 @@ export function NewSheet({
             {parsed ? (
               <div className="card card--pad stack stack--sm">
                 <div className="row row--wrap">
-                  <span className={`chip chip--${person}`}>
-                    <Avatar who={person} size={18} /> {PERSON_LABEL[person]}
-                  </span>
+                  {peopleOf(selection).map((p) => (
+                    <span key={p} className={`chip chip--${p}`}>
+                      <Avatar who={p} size={18} /> {PERSON_LABEL[p]}
+                    </span>
+                  ))}
                   <span className="chip">{CATEGORY_LABEL[parsed.category]}</span>
                   {parsed.time && (
                     <span className="chip">
@@ -283,7 +289,13 @@ export function NewSheet({
               </p>
             ))}
 
-            <ChipPicker label="Voor wie" value={person} options={WHO_EVENT} onChange={setWhoEvent} />
+            <ChipMultiPicker
+              label="Voor wie"
+              hint="meer dan één mag"
+              values={peopleOf(selection)}
+              options={WHO_EVENT}
+              onToggle={(id) => setWhoEvent(togglePerson(selection, id))}
+            />
           </>
         ) : (
           <>

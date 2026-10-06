@@ -9,6 +9,7 @@
 
 import type { CalendarEvent, Receipt, ReceiptInput, Task } from './types';
 import { warrantyEnd } from './warranty';
+import { cleanOthers } from './people';
 
 export interface SaveContext {
   /** Het tijdstip van opslaan, ISO. */
@@ -45,6 +46,7 @@ export function saveEvent(
       createdAt: current.createdAt,
       updatedAt: ctx.now,
     } as CalendarEvent;
+    next[index].others = cleanOthers(next[index].person, next[index].others);
     return next;
   }
 
@@ -60,6 +62,7 @@ export function saveEvent(
       time: body.time,
       endTime: body.endTime,
       person: body.person ?? 'gezin',
+      others: cleanOthers(body.person ?? 'gezin', body.others),
       category: body.category ?? 'anders',
       bring: body.bring ?? [],
       notes: body.notes,

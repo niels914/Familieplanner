@@ -15,7 +15,8 @@ import { Modal } from './Modal';
 import { LEGE_OPPAS, SitterFields } from './SitterFields';
 import { MoreOptions } from './MoreOptions';
 import { TimeField } from './TimeField';
-import { ChipPicker, type ChipOption } from './ChipPicker';
+import { ChipMultiPicker, ChipPicker, type ChipOption } from './ChipPicker';
+import { peopleOf, togglePerson } from '../../shared/people';
 import { CATEGORY_ICON } from './EventBody';
 import { useData, useStore } from '../lib/store';
 import { Icon } from './Icon';
@@ -106,7 +107,7 @@ export function EventForm({
   /** Is er iets veranderd dat voor de hele reeks geldt (titel, tijd, wie...)? */
   const gedeeldGewijzigd =
     Boolean(reeks) &&
-    SERIES_SHARED_FIELDS.some((veld) => veld !== 'allDay' && (draft[veld] ?? '') !== (initial?.[veld] ?? ''));
+    SERIES_SHARED_FIELDS.some((veld) => veld !== 'allDay' && JSON.stringify(draft[veld] ?? '') !== JSON.stringify(initial?.[veld] ?? ''));
   // Uit Parro of een gekoppelde agenda: de bron bepaalt titel, datum en tijd.
   const isParro = draft.source === 'parro' || draft.source === 'agenda';
   const isSitter = draft.category === 'oppas';
@@ -122,7 +123,8 @@ export function EventForm({
       .join(' · ') || 'Soort, herhalen, notitie';
   const heeftTijd = Boolean(draft.time);
   const isAway = draft.category === 'weg';
-  const awayWithoutParent = isAway && draft.person !== 'niels' && draft.person !== 'irene';
+  const awayWithoutParent =
+    isAway && !peopleOf({ person: draft.person ?? 'gezin', others: draft.others }).some((p) => p === 'niels' || p === 'irene');
 
   // Terwijl je invult: botst dit met wat de ander al heeft aangegeven?
   const warnings = useAwayWarnings(draft);
@@ -394,11 +396,14 @@ export function EventForm({
           </p>
         ))}
 
-        <ChipPicker
+        <ChipMultiPicker
           label="Voor wie"
-          value={draft.person ?? 'gezin'}
+          hint="meer dan één mag"
+          values={peopleOf({ person: draft.person ?? 'gezin', others: draft.others })}
           options={PERSON_OPTIONS}
-          onChange={(v) => set('person', v)}
+          onToggle={(id) =>
+            setDraft((d) => ({ ...d, ...togglePerson({ person: d.person ?? 'gezin', others: d.others }, id) }))
+          }
         />
 
         <div className="field">

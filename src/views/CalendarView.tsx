@@ -14,6 +14,7 @@ import {
 import { useData, useStore } from '../lib/store';
 import { birthdaysOnDate, coversDate, eventsOnDate } from '../lib/events';
 import { ageTurning, turningLabel } from '../../shared/verjaardagen';
+import { involves, peopleOf } from '../../shared/people';
 import { feestdagenOp, feestdagenTussen, feestdagNamen, isFeestdag } from '../../shared/feestdagen';
 import { EventForm } from '../components/EventForm';
 import { Timeline } from '../components/Timeline';
@@ -48,7 +49,7 @@ export function CalendarView({
   const today = todayInNl();
 
   const visible = useMemo(
-    () => (filter === 'alles' ? events : events.filter((e) => e.person === filter)),
+    () => (filter === 'alles' ? events : events.filter((e) => involves(e, filter))),
     [events, filter],
   );
 
@@ -209,9 +210,12 @@ export function CalendarView({
                   )}
                   {items.length > 0 && (
                     <span className="day__dots">
-                      {items.slice(0, 5).map((e) => (
-                        <span key={e.id} className={`dot dot--${e.person}`} />
-                      ))}
+                      {items
+                        .flatMap((e) => peopleOf(e).map((p) => ({ key: `${e.id}-${p}`, p })))
+                        .slice(0, 5)
+                        .map(({ key, p }) => (
+                          <span key={key} className={`dot dot--${p}`} />
+                        ))}
                     </span>
                   )}
                   {feest && <span className="day__feest">{feestdagNamen(feest)}</span>}

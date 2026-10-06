@@ -7,7 +7,7 @@
 
 import { useMemo, useState } from 'react';
 import type { CalendarEvent } from '../../shared/types';
-import { PERSON_LABEL } from '../../shared/types';
+import { peopleNames } from '../../shared/people';
 import { formatLong, todayInNl } from '../../shared/dates';
 import { byDate } from '../lib/events';
 import { useData, useStore } from '../lib/store';
@@ -138,7 +138,7 @@ export function SeriesView({ seriesId, onClose }: { seriesId: string; onClose: (
           <Icon name="herhaal" size={15} style={{ verticalAlign: -3 }} />{' '}
           {reeks.interval === 2 ? 'Om de week' : 'Elke week'} op {weekdag}
           {eerste.time ? ` om ${eerste.time}` : ''}
-          {eerste.person !== 'gezin' ? ` · ${PERSON_LABEL[eerste.person]}` : ''} · {keren.length} keer,
+          {eerste.person !== 'gezin' ? ` · ${peopleNames(eerste)}` : ''} · {keren.length} keer,
           t/m {formatLong(keren[keren.length - 1].date).split(' ').slice(1).join(' ')}
         </p>
 

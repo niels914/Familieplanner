@@ -156,4 +156,15 @@ check('null wist de retourdatum', gewist[0].returnUntil, undefined);
 const blijft = saveReceipt(metBedrag, { id: 'r1', purchaseDate: '2026-03-12' }, later);
 check('zonder veld blijft het bedrag staan', blijft[0].amountCents, 4500);
 
+// --- meer personen bij één item
+const duoLijst = saveEvent([], { title: 'Uitje', date: '2026-12-12', person: 'niels', others: ['irene', 'niels', 'irene', 'gezin'] }, ctx);
+check('anderen: geen dubbelen, niet de eerste, niet "gezin"', duoLijst[0].others, ['irene']);
+check('gezin heeft geen anderen', saveEvent([], { title: 'x', date: '2026-12-12', person: 'gezin', others: ['irene'] }, ctx)[0].others, undefined);
+const nuAnders = saveEvent(duoLijst, { id: duoLijst[0].id, others: [] }, later);
+check('een lege lijst haalt de anderen weg', nuAnders[0].others, undefined);
+const eerstGewisseld = saveEvent(duoLijst, { id: duoLijst[0].id, person: 'irene' }, later);
+check('wordt de eerste iemand anders, dan is de oude eerste geen dubbel', eerstGewisseld[0].others, undefined);
+const weerDuo = saveEvent(duoLijst, { id: duoLijst[0].id, others: ['irene', 'lotte'] }, later);
+check('een andere lijst vervangt de oude', weerDuo[0].others, ['irene', 'lotte']);
+
 report('opslagregels');

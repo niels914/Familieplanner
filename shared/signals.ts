@@ -15,6 +15,7 @@
 
 import type { CalendarEvent, Decisions } from './types';
 import { addDays } from './dates';
+import { involves, peopleOf } from './people';
 
 /** Een tijdvak als [begin, eind) in minuten sinds middernacht. */
 export type Span = [number, number];
@@ -66,7 +67,7 @@ function spanOn(e: CalendarEvent, date: string, guess: number): Span | null {
 /** Wanneer is Niels of Irene weg volgens dit item? Null als het geen 'weg' is. */
 export function awaySpan(e: CalendarEvent, date: string): Span | null {
   if (e.category !== 'weg') return null;
-  if (e.person !== 'niels' && e.person !== 'irene') return null;
+  if (!peopleOf(e).some((p) => p === 'niels' || p === 'irene')) return null;
   return spanOn(e, date, GUESS_AWAY_MIN);
 }
 
@@ -133,8 +134,8 @@ export interface Signal {
 /** De signalen van één dag. */
 export function signalsOn(events: CalendarEvent[], date: string): Signal[] {
   const onDay = events.filter((e) => coversDay(e, date));
-  const nielsAway = onDay.filter((e) => e.person === 'niels' && awaySpan(e, date));
-  const ireneAway = onDay.filter((e) => e.person === 'irene' && awaySpan(e, date));
+  const nielsAway = onDay.filter((e) => involves(e, 'niels') && awaySpan(e, date));
+  const ireneAway = onDay.filter((e) => involves(e, 'irene') && awaySpan(e, date));
   if (nielsAway.length === 0 || ireneAway.length === 0) return [];
 
   const sitters = onDay

@@ -244,8 +244,8 @@ export function SettingsView({ onLogout }: { onLogout: () => void }) {
             </>
           ) : (
             <div className="banner">
-              Er is nog geen agenda gekoppeld. Zet de geheime iCal-link van Google Agenda in
-              Netlify als <code>NIELS_ICS_URL</code>.
+              Er is nog geen agenda gekoppeld. Zet de geheime iCal-link in Netlify als{' '}
+              <code>NIELS_ICS_URL</code> (Google Agenda) of <code>IRENE_ICS_URL</code> (Outlook of Hotmail).
             </div>
           )}
         </div>

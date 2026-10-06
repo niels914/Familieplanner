@@ -24,7 +24,7 @@ export interface Feed {
 
 export const FEEDS: Feed[] = [
   { id: 'niels', envVar: 'NIELS_ICS_URL', person: 'niels', label: 'Gmail van Niels' },
-  { id: 'irene', envVar: 'IRENE_ICS_URL', person: 'irene', label: 'Agenda van Irene' },
+  { id: 'irene', envVar: 'IRENE_ICS_URL', person: 'irene', label: 'Outlook van Irene' },
 ];
 
 export const configuredFeeds = (): Feed[] => FEEDS.filter((f) => Boolean(process.env[f.envVar]));

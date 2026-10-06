@@ -79,7 +79,7 @@ Netlify → *Site configuration* → *Environment variables*. Zie ook `.env.exam
 | `SESSION_SECRET` | Lange willekeurige tekst waarmee de sessiecookie ondertekend wordt. |
 | `PARRO_ICS_URL` | De iCal-link uit Parro. |
 | `NIELS_ICS_URL` | Het geheime iCal-adres van Google Agenda (Niels). Leeg = niet gekoppeld. |
-| `IRENE_ICS_URL` | Idem voor Irene, als zij haar agenda wil koppelen. |
+| `IRENE_ICS_URL` | Idem voor Irene (Outlook of Hotmail): het gepubliceerde iCal-adres (ICS), met rechten *Alle details kunnen bekijken*. Leeg = niet gekoppeld. |
 | `VAPID_PUBLIC_KEY` | Voor pushmeldingen. |
 | `VAPID_PRIVATE_KEY` | Voor pushmeldingen. |
 | `VAPID_SUBJECT` | `mailto:` plus je e-mailadres. |

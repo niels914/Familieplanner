@@ -22,6 +22,7 @@ const files = [
   'tests/receipt-files.test.ts',
   'tests/image.test.ts',
   'tests/verjaardagen.test.ts',
+  'tests/suggesties.test.ts',
   'tests/quickparse.test.ts',
   'tests/series.test.ts',
   'tests/signals.test.ts',

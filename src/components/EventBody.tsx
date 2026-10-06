@@ -7,7 +7,9 @@
 import type { CalendarEvent, Category } from '../../shared/types';
 import { AGENDA_FEED_LABEL, CATEGORY_LABEL } from '../../shared/types';
 import { peopleNames, peopleOf } from '../../shared/people';
+import type { BringSuggestion } from '../../shared/suggesties';
 import { Avatar } from './Avatar';
+import { SuggestionRow } from './SuggestionRow';
 import { Icon, type IconName } from './Icon';
 
 /** Welk icoon hoort bij welke soort item. */
@@ -29,10 +31,17 @@ export function EventBody({
   onClick,
   onToggleBring,
   compactBring = false,
+  suggestions = [],
+  onAdopt,
+  onDismiss,
 }: {
   event: CalendarEvent;
   onClick: () => void;
   onToggleBring?: (itemId: string) => void;
+  /** Voorstellen voor het meeneem-lijstje, uit het bericht van school. */
+  suggestions?: BringSuggestion[];
+  onAdopt?: (s: BringSuggestion) => void;
+  onDismiss?: (s: BringSuggestion) => void;
   /** Het meeneem-lijstje staat al elders op de pagina: hier één regel. */
   compactBring?: boolean;
 }) {
@@ -101,6 +110,10 @@ export function EventBody({
             Klaargezet: {event.bring.map((b) => b.text).join(', ')}
           </p>
         )
+      )}
+
+      {onAdopt && onDismiss && (
+        <SuggestionRow suggestions={suggestions} onAdopt={onAdopt} onDismiss={onDismiss} />
       )}
     </>
   );

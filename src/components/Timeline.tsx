@@ -5,6 +5,9 @@
  */
 
 import type { CalendarEvent } from '../../shared/types';
+import { todayInNl } from '../../shared/dates';
+import { bringSuggestions } from '../../shared/suggesties';
+import { useBringSuggestions } from '../lib/suggesties';
 import { Icon } from './Icon';
 import { EventBody, CATEGORY_ICON } from './EventBody';
 
@@ -22,6 +25,9 @@ export function Timeline({
   /** Voorbij: gedimd, bijvoorbeeld onder "Eerder vandaag". */
   dim?: boolean;
 }) {
+  const { adopt, dismiss } = useBringSuggestions();
+  const today = todayInNl();
+
   return (
     <ol className="timeline">
       {events.map((event) => (
@@ -43,6 +49,9 @@ export function Timeline({
               onClick={() => onOpen(event)}
               onToggleBring={(id) => onToggleBring(event, id)}
               compactBring={compactBring}
+              suggestions={dim ? [] : bringSuggestions(event, today)}
+              onAdopt={(s) => adopt(event, s)}
+              onDismiss={(s) => dismiss(event, s)}
             />
           </div>
         </li>

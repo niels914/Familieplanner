@@ -414,3 +414,29 @@ als twee keuzelijsten, de minuten per vijf. Een eindtijd mag leeg blijven. Een m
 niet bij hoort, zoals 08:32 uit een Google-afspraak, blijft zichtbaar en verspringt niet tot
 je zelf iets kiest. Het geldt voor tijdstip, eindtijd, oppas van en tot, en *Thuis om*.
 
+
+---
+
+## 12. Gebouwd: fase F
+
+**Meeneem-suggesties uit Parro-berichten** (`shared/suggesties.ts`, `SuggestionRow`).
+
+- De app leest titel en omschrijving van een Parro-item en haalt eruit wat er mee moet:
+  *"Neem gymschoenen en een bidon mee"*, *"De kinderen moeten een regenjas meenemen"*,
+  *"Vergeet niet een knuffel mee te nemen"*, *"Geef uw kind laarzen mee"*, en lijsten onder een
+  kopje (*Meenemen:*, *Wat moet er mee:*, *Benodigdheden:*, op één regel of met streepjes).
+- Onder het item staat een rustig blok **Uit het bericht, meenemen?** met per ding een knop
+  *Meenemen* en een kruisje. Meenemen zet het in het meeneem-lijstje, het kruisje (Niet nodig)
+  verbergt het voorstel. Nooit automatisch: jullie beslissen.
+- Alleen voor Parro-items die nog niet voorbij zijn. Wat al in het lijstje staat (ook onder een
+  iets andere naam) komt niet nog eens als voorstel. Een afgewezen of overgenomen voorstel komt
+  niet terug, ook niet als je het later uit het lijstje haalt (`CalendarEvent.suggestionsOff`,
+  bewaard op het item en bij een Parro-synchronisatie ongemoeid).
+- Zinnen met een ontkenning (*"Je hoeft geen lunch mee te nemen"*), vage omschrijvingen
+  (*"alles wat je nodig hebt"*) en meer dan vijf voorstellen per item worden overgeslagen. Liever
+  een zin missen dan iets verkeerds voorstellen.
+- Het is een vaste regelset, geen taalmodel: er verlaat geen bericht van school de app.
+
+**Bewust niet gedaan:** voorstellen in de avondmelding, en voorstellen voor items uit je eigen
+agenda of Gmail. Een taalmodel zou meer zinnen begrijpen, maar dan gaat schooltekst naar een
+externe dienst; dat is een aparte keuze.

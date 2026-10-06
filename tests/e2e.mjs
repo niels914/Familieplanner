@@ -698,6 +698,37 @@ await sectie('Een item voor meer dan één persoon', async () => {
 });
 
 // ============================================================================
+await sectie('Meeneem-suggesties uit een Parro-bericht', async () => {
+  const { context, page: p } = await toestel();
+  const datum = new Date(Date.now() + 4 * 86400000).toISOString().slice(0, 10);
+  await open(p, `/?date=${datum}`);
+  await p.waitForSelector('.suggest');
+  const tekst = await p.locator('.suggest__text').allTextContents();
+  ok('twee suggesties uit de tekst, niet uit de zin met "niet nodig"', JSON.stringify(tekst) === '["Gymschoenen","Bidon"]', JSON.stringify(tekst));
+  ok('er staat nog niets in het meeneem-lijstje', (await p.locator('.bringrow').count()) === 0);
+
+  await p.getByRole('button', { name: 'Gymschoenen meenemen' }).tap();
+  ok('Meenemen zet het in het lijstje', await tot(p, (d) => d.events.some((e) => e.title === 'Gymles groep 1/2' && e.bring.some((b) => b.text === 'Gymschoenen'))));
+  await rust(p);
+  ok('de suggestie is weg en het staat bij Meenemen', (await p.locator('.suggest__text').allTextContents()).join() === 'Bidon' && (await p.locator('.bringrow', { hasText: 'Gymschoenen' }).count()) === 1);
+
+  await p.getByRole('button', { name: 'Bidon niet nodig' }).tap();
+  ok('Niet nodig onthoudt de keuze op het item', await tot(p, (d) => d.events.some((e) => e.title === 'Gymles groep 1/2' && e.suggestionsOff?.includes('bidon') && !e.bring.some((b) => b.text === 'Bidon'))));
+  await rust(p);
+  ok('geen suggesties meer, ook niet na opnieuw openen', (await p.locator('.suggest').count()) === 0);
+  await open(p, `/?date=${datum}`);
+  await p.waitForSelector('.event__title', { hasText: 'Gymles' });
+  await rust(p);
+  ok('ook na herladen blijft het weg', (await p.locator('.suggest').count()) === 0);
+
+  // Eigen items en andere dagen krijgen nooit een voorstel.
+  await open(p, `/?date=${morgen}`);
+  await rust(p);
+  ok('geen suggesties bij eigen items', (await p.locator('.suggest').count()) === 0);
+  await context.close();
+});
+
+// ============================================================================
 kop('Geen fouten in de console');
 ok('geen scriptfouten tijdens deze hele test', consoleFouten.length === 0, consoleFouten.slice(0, 3).join(' | '));
 

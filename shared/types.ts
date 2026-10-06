@@ -89,6 +89,9 @@ export interface CalendarEvent {
   /** Wat de gekoppelde agenda bij de laatste sync als omschrijving gaf. Zo weten we of jij de
    *  notitie hebt aangepast en laten we die met rust. */
   syncedNotes?: string;
+  /** Meeneem-suggesties uit de tekst van een Parro-bericht die jullie hebben afgewezen
+   *  (genormaliseerd, zie `shared/suggesties.ts`). */
+  suggestionsOff?: string[];
   /** Meenemen in de avondherinnering van de dag ervoor. */
   reminder: boolean;
   sitter?: SitterDetails;

@@ -26,6 +26,8 @@ export function voorbeeldData() {
     // Allebei weg, maar de oppas van overmorgen dekt het: geen signaal.
     { id: uid(), source: 'local', title: 'Etentje', date: plus(2), time: '19:00', endTime: '22:00', allDay: false, person: 'niels', category: 'weg', bring: [], reminder: false, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'local', title: 'Etentje', date: plus(2), time: '19:00', endTime: '22:00', allDay: false, person: 'irene', category: 'weg', bring: [], reminder: false, createdAt: '', updatedAt: '' },
+    // Een Parro-bericht met meeneem-tekst: de app stelt gymschoenen en een bidon voor.
+    { id: uid(), source: 'parro', parroUid: 'p3', title: 'Gymles groep 1/2', date: plus(4), allDay: true, person: 'matthijs', category: 'school', bring: [], notes: 'Neem gymschoenen en een bidon mee. Een lunch is niet nodig.', syncedNotes: 'Neem gymschoenen en een bidon mee. Een lunch is niet nodig.', reminder: true, createdAt: '', updatedAt: '' },
     { id: uid(), source: 'parro', parroUid: 'p2', title: 'Studiedag — alle kinderen vrij', date: plus(12), allDay: true, person: 'matthijs', category: 'school', bring: [], reminder: true, createdAt: '', updatedAt: '' },
   ],
   contacts: [

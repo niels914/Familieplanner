@@ -35,6 +35,8 @@ verplaatste en geannuleerde afspraken en andere tijdzones worden verwerkt.
 
 ## Werkagenda van Niels: signaleren bij vroeg weg of laat thuis
 
+Uitgewerkt plan, wacht op keuzes: [werkagenda-plan.md](werkagenda-plan.md). Onderstaande tekst is de eerste schets.
+
 **Wens.** De app leest de werkagenda van Niels en meldt zelf wanneer hij vroeg van
 huis moet of laat thuis is, ook door reistijd. Voorbeeld: een afspraak in Den Haag
 die tot 17:00 duurt. Met de reistijd erbij is hij pas veel later thuis, en dat
